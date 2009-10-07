@@ -12,7 +12,7 @@ namespace XTL
 	 * @class ByteBuffer
 	 * @brief Realize autogrowing buffer of bytes.
 	 *
-	 * While growing is needed, capacity of buffer doubles.
+	 * While need growing, capacity of buffer doubles.
 	 */
 	class ByteBuffer
 	{
@@ -31,14 +31,14 @@ namespace XTL
 			/**
 			 * @brief Constructor with preallocating memory.
 			 * @param capacity Initial capacity of the creating buffer.
-			 * @exception ExceptionNotEnoughMemory
+			 * @exception OutOfMemoryException
 			 */
-			ByteBuffer(int capacity);
+			explicit ByteBuffer(int capacity);
 
 			/**
 			 * @brief Copy constructor
 			 * @param buffer Another buffer object.
-			 * @exception ExceptionNotEnoughMemory
+			 * @exception OutOfMemoryException
 			 */
 			ByteBuffer(const ByteBuffer & buffer);
 
@@ -75,7 +75,7 @@ namespace XTL
 			/**
 			 * @brief Reserve buffer memory for appending 'size' bytes.
 			 * @param size Size of additional memory to reserve.
-			 * @exception ExceptionNotEnoughMemory
+			 * @exception OutOfMemoryException
 			 */
 			void Reserve(int size);
 
@@ -91,7 +91,7 @@ namespace XTL
 
 			/**
 			 * @brief Assignment operator.
-			 * @exception ExceptionNotEnoughMemory
+			 * @exception OutOfMemoryException
 			 * @return Reference to self.
 			 */
 			ByteBuffer & operator= (const ByteBuffer & buffer);

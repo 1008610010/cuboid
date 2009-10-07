@@ -72,12 +72,23 @@ namespace XTL
 			XTL_EXCEPTION_CONSTRUCTORS(InterruptError)
 	};
 
-	class ExceptionNotEnoughMemory : public Exception
+	class Ex
 	{
 		public:
 
-			ExceptionNotEnoughMemory(const char * where)
-				: Exception(where) { ;; }
+			Ex(const char * what) : what_(what) { ;; }
+
+		protected:
+
+			std::string what_;
+	};
+
+	class OutOfMemoryException : public Ex
+	{
+		public:
+
+			OutOfMemoryException(const char * what)
+				: Ex(what) { ;; }
 	};
 }
 

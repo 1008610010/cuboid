@@ -144,6 +144,11 @@ namespace XTL
 #endif
 	}
 
+	int SocketAddressInet::Family() const
+	{
+		return AF_INET;
+	}
+
 	const std::string SocketAddressInet::Host() const
 	{
 		char ipaddr[INET_ADDRSTRLEN];
