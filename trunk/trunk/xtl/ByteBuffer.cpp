@@ -73,10 +73,11 @@ namespace XTL
 		{
 			newCapacity <<= 1;
 		}
+
 		char * newData = static_cast<char *>(::realloc(data_, newCapacity));
 		if (newData == 0)
 		{
-			throw ExceptionNotEnoughMemory("ByteBuffer::Reserve");
+			throw OutOfMemoryException("ByteBuffer::Reserve");
 		}
 		data_ = newData;
 		capacity_ = newCapacity;

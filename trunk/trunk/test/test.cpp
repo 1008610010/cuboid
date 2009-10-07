@@ -1,5 +1,118 @@
 #include "xtl/TcpClient.hpp"
 #include "xtl/ByteBuffer.hpp"
+#include <netdb.h>
+
+class NameResolveException
+{
+};
+
+class IpAddress
+{
+	public:
+
+		IpAddress()
+		{
+			address_.s_addr = INADDR_NONE;
+		}
+
+		IpAddress(const char * host)
+		{
+			Initialize(host);
+		}
+
+		static IpAddress None()
+		{
+			return IpAddress((unsigned long int) INADDR_NONE);
+		}
+
+		static IpAddress Any()
+		{
+			return IpAddress((unsigned long int) INADDR_ANY);
+		}
+
+		const std::string AsString() const
+		{
+			char buffer[INET_ADDRSTRLEN];
+			return ::inet_ntop(AF_INET, &(address_.s_addr), buffer, sizeof(buffer)) == NULL
+			       ? std::string()
+			       : std::string(buffer);
+		}
+
+	protected:
+
+		explicit IpAddress(unsigned long int address)
+		{
+			address_.s_addr = address;
+		}
+
+		void Initialize(const char * host)
+		{
+			/*
+#if XTL_USE_GETADDRINFO
+			struct ::addrinfo hints;
+			struct ::addrinfo * result;
+
+			::memset(&hints, 0, sizeof(hints));
+			hints.ai_family = AF_INET;
+			hints.ai_socktype = 0;
+			hints.ai_protocol = 0;
+			hints.ai_flags = 0;
+
+			const char * portString[16];
+			::sprintf(portString, "%d", port);
+
+			int error = ::getaddrinfo(host, portString, &hints, &result);
+			if (error != 0)
+			{
+				throw SocketAddressError(error, std::string("getaddrinfo(): ") + ::gai_strerror(error));
+			}
+
+			for (struct ::addrinfo * current = result; current != NULL; current = current->ai_next)
+			{
+				if (current->ai_family == AF_INET)
+				{
+					::memcpy(&address_, current->ai_addr, current->ai_addrlen);
+					::freeaddrinfo(result);
+					return;
+				}
+			}
+			::freeaddrinfo(result);
+
+			throw SocketAddressError("Host not found");
+#else
+			*/
+
+			struct ::hostent * hostEntry = NULL;
+#ifdef XTL_USE_GETHOSTBYNAME_R
+			struct ::hostent hostData;
+			char buffer[2048];
+			int error = 0;
+			if (::gethostbyname_r(host, &hostData, buffer, sizeof(buffer), &hostEntry, &error) != 0)
+			{
+				// throw SocketAddressError(error, std::string("gethostbyname_r(): ") + ::hstrerror(error));
+				throw NameResolveException();
+			}
+#else
+			hostEntry = ::gethostbyname(host);
+			if (hostEntry == NULL || hostEntry->h_addrtype != AF_INET)
+			{
+				// throw SocketAddressError(h_errno, std::string("gethostbyname(): ") + ::hstrerror(h_errno));
+				throw NameResolveException();
+			}
+#endif
+			::memcpy(&address_, hostEntry->h_addr_list[0], hostEntry->h_length);
+
+/*
+			for (int i = 0; hostEntry->h_addr_list[i] != NULL; ++i)
+			{
+				printf("%08x\n", *((unsigned int *) (hostEntry->h_addr_list[i])));
+			}
+*/
+//#endif
+		}
+
+		struct ::in_addr address_;
+};
 
 int main(int argc, const char * argv[])
 {
