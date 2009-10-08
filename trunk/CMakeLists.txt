@@ -48,3 +48,7 @@ ADD_EXECUTABLE(
 	xtl/SocketAddressInet.cpp
 )
 
+ADD_EXECUTABLE (
+	json-test
+	test/json-test.cpp
+)
