@@ -51,4 +51,12 @@ ADD_EXECUTABLE(
 ADD_EXECUTABLE (
 	json-test
 	test/json-test.cpp
+	xtl/Json.cpp
+	xtl/FileLock.cpp
+)
+
+ADD_EXECUTABLE (
+	file-lock-test
+	test/file-lock-test.cpp
+	xtl/FileLock.cpp
 )

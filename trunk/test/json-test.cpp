@@ -1,622 +1,409 @@
-#include <stdio.h>
-#include <string>
-#include <map>
-#include <list>
-#include <vector>
+#include <xtl/Json.hpp>
 #include <memory>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <xtl/FileLock.hpp>
 
-class JsonParseError
+namespace XTL
 {
-	public:
-	
-		JsonParseError(int row, int column, const char * what)
-			: row_(row), column_(column), what_(what)
-		{
-			;;
-		}
-		
-		int Row() const
-		{
-			return row_;
-		}
-		
-		int Column() const
-		{
-			return column_;
-		}
-		
-		const char * What() const
-		{
-			return what_.c_str();
-		}
-	
-	protected:
-	
-		int         row_;
-		int         column_;
-		std::string what_;
-};
+	bool FormatString(std::string & s, const char * format, ...)
+	{
+		va_list ap;
 
-class JsonValue
-{
-	public:
-	
-		enum Type
+		int size = 128;
+		char * buffer = static_cast<char *>(::malloc(size));
+		if (buffer == 0)
 		{
-			STRING   = 0,
-			INTEGER  = 1,
-			FLOAT    = 2,
-			LIST     = 3,
-			MAP      = 4
-		};
-
- 		virtual ~JsonValue() throw() { ;; }
-
-		virtual int Type() const = 0;
-};
-
-class JsonString : public JsonValue
-{
-	public:
-	
-		JsonString(const std::string & value)
-			: JsonValue(), value_(value) { ;; }
-	
-		virtual ~JsonString() throw()
-		{
-			;;
-		}
-		
-		virtual int Type() const
-		{
-			return STRING;
-		}
-		
-	protected:
-	
-		std::string value_;
-};
-
-class JsonInteger : public JsonValue
-{
-	public:
-	
-		JsonInteger(const long long & value)
-			: JsonValue(), value_(value) { ;; }
-	
-		virtual ~JsonInteger() throw()
-		{
-			;;
-		}
-		
-		virtual int Type() const
-		{
-			return INTEGER;
-		}
-		
-	protected:
-	
-		long long value_;
-};
-
-class JsonFloat : public JsonValue
-{
-	public:
-	
-		JsonFloat(const double & value)
-			: JsonValue(), value_(value) { ;; }
-	
-		virtual ~JsonFloat() throw()
-		{
-			;;
-		}
-		
-		virtual int Type() const
-		{
-			return FLOAT;
-		}
-		
-	protected:
-	
-		double value_;
-};
-
-class JsonContainer : public JsonValue
-{
-	public:
-	
-		JsonContainer(JsonContainer * parent)
-			: parent_(parent) { ;; }
-			
-		JsonContainer * Parent() const
-		{
-			return parent_;
+			return false;
 		}
 
-	protected:
-	
-		JsonContainer * parent_;
-};
+		while (true)
+		{
+			va_start(ap, format);
+			int result = ::vsnprintf(buffer, size, format, ap);
+			va_end(ap);
 
-class JsonList : public JsonContainer
-{
-	typedef std::vector<JsonValue *> ValuesVector;
-	
-	public:
-	
-		JsonList(JsonContainer * parent)
-			: JsonContainer(parent), values_() { ;; }
-			
-		virtual ~JsonList() throw()
-		{
-			Free();
-		}
-			
-		virtual int Type() const
-		{
-			return LIST;
-		}
-		
-		JsonValue * Parent()
-		{
-			return parent_;
-		}
-
-		void Add(JsonValue * value)
-		{
-			values_.push_back(value);
-		}
-
-	protected:
-	
-		void Free()
-		{
-			for (ValuesVector::iterator itr = values_.begin(); itr != values_.end(); ++itr)
+			if (result >= 0)
 			{
-				delete *itr;
-			}
-		}
-	
-		JsonValue    * parent_;
-		ValuesVector   values_;
-};
-
-class JsonMap : public JsonContainer
-{
-	typedef std::list<JsonValue *> ValuesList;
-	typedef std::map<std::string, ValuesList::iterator> IndexMap;
-
-	public:
-
-		JsonMap(JsonContainer * parent)
-			: JsonContainer(parent), values_(), index_() { ;; }
-			
-		virtual ~JsonMap() throw()
-		{
-			Free();
-		}
-			
-		virtual int Type() const
-		{
-			return MAP;
-		}
-		
-		JsonValue * Parent()
-		{
-			return parent_;
-		}
-		
-		void Set(const std::string & key, JsonValue * value)
-		{
-			IndexMap::iterator itr = index_.find(key);
-			if (itr != index_.end())
-			{
-				if (*(itr->second) != value)
+				if (result < size)
 				{
-					delete *(itr->second);
-					*(itr->second) = value;
+					break;
+				}
+				else
+				{
+					size = result + 1;
 				}
 			}
 			else
 			{
-				values_.push_back(value);
-				ValuesList::iterator last = values_.end();
-				--last;
-				index_[key] = last;
+				size <<= 1;
 			}
-		}
-			
-	protected:
-	
-		void Free()
-		{
-			for (ValuesList::iterator itr = values_.begin(); itr != values_.end(); ++itr)
+
+			char * newBuffer = static_cast<char *>(::realloc(buffer, size));
+			if (newBuffer == 0)
 			{
-				delete *itr;
+				::free(buffer);
+				return false;
 			}
-		}
-	
-		JsonValue * parent_;
-		ValuesList values_;
-		IndexMap index_;
-};
 
-class JsonParser
-{
-	public:
+			buffer = newBuffer;
+		}
 
-		JsonParser(const char * source)
-			: root_(0),
-			  row_(0),
-			  column_(0),
-			  cur_(source)
+		s.assign(buffer);
+		::free(buffer);
+		return true;
+	}
+
+	const std::string FormatString(const char * format, ...)
+	{
+		va_list ap;
+
+		int size = 128;
+		char * buffer = static_cast<char *>(::malloc(size));
+		if (buffer == 0)
 		{
-			Parse();
+			return std::string();
 		}
-		
-		~JsonParser() throw()
+
+		while (true)
 		{
-			delete root_;
-		}
-			
-	protected:
-	
-		bool IsSpace(char c)
-		{
-			return c == ' ' || c == '\t' || c == '\r';
-		}
-		
-		bool IsNewLine(char c)
-		{
-			return c == '\n';
-		}
-		
-		bool IsDigit(char c)
-		{
-			return c >= '0' && c <= '9';
-		}
-		
-		void SkipSpaces()
-		{
-			for (const char * p = cur_; ; ++p)
+			va_start(ap, format);
+			int result = ::vsnprintf(buffer, size, format, ap);
+			va_end(ap);
+
+			if (result >= 0)
 			{
-				if (IsSpace(*p))
+				if (result < size)
 				{
-					++column_;
-				}
-				else if (IsNewLine(*p))
-				{
-					++row_;
-					column_ = 0;
+					break;
 				}
 				else
 				{
-					// TODO: check (p - cur_) for space count here
-					cur_ = p;
+					size = result + 1;
+				}
+			}
+			else
+			{
+				size <<= 1;
+			}
+
+			char * newBuffer = static_cast<char *>(::realloc(buffer, size));
+			if (newBuffer == 0)
+			{
+				::free(buffer);
+				return std::string();
+			}
+
+			buffer = newBuffer;
+		}
+
+		std::string s(buffer);
+		::free(buffer);
+		return s;
+	}
+
+	class JsonDatabase
+	{
+		public:
+
+			class Error
+			{
+				public:
+					explicit Error(const char * what) : what_(what) { ;; }
+					explicit Error(const std::string & what) : what_(what) { ;; }
+					const char * What() const { return what_.c_str(); }
+				protected:
+					const std::string what_;
+			};
+
+			class Locked { };
+
+			JsonDatabase(const std::string & path, const std::string & name)
+				: filePath_(path + "/" + name + ".json"),
+				  lock_(path + "/" + name + ".lock"),
+				  root_(0)
+			{
+				;;
+			}
+
+			~JsonDatabase() throw()
+			{
+				delete root_;
+			}
+
+			void Create(bool waitLock = false)
+			{
+				try
+				{
+					if (!lock_.Lock(waitLock))
+					{
+						throw Locked();
+					}
+
+					root_ = 0;
+				}
+				catch (const FileLock::Error & e)
+				{
+					throw Error(e.What());
+				}
+			}
+
+			bool Open(bool waitLock = false)
+			{
+				FILE * file = 0;
+				char * buffer = 0;
+				try
+				{
+					if (!lock_.Lock(waitLock))
+					{
+						throw Locked();
+					}
+
+					file = fopen(filePath_.c_str(), "r");
+					if (file == 0)
+					{
+						lock_.Unlock();
+
+						if (errno == ENOENT)
+						{
+							return false;
+						}
+
+						throw Error(
+							FormatString(
+								"Unable to open file \"%s\" for reading: %s",
+								filePath_.c_str(),
+								::strerror(errno)
+							)
+						);
+					}
+
+					::fseek(file, 0, SEEK_END);
+					long fileSize = ::ftell(file);
+					::fseek(file, 0, SEEK_SET);
+
+					char * buffer = static_cast<char *>(::malloc(fileSize + 1));
+					if (buffer == 0)
+					{
+						::fclose(file);
+						lock_.Unlock();
+						throw Error(
+							FormatString(
+								"Unable to allocate memory to read file \"%s\"",
+								filePath_.c_str()
+							)
+						);
+					}
+
+					long fileRead = ::fread(buffer, 1, fileSize, file);
+					if (fileRead != fileSize)
+					{
+						::free(buffer);
+						::fclose(file);
+						lock_.Unlock();
+						throw Error(
+							FormatString(
+								"Unable to read file \"%s\": %s",
+								filePath_.c_str(),
+								::strerror(errno)
+							)
+						);
+					}
+					buffer[fileSize] = '\0';
+
+					::fclose(file);
+
+					JsonParser parser(buffer);
+					::free(buffer);
+
+					root_ = parser.Release();
+					return true;
+				}
+				catch (const FileLock::Error & e)
+				{
+					throw Error(e.What());
+				}
+				catch (const JsonParseError & e)
+				{
+					::free(buffer);
+					lock_.Unlock();
+					throw Error(
+						FormatString(
+							"Database file corrupted (row %d, column %d): %s",
+							e.Row() + 1,
+							e.Column() + 1,
+							e.What()
+						)
+					);
+				}
+			}
+
+			void Close()
+			{
+				if (!lock_.Locked())
+				{
 					return;
 				}
-			}
-		}
-		
-		/*
-			IsDigit(*cur_) || *cur_ == '-' || *cur_ == '+'
-		*/
-		JsonValue * ReadNumber()
-		{
-			bool isNegative = false;
 
-			if (*cur_ == '-' || *cur_ == '+')
-			{
-				isNegative = (*cur_ == '-');
-				++cur_;
-				++column_;
-				SkipSpaces();
-				if (!IsDigit(*cur_))
+				if (root_ == 0)
 				{
-					throw JsonParseError(row_, column_, "Decimal digit expected");
-				}
-			}
-
-			long long integer = 0;
-
-			for (; IsDigit(*cur_); ++cur_, ++column_)
-			{
-				integer = 10 * integer + (*cur_ - '0');
-			}
-			
-			if (*cur_ == '.')
-			{
-				++cur_;
-				++column_;
-				double real = integer;
-				double divisor = 1.0;
-				for (; IsDigit(*cur_); ++cur_, ++column_)
-				{
-					divisor /= 10.0;
-					real += (*cur_ - '0') * divisor;
-				}
-				return new JsonFloat(isNegative ? -real : real);
-			}
-			else
-			{
-				return new JsonInteger(isNegative ? -integer : integer);
-			}
-			
-			// TODO: check (*cur_ == 'E' || *cur_ == 'e') for 1.0e2
-		}
-		
-		/*
-			*cur_ == '"'
-		*/
-		void ReadString(std::string & s)
-		{
-			const char * begin = cur_;
-			++cur_;
-			++column_;
-			
-			while (true)
-			{
-				if (*cur_ == '\0')
-				{
-					throw JsonParseError(row_, column_, "Unexpected end of file in double quoted string");
-				}
-				else if (*cur_ == '"')
-				{
-					if (begin < cur_)
+					if (::unlink(filePath_.c_str()) == -1 && errno != ENOENT)
 					{
-						s.append(begin, cur_ - begin);
-						begin = cur_;
+						throw Error(
+							FormatString(
+								"Unable to remove file \"%s\": %s",
+								filePath_.c_str(),
+								::strerror(errno)
+							)
+						);
 					}
-					++cur_;
-					++column_;
-					return;
-				}
-				else if (*cur_ == '\\')
-				{
-					if (begin < cur_)
-					{
-						s.append(begin, cur_ - begin);
-					}
-					++cur_;
-					++column_;
-					if (*cur_ == '\0')
-					{
-						throw JsonParseError(row_, column_, "Unexpected end of file in double quoted string");
-					}
-					else if (*cur_ == '\\')
-					{
-						++cur_;
-						++column_;
-						s.append(1, '\\');
-						begin = cur_;
-					}
-					else if (*cur_ == '"')
-					{
-						++cur_;
-						++column_;
-						s.append(1, '"');
-						begin = cur_;
-					}
-					else if (*cur_ == 'n')
-					{
-						++cur_;
-						++column_;
-						s.append(1, '\n');
-						begin = cur_;
-					}
-					else
-					{
-						// TODO: print sequence in JsonParseError
-						throw JsonParseError(row_, column_, "Unknown escape sequence");
-					}
-				}
-				else if (*cur_ == '\n')
-				{
-					++cur_;
-					++row_;
-					column_ = 0;
 				}
 				else
 				{
-					++cur_;
-					++column_;
-				}
-			}
-		}
-		
-		JsonValue * ReadString()
-		{
-			std::string value;
-			ReadString(value);
-			return new JsonString(value);
-		}
-		
-		// *cur_ == '['
-		JsonValue * ReadList(JsonContainer * parent)
-		{
-			std::auto_ptr<JsonList> list(new JsonList(parent));
+					FILE * file = ::fopen(filePath_.c_str(), "w");
+					if (file == 0)
+					{
+						throw Error(
+							FormatString(
+								"Unable to open file \"%s\" for writing: %s",
+								filePath_.c_str(),
+								::strerror(errno)
+							)
+						);
+					}
 
-			++cur_;
-			++column_;
-			
-			SkipSpaces();
-			if (*cur_ == ']')
+					root_->Print(file, 0, 0);
+
+					::fclose(file);
+					delete root_;
+					root_ = 0;
+				}
+
+				lock_.Unlock();
+			}
+
+			class JsonVar
 			{
-				++cur_;
-				++column_;
-				return list.release();
-			}
+				public:
 
-			while (true)
+					JsonVar(JsonValue ** value)
+						: value_(value) { ;; }
+
+				protected:
+
+					JsonValue ** value_;
+			};
+
+			template <typename ValueType>
+			class JsonVarBase
 			{
-				if (*cur_ == '"')
-				{
-					list->Add(ReadString());
-				}
-				else if (IsDigit(*cur_) || *cur_ == '+' || *cur_ == '-')
-				{
-					list->Add(ReadNumber());
-				}
-				else if (*cur_ == '[')
-				{
-					list->Add(ReadList(list.get()));
-				}
-				else if (*cur_ == '{')
-				{
-					list->Add(ReadMap(list.get()));
-				}
-				else
-				{
-					throw JsonParseError(row_, column_, "Invalid symbol, when value expected");
-				}
+				public:
 
-				SkipSpaces();
+					JsonVarBase(JsonValue ** value)
+						: value_(reinterpret_cast<ValueType **>(value)) { ;; }
 
-				if (*cur_ == ',')
-				{
-					++cur_;
-					++column_;
-					SkipSpaces();
-					continue;
-				}
-				else if (*cur_ == ']')
-				{
-					++cur_;
-					++column_;
-					return list.release();
-				}
-				else
-				{
-					throw JsonParseError(row_, column_, "Comma or end of list expected");
-				}
-			}
-		}
-	
-		// *cur_ == '{'
-		JsonValue * ReadMap(JsonContainer * parent)
-		{
-			std::auto_ptr<JsonMap> map(new JsonMap(parent));
-			std::string key;
-			JsonValue * value;
+				protected:
 
-			++cur_;
-			++column_;
-			
-			SkipSpaces();
-			if (*cur_ == '}')
+					ValueType ** value_;
+			};
+
+			class JsonObject : public JsonVarBase<JsonObjectValue>
 			{
-				++cur_;
-				++column_;
-				return map.release();
+				public:
+
+					JsonObject(JsonValue ** value)
+						: JsonVarBase<JsonObjectValue>(value) { ;; }
+
+					JsonVar operator[] (const char * key)
+					{
+						return JsonVar((*value_)->Set(key, 0));
+					}
+
+				protected:
+			};
+
+			class Node
+			{
+				public:
+
+					Node(JsonValue ** value) : value_(value) { ;; }
+
+					JsonVarBase<JsonObjectValue> CreateObject()
+					{
+						delete *value_;
+						JsonVarBase<JsonObjectValue> var(value_);
+						*value_ = new JsonObjectValue();
+						return var;
+					}
+
+				protected:
+
+					JsonValue ** value_;
+			};
+
+			JsonVar Root()
+			{
+				return JsonVar(&root_);
 			}
 
-			while (true)
-			{
-				if (*cur_ == '"')
-				{
-					ReadString(key);
-				}
-				else
-				{
-					throw JsonParseError(row_, column_, "Unexpected symbol, while waiting key of map");
-				}
+		protected:
 
-				SkipSpaces();
-				if (*cur_ != ':')
-				{
-					throw JsonParseError(row_, column_, "Colon expected");
-				}
-				++cur_;
-				++column_;
-				SkipSpaces();
-
-				if (*cur_ == '"')
-				{
-					value = ReadString();
-				}
-				else if (IsDigit(*cur_) || *cur_ == '+' || *cur_ == '-')
-				{
-					value = ReadNumber();
-				}
-				else if (*cur_ == '{')
-				{
-					value = ReadMap(map.get());
-				}
-				else if (*cur_ == '[')
-				{
-					value = ReadList(map.get());
-				}
-				else
-				{
-					throw JsonParseError(row_, column_, "Invalid symbol, when value expected");
-				}
-						
-				map->Set(key, value);
-
-				SkipSpaces();
-				if (*cur_ == ',')
-				{
-					++cur_;
-					++column_;
-					SkipSpaces();
-					continue;
-				}
-				else if (*cur_ == '}')
-				{
-					++cur_;
-					++column_;
-					return map.release();
-				}
-				else
-				{
-					throw JsonParseError(row_, column_, "Comma or end of map expected");
-				}
-			}
-		}
-	
-		void Parse()
-		{
-			SkipSpaces();
-			if (*cur_ == '[')
-			{
-				root_ = ReadList(0);
-			}
-			else if (*cur_ == '{')
-			{
-				root_ = ReadMap(0);
-			}
-			else
-			{
-				throw JsonParseError(row_, column_, "List or map expected at the root level");
-			}
-		}
-	
-		JsonValue * root_;
-		int row_;
-		int column_;
-		const char * cur_;
-};
+			const std::string   filePath_;
+			FileLock            lock_;
+			JsonValue         * root_;
+	};
+}
 
 int main(int argc, const char * argv[])
 {
-	printf("JSON test.\n");
-	
-	const char * source =
-	" { \n"
-	"\"a\" : \"b\" , \"\\\\fucky\" : 12345.6789\n"
-	" }";
-	
-	fprintf(stderr, "%s\n", source);
-	
+	XTL::JsonDatabase db(".", "testdb");
+
 	try
 	{
-		JsonParser parser(source);
+		if (!db.Open())
+		{
+			db.Create();
+		}
+
+		XTL::JsonDatabase::JsonObject obj = db.Root().CreateObject();
+
+		db.Close();
 	}
-	catch (const JsonParseError & error)
+	catch (const XTL::JsonDatabase::Locked)
+	{
+		fprintf(stderr, "Database is locked\n");
+	}
+	catch (const XTL::JsonDatabase::Error & e)
+	{
+		fprintf(stderr, "%s\n", e.What());
+	}
+
+	return 0;
+
+	printf("JSON test.\n");
+
+	const char * source =
+	" { \n"
+	"\"a\" : [{}] , \"x\\\"y\\\"z\" : -1024e+3, \"obj\":{\"x\":1,\"y\":false, \"z\":null}, \"\\\\fucky\" : 123456.789000000000000000000000000000000, \"flags\" : [[true], [true, false], [   [   null   ,  [  null  ] , null ] ,  null  ] , null ]   \n"
+	" }";
+
+	fprintf(stderr, "%s\n", source);
+
+	try
+	{
+		XTL::JsonParser parser(source);
+		std::auto_ptr<XTL::JsonValue> root(parser.Release());
+		root->PrintPlain(stdout);
+		fprintf(stdout, "\n");
+		root->Print(stdout, 0, false);
+	}
+	catch (const XTL::JsonParseError & error)
 	{
 		fprintf(stderr, "[ERROR] Line %d, col %d: %s\n", error.Row(), error.Column(), error.What());
 	}
-	
+
 	return 0;
 }
 
