@@ -52,6 +52,8 @@ ADD_EXECUTABLE (
 	json-test
 	test/json-test.cpp
 	xtl/Json.cpp
+	xtl/JsonParser.cpp
+	xtl/JsonFile.cpp
 	xtl/StringUtils.cpp
 	xtl/FileLock.cpp
 )
