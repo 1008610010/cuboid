@@ -48,9 +48,9 @@ namespace XTL
 
 					file_.Clear();
 				}
-				catch (const FileLock::Error & e)
+				catch (const FileLock::Error &)
 				{
-					throw Error(e.What());
+					throw;
 				}
 			}
 
@@ -71,11 +71,16 @@ namespace XTL
 
 					return true;
 				}
-				catch (const FileLock::Error & e)
+				catch (const FileLock::Error &)
 				{
-					throw Error(e.What());
+					throw;
 				}
-				catch (const JsonParseError & e)
+				catch (const JsonFile::Error &)
+				{
+					lock_.Unlock();
+					throw;
+				}
+				catch (const JsonParser::Error & e)
 				{
 					lock_.Unlock();
 					throw Error(
@@ -94,52 +99,14 @@ namespace XTL
 				if (lock_.Locked())
 				{
 					file_.Save();
+					file_.Clear();
 					lock_.Unlock();
 				}
 			}
-			
-			class JsonVar
+
+			JsonVariable Root()
 			{
-				public:
-
-					JsonVar(JsonValue ** value)
-						: value_(value) { ;; }
-
-					JsonValue ** CreateObject()
-					{
-						delete *value_;
-						*value_ = new JsonObjectValue();
-						return value_;
-					}
-
-				protected:
-
-					JsonValue ** value_;
-			};
-
-			class JsonObject
-			{
-				public:
-
-					JsonObject(JsonValue ** value)
-						: value_(reinterpret_cast<JsonObjectValue **>(value))
-					{
-						// TODO: check (*value_)->Type() == OBJECT
-					}
-
-					JsonVar operator[] (const char * key)
-					{
-						return (*value_)->Set(key, 0);
-					}
-
-				protected:
-				
-					JsonObjectValue ** value_;
-			};
-
-			JsonVar Root()
-			{
-				return JsonVar(file_.Root());
+				return file_.Root();
 			}
 
 		protected:
@@ -151,18 +118,56 @@ namespace XTL
 
 int main(int argc, const char * argv[])
 {
+	try
+	{
+		XTL::JsonFile config("hit_stats.cfg");
+
+		if (config.Load())
+		{
+			XTL::JsonConstant counterCfg = config.ConstRoot().Get("counter");
+			fprintf(stdout, "table_dir = %s\n", counterCfg.Get("table_dir").AsString().c_str());
+			fprintf(stdout, "flush_period = %s\n", counterCfg.Get("flush_period").AsString().c_str());
+		}
+		else
+		{
+			fprintf(stderr, "File \"%s\" not found\n", config.FilePath());
+		}
+	}
+	catch (const XTL::JsonFile::Error & e)
+	{
+		fprintf(stderr, "%s\n", e.What());
+	}
+	catch (const XTL::JsonParser::Error & e)
+	{
+		fprintf(stderr, "Parse error (row %d, column %d): %s\n", e.Row() + 1, e.Column() + 1, e.What());
+	}
+	catch (const XTL::JsonException & e)
+	{
+		fprintf(stderr, "Config error: %s\n", e.What());
+	}
+
+	return 0;
+
 	XTL::JsonDatabase db(".", "testdb");
 
 	try
 	{
-		if (!db.Open())
+		if (db.Open(true))
 		{
-			db.Create();
+			fprintf(stderr, "Database opened\n");
+		}
+		else
+		{
+			db.Create(true);
+			fprintf(stderr, "Database created\n");
 		}
 
-		XTL::JsonDatabase::JsonObject obj = db.Root().CreateObject();
+		XTL::JsonObject obj = db.Root().CreateObject();
 		obj["first"].CreateObject();
-		obj["second"];
+		obj["second"] = "Abobo and Jimmy";
+
+		fprintf(stderr, "Database closed\n");
+
 
 		db.Close();
 	}
@@ -194,9 +199,9 @@ int main(int argc, const char * argv[])
 		fprintf(stdout, "\n");
 		root->Print(stdout, 0, false);
 	}
-	catch (const XTL::JsonParseError & error)
+	catch (const XTL::JsonParser::Error & e)
 	{
-		fprintf(stderr, "[ERROR] Line %d, col %d: %s\n", error.Row(), error.Column(), error.What());
+		fprintf(stderr, "[ERROR] Line %d, col %d: %s\n", e.Row(), e.Column(), e.What());
 	}
 
 	return 0;

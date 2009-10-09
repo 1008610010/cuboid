@@ -2,13 +2,12 @@
 #define _XTL__JSON_FILE_HPP__ 1
 
 #include "Json.hpp"
-#include "StringUtils.hpp"
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
+#include "JsonParser.hpp"
 
 namespace XTL
 {
+	class Json;
+
 	class JsonFile
 	{
 		public:
@@ -23,143 +22,25 @@ namespace XTL
 					const std::string what_;
 			};
 
-			JsonFile(const std::string & filePath)
-				: filePath_(filePath),
-				  root_(0)
-			{
-				;;
-			}
+			JsonFile(const std::string & filePath);
 
-			~JsonFile() throw()
-			{
-				delete root_;
-			}
-			
-			void Clear()
-			{
-				delete root_;
-				root_ = 0;
-			}
+			~JsonFile() throw();
 
-			bool Load()
-			{
-				FILE * file = 0;
-				char * buffer = 0;
-				try
-				{
-					file = fopen(filePath_.c_str(), "r");
-					if (file == 0)
-					{
-						if (errno == ENOENT)
-						{
-							return false;
-						}
+			void Clear();
 
-						throw Error(
-							FormatString(
-								"Unable to open file \"%s\" for reading: %s",
-								filePath_.c_str(),
-								::strerror(errno)
-							)
-						);
-					}
+			bool Load();
 
-					::fseek(file, 0, SEEK_END);
-					long fileSize = ::ftell(file);
-					::fseek(file, 0, SEEK_SET);
+			void Save();
 
-					char * buffer = static_cast<char *>(::malloc(fileSize + 1));
-					if (buffer == 0)
-					{
-						::fclose(file);
-						throw Error(
-							FormatString(
-								"Unable to allocate memory to read file \"%s\"",
-								filePath_.c_str()
-							)
-						);
-					}
+			const char * FilePath() const   { return filePath_.c_str(); }
 
-					long fileRead = ::fread(buffer, 1, fileSize, file);
-					if (fileRead != fileSize)
-					{
-						::free(buffer);
-						::fclose(file);
-						throw Error(
-							FormatString(
-								"Unable to read file \"%s\": %s",
-								filePath_.c_str(),
-								::strerror(errno)
-							)
-						);
-					}
-					buffer[fileSize] = '\0';
+			JsonConstant ConstRoot() const  { return root_; }
 
-					::fclose(file);
-
-					JsonParser parser(buffer);
-					::free(buffer);
-
-					root_ = parser.Release();
-					return true;
-				}
-				catch (const JsonParseError & e)
-				{
-					::free(buffer);
-					throw Error(
-						FormatString(
-							"JSON file corrupted (row %d, column %d): %s",
-							e.Row() + 1,
-							e.Column() + 1,
-							e.What()
-						)
-					);
-				}
-			}
-
-			void Save()
-			{
-				if (root_ == 0)
-				{
-					if (::unlink(filePath_.c_str()) == -1 && errno != ENOENT)
-					{
-						throw Error(
-							FormatString(
-								"Unable to remove file \"%s\": %s",
-								filePath_.c_str(),
-								::strerror(errno)
-							)
-						);
-					}
-				}
-				else
-				{
-					FILE * file = ::fopen(filePath_.c_str(), "w");
-					if (file == 0)
-					{
-						throw Error(
-							FormatString(
-								"Unable to open file \"%s\" for writing: %s",
-								filePath_.c_str(),
-								::strerror(errno)
-							)
-						);
-					}
-
-					root_->Print(file, 0, 0);
-
-					::fclose(file);
-					delete root_;
-					root_ = 0;
-				}
-			}
-			
-			JsonValue ** Root()
-			{
-				return &root_;
-			}
+			JsonVariable Root()             { return root_; }
 
 		protected:
+
+			const std::string TempFileName() const;
 
 			const std::string   filePath_;
 			JsonValue         * root_;
