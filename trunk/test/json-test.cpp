@@ -1,109 +1,14 @@
 #include <xtl/Json.hpp>
+#include <xtl/JsonFile.hpp>
+#include <xtl/StringUtils.hpp>
+#include <xtl/FileLock.hpp>
 #include <memory>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <xtl/FileLock.hpp>
 
 namespace XTL
 {
-	bool FormatString(std::string & s, const char * format, ...)
-	{
-		va_list ap;
-
-		int size = 128;
-		char * buffer = static_cast<char *>(::malloc(size));
-		if (buffer == 0)
-		{
-			return false;
-		}
-
-		while (true)
-		{
-			va_start(ap, format);
-			int result = ::vsnprintf(buffer, size, format, ap);
-			va_end(ap);
-
-			if (result >= 0)
-			{
-				if (result < size)
-				{
-					break;
-				}
-				else
-				{
-					size = result + 1;
-				}
-			}
-			else
-			{
-				size <<= 1;
-			}
-
-			char * newBuffer = static_cast<char *>(::realloc(buffer, size));
-			if (newBuffer == 0)
-			{
-				::free(buffer);
-				return false;
-			}
-
-			buffer = newBuffer;
-		}
-
-		s.assign(buffer);
-		::free(buffer);
-		return true;
-	}
-
-	const std::string FormatString(const char * format, ...)
-	{
-		va_list ap;
-
-		int size = 128;
-		char * buffer = static_cast<char *>(::malloc(size));
-		if (buffer == 0)
-		{
-			return std::string();
-		}
-
-		while (true)
-		{
-			va_start(ap, format);
-			int result = ::vsnprintf(buffer, size, format, ap);
-			va_end(ap);
-
-			if (result >= 0)
-			{
-				if (result < size)
-				{
-					break;
-				}
-				else
-				{
-					size = result + 1;
-				}
-			}
-			else
-			{
-				size <<= 1;
-			}
-
-			char * newBuffer = static_cast<char *>(::realloc(buffer, size));
-			if (newBuffer == 0)
-			{
-				::free(buffer);
-				return std::string();
-			}
-
-			buffer = newBuffer;
-		}
-
-		std::string s(buffer);
-		::free(buffer);
-		return s;
-	}
-
 	class JsonDatabase
 	{
 		public:
@@ -121,16 +26,15 @@ namespace XTL
 			class Locked { };
 
 			JsonDatabase(const std::string & path, const std::string & name)
-				: filePath_(path + "/" + name + ".json"),
-				  lock_(path + "/" + name + ".lock"),
-				  root_(0)
+				: file_(path + "/" + name + ".json"),
+				  lock_(path + "/" + name + ".lock")
 			{
 				;;
 			}
 
 			~JsonDatabase() throw()
 			{
-				delete root_;
+				;;
 			}
 
 			void Create(bool waitLock = false)
@@ -142,7 +46,7 @@ namespace XTL
 						throw Locked();
 					}
 
-					root_ = 0;
+					file_.Clear();
 				}
 				catch (const FileLock::Error & e)
 				{
@@ -152,8 +56,6 @@ namespace XTL
 
 			bool Open(bool waitLock = false)
 			{
-				FILE * file = 0;
-				char * buffer = 0;
 				try
 				{
 					if (!lock_.Lock(waitLock))
@@ -161,64 +63,12 @@ namespace XTL
 						throw Locked();
 					}
 
-					file = fopen(filePath_.c_str(), "r");
-					if (file == 0)
+					if (!file_.Load())
 					{
 						lock_.Unlock();
-
-						if (errno == ENOENT)
-						{
-							return false;
-						}
-
-						throw Error(
-							FormatString(
-								"Unable to open file \"%s\" for reading: %s",
-								filePath_.c_str(),
-								::strerror(errno)
-							)
-						);
+						return false;
 					}
 
-					::fseek(file, 0, SEEK_END);
-					long fileSize = ::ftell(file);
-					::fseek(file, 0, SEEK_SET);
-
-					char * buffer = static_cast<char *>(::malloc(fileSize + 1));
-					if (buffer == 0)
-					{
-						::fclose(file);
-						lock_.Unlock();
-						throw Error(
-							FormatString(
-								"Unable to allocate memory to read file \"%s\"",
-								filePath_.c_str()
-							)
-						);
-					}
-
-					long fileRead = ::fread(buffer, 1, fileSize, file);
-					if (fileRead != fileSize)
-					{
-						::free(buffer);
-						::fclose(file);
-						lock_.Unlock();
-						throw Error(
-							FormatString(
-								"Unable to read file \"%s\": %s",
-								filePath_.c_str(),
-								::strerror(errno)
-							)
-						);
-					}
-					buffer[fileSize] = '\0';
-
-					::fclose(file);
-
-					JsonParser parser(buffer);
-					::free(buffer);
-
-					root_ = parser.Release();
 					return true;
 				}
 				catch (const FileLock::Error & e)
@@ -227,7 +77,6 @@ namespace XTL
 				}
 				catch (const JsonParseError & e)
 				{
-					::free(buffer);
 					lock_.Unlock();
 					throw Error(
 						FormatString(
@@ -242,48 +91,13 @@ namespace XTL
 
 			void Close()
 			{
-				if (!lock_.Locked())
+				if (lock_.Locked())
 				{
-					return;
+					file_.Save();
+					lock_.Unlock();
 				}
-
-				if (root_ == 0)
-				{
-					if (::unlink(filePath_.c_str()) == -1 && errno != ENOENT)
-					{
-						throw Error(
-							FormatString(
-								"Unable to remove file \"%s\": %s",
-								filePath_.c_str(),
-								::strerror(errno)
-							)
-						);
-					}
-				}
-				else
-				{
-					FILE * file = ::fopen(filePath_.c_str(), "w");
-					if (file == 0)
-					{
-						throw Error(
-							FormatString(
-								"Unable to open file \"%s\" for writing: %s",
-								filePath_.c_str(),
-								::strerror(errno)
-							)
-						);
-					}
-
-					root_->Print(file, 0, 0);
-
-					::fclose(file);
-					delete root_;
-					root_ = 0;
-				}
-
-				lock_.Unlock();
 			}
-
+			
 			class JsonVar
 			{
 				public:
@@ -291,68 +105,47 @@ namespace XTL
 					JsonVar(JsonValue ** value)
 						: value_(value) { ;; }
 
+					JsonValue ** CreateObject()
+					{
+						delete *value_;
+						*value_ = new JsonObjectValue();
+						return value_;
+					}
+
 				protected:
 
 					JsonValue ** value_;
 			};
 
-			template <typename ValueType>
-			class JsonVarBase
-			{
-				public:
-
-					JsonVarBase(JsonValue ** value)
-						: value_(reinterpret_cast<ValueType **>(value)) { ;; }
-
-				protected:
-
-					ValueType ** value_;
-			};
-
-			class JsonObject : public JsonVarBase<JsonObjectValue>
+			class JsonObject
 			{
 				public:
 
 					JsonObject(JsonValue ** value)
-						: JsonVarBase<JsonObjectValue>(value) { ;; }
+						: value_(reinterpret_cast<JsonObjectValue **>(value))
+					{
+						// TODO: check (*value_)->Type() == OBJECT
+					}
 
 					JsonVar operator[] (const char * key)
 					{
-						return JsonVar((*value_)->Set(key, 0));
+						return (*value_)->Set(key, 0);
 					}
 
 				protected:
-			};
-
-			class Node
-			{
-				public:
-
-					Node(JsonValue ** value) : value_(value) { ;; }
-
-					JsonVarBase<JsonObjectValue> CreateObject()
-					{
-						delete *value_;
-						JsonVarBase<JsonObjectValue> var(value_);
-						*value_ = new JsonObjectValue();
-						return var;
-					}
-
-				protected:
-
-					JsonValue ** value_;
+				
+					JsonObjectValue ** value_;
 			};
 
 			JsonVar Root()
 			{
-				return JsonVar(&root_);
+				return JsonVar(file_.Root());
 			}
 
 		protected:
 
-			const std::string   filePath_;
-			FileLock            lock_;
-			JsonValue         * root_;
+			JsonFile file_;
+			FileLock lock_;
 	};
 }
 
@@ -368,6 +161,8 @@ int main(int argc, const char * argv[])
 		}
 
 		XTL::JsonDatabase::JsonObject obj = db.Root().CreateObject();
+		obj["first"].CreateObject();
+		obj["second"];
 
 		db.Close();
 	}
