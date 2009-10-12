@@ -1,3 +1,6 @@
+#ifndef _XTL__PARSER_HPP__
+#define _XTL__PARSER_HPP__ 1
+
 #include <string>
 
 namespace XTL
@@ -52,3 +55,5 @@ namespace XTL
 			int          column_;
 	};
 }
+
+#endif
