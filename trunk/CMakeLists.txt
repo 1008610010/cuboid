@@ -51,11 +51,21 @@ ADD_EXECUTABLE(
 ADD_EXECUTABLE (
 	json-test
 	test/json-test.cpp
+	xtl/Parser.cpp
 	xtl/Json.cpp
 	xtl/JsonParser.cpp
 	xtl/JsonFile.cpp
 	xtl/StringUtils.cpp
 	xtl/FileLock.cpp
+)
+
+ADD_EXECUTABLE (
+	init-config-test
+	test/init-config-test.cpp
+	xtl/InitConfig.cpp
+	xtl/InitConfigParser.cpp
+	xtl/Parser.cpp
+	xtl/StringUtils.cpp
 )
 
 ADD_EXECUTABLE (

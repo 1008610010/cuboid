@@ -2,28 +2,15 @@
 #define _XTL__JSON_PARSER_HPP__ 1
 
 #include "Json.hpp"
+#include "Parser.hpp"
 
 namespace XTL
 {
-	class JsonParser
+	class JsonParser : protected Parser
 	{
 		public:
 
-			class Error
-			{
-				public:
-					Error(int row, int column, const char * what)
-						: row_(row), column_(column), what_(what) { ;; }
-
-					int Row() const            { return row_; }
-					int Column() const         { return column_; }
-					const char * What() const  { return what_.c_str(); }
-
-				protected:
-					int         row_;
-					int         column_;
-					std::string what_;
-			};
+			using Parser::Error;
 
 			JsonParser(const char * source);
 
@@ -33,29 +20,13 @@ namespace XTL
 
 		protected:
 
-			bool IsSpace(char c)    { return c == ' ' || c == '\t' || c == '\r'; }
-
-			bool IsNewLine(char c)  { return c == '\n'; }
-
-			bool IsDigit(char c)    { return c >= '0' && c <= '9'; }
-
-			bool IsAlpha(char c)    { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_'; }
-
-			void Advance()          { ++cur_; ++column_; }
-
-			void AdvanceNewLine()   { ++cur_; ++row_; column_ = 0; }
-
 			void SkipSpaces();
 
-			void ReadKeyword(std::string & s);
-
-			void ReadString(std::string & s);
+			JsonValue * ReadValue(JsonValue * parent);
 
 			JsonValue * ReadNumber(JsonValue * parent);
 
 			JsonValue * ReadString(JsonValue * parent);
-
-			JsonValue * ReadValue(JsonValue * parent);
 
 			JsonValue * ReadArray(JsonValue * parent);
 
@@ -63,10 +34,10 @@ namespace XTL
 
 			void Parse();
 
-			JsonValue * root_;
-			int row_;
-			int column_;
+			JsonValue  * root_;
 			const char * cur_;
+			int          row_;
+			int          column_;
 	};
 }
 
