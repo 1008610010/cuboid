@@ -6,10 +6,8 @@
 namespace XTL
 {
 	JsonParser::JsonParser(const char * source)
-		: root_(0),
-		  row_(0),
-		  column_(0),
-		  cur_(source)
+		: Parser(source),
+		  root_(0)
 	{
 		Parse();
 	}
@@ -45,86 +43,6 @@ namespace XTL
 		}
 	}
 
-	// IsAlpha(*cur)
-	void JsonParser::ReadKeyword(std::string & s)
-	{
-		const char * begin = cur_;
-		Advance();
-		for (; IsAlpha(*cur_) || IsDigit(*cur_); Advance()) { ;; }
-		s.assign(begin, cur_ - begin);
-	}
-
-	/*
-		*cur_ == '"'
-	*/
-	void JsonParser::ReadString(std::string & s)
-	{
-		Advance();
-		const char * begin = cur_;
-		s.clear();
-
-		while (true)
-		{
-			if (*cur_ == '\0')
-			{
-				throw Error(row_, column_, "Unexpected end of file in double quoted string");
-			}
-			else if (*cur_ == '\n')
-			{
-				throw Error(row_, column_, "Multiline string");
-			}
-			else if (*cur_ == '"')
-			{
-				if (begin < cur_)
-				{
-					s.append(begin, cur_ - begin);
-					begin = cur_;
-				}
-				Advance();
-				return;
-			}
-			else if (*cur_ == '\\')
-			{
-				if (begin < cur_)
-				{
-					s.append(begin, cur_ - begin);
-				}
-				Advance();
-				switch (*cur_)
-				{
-					case '\0':
-						throw Error(row_, column_, "Unexpected end of file in double quoted string");
-					case '\\':
-					case '/':
-					case '"':
-						s.append(1, *cur_); Advance(); begin = cur_; break;
-					case 'b':
-						s.append(1, '\b'); Advance(); begin = cur_; break;
-					case 'f':
-						s.append(1, '\f'); Advance(); begin = cur_; break;
-					case 'n':
-						s.append(1, '\n'); Advance(); begin = cur_; break;
-					case 'r':
-						s.append(1, '\r'); Advance(); begin = cur_; break;
-					case 't':
-						s.append(1, '\t'); Advance(); begin = cur_; break;
-					default:
-						// TODO: \uXXXX - char in hexademical digit
-
-						throw Error(
-							row_,
-							column_,
-							FormatString("Unknown escape sequence: \\%c", *cur_).c_str()
-						);
-				}
-			}
-			else
-			{
-				Advance();
-			}
-		}
-	}
-
 	JsonValue * JsonParser::ReadValue(JsonValue * parent)
 	{
 		if (*cur_ == '"')
@@ -138,7 +56,7 @@ namespace XTL
 		else if (IsAlpha(*cur_))
 		{
 			std::string keyword;
-			ReadKeyword(keyword);
+			ParseIdentifier(keyword);
 
 			if (keyword == "null")
 			{
@@ -182,106 +100,22 @@ namespace XTL
 	{
 		long long integer = 0;
 		double real = 0.0;
-		bool isNegative = false;
-		bool isInteger = true;
 
-		if (*cur_ == '-')
+		if (ParseNumberLiteral(integer, real))
 		{
-			isNegative = true;
-			Advance();
-			SkipSpaces();
-			if (!IsDigit(*cur_))
-			{
-				throw Error(row_, column_, "Decimal digit expected");
-			}
-		}
-
-		for (; IsDigit(*cur_); Advance())
-		{
-			integer = 10 * integer + (*cur_ - '0');
-		}
-
-		if (*cur_ == '.')
-		{
-			Advance();
-
-			isInteger = false;
-			real = integer;
-
-			double divisor = 1.0;
-			for (; IsDigit(*cur_); Advance())
-			{
-				divisor /= 10.0;
-				real += (*cur_ - '0') * divisor;
-			}
-		}
-
-		if (*cur_ == 'e' || *cur_ == 'E')
-		{
-			Advance();
-
-			bool isExponentPositive = true;
-			if (*cur_ == '+' || *cur_ == '-')
-			{
-				isExponentPositive = (*cur_ == '+');
-				Advance();
-			}
-
-			if (!IsDigit(*cur_))
-			{
-				throw Error(row_, column_, "Exponent expected");
-			}
-
-			long long exponent = 0;
-			for (; IsDigit(*cur_); Advance())
-			{
-				exponent = 10 * exponent + (*cur_ - '0');
-			}
-/*
-			if (isInteger)
-			{
-				isInteger = false;
-				real = integer;
-			}
-*/
-
-			if (isInteger && isExponentPositive)
-			{
-				for (; exponent > 0; --exponent, integer *= 10) { ;; }
-			}
-			else
-			{
-				if (isInteger)
-				{
-					isInteger = false;
-					real = integer;
-				}
-
-				if (isExponentPositive)
-				{
-					for (; exponent > 0; --exponent, real *= 10.0) { ;; }
-				}
-				else
-				{
-					for (; exponent > 0; --exponent, real /= 10.0) { ;; }
-				}
-			}
-		}
-
-		if (isInteger)
-		{
-			return new JsonIntegerValue(parent, isNegative ? -integer : integer);
+			return new JsonIntegerValue(parent, integer);
 		}
 		else
 		{
-			return new JsonFloatValue(parent, isNegative ? -real : real);
+			return new JsonFloatValue(parent, real);
 		}
 	}
 
+	// *cur == '"'
 	JsonValue * JsonParser::ReadString(JsonValue * parent)
 	{
 		std::string value;
-		ReadString(value);
+		ParseStringLiteral(value);
 		return new JsonStringValue(parent, value);
 	}
 
@@ -340,7 +174,7 @@ namespace XTL
 		{
 			if (*cur_ == '"')
 			{
-				ReadString(key);
+				ParseStringLiteral(key);
 			}
 			else
 			{
