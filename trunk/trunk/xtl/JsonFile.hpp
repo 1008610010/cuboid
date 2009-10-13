@@ -36,7 +36,7 @@ namespace XTL
 
 			JsonConstant ConstRoot() const  { return root_; }
 
-			JsonVariable Root()             { return root_; }
+			JsonVariableRef Root()           { return root_; }
 
 		protected:
 

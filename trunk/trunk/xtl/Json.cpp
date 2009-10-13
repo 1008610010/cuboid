@@ -187,9 +187,26 @@ namespace XTL
 		return values_.empty();
 	}
 
-	void JsonArrayValue::Add(JsonValue * value)
+	JsonValue *& JsonArrayValue::Front()
+	{
+		return values_.front();
+	}
+
+	JsonValue *& JsonArrayValue::Back()
+	{
+		return values_.back();
+	}
+
+	JsonValue *& JsonArrayValue::PushFront(JsonValue * value)
 	{
 		values_.push_back(value);
+		return Front();
+	}
+
+	JsonValue *& JsonArrayValue::PushBack(JsonValue * value)
+	{
+		values_.push_back(value);
+		return Back();
 	}
 
 	JsonObjectValue::~JsonObjectValue() throw()
