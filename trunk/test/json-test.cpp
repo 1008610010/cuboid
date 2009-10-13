@@ -1,127 +1,59 @@
-#include <xtl/Json.hpp>
-#include <xtl/JsonFile.hpp>
-#include <xtl/StringUtils.hpp>
-#include <xtl/FileLock.hpp>
-#include <memory>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-
-namespace XTL
-{
-	class JsonDatabase
-	{
-		public:
-
-			class Error
-			{
-				public:
-					explicit Error(const char * what) : what_(what) { ;; }
-					explicit Error(const std::string & what) : what_(what) { ;; }
-					const char * What() const { return what_.c_str(); }
-				protected:
-					const std::string what_;
-			};
-
-			class Locked { };
-
-			JsonDatabase(const std::string & path, const std::string & name)
-				: file_(path + "/" + name + ".json"),
-				  lock_(path + "/" + name + ".lock")
-			{
-				;;
-			}
-
-			~JsonDatabase() throw()
-			{
-				;;
-			}
-
-			void Create(bool waitLock = false)
-			{
-				try
-				{
-					if (!lock_.Lock(waitLock))
-					{
-						throw Locked();
-					}
-
-					file_.Clear();
-				}
-				catch (const FileLock::Error &)
-				{
-					throw;
-				}
-			}
-
-			bool Open(bool waitLock = false)
-			{
-				try
-				{
-					if (!lock_.Lock(waitLock))
-					{
-						throw Locked();
-					}
-
-					if (!file_.Load())
-					{
-						lock_.Unlock();
-						return false;
-					}
-
-					return true;
-				}
-				catch (const FileLock::Error &)
-				{
-					throw;
-				}
-				catch (const JsonFile::Error &)
-				{
-					lock_.Unlock();
-					throw;
-				}
-				catch (const JsonParser::Error & e)
-				{
-					lock_.Unlock();
-					throw Error(
-						FormatString(
-							"Database file corrupted (row %d, column %d): %s",
-							e.Row() + 1,
-							e.Column() + 1,
-							e.What()
-						)
-					);
-				}
-			}
-
-			void Close()
-			{
-				if (lock_.Locked())
-				{
-					file_.Save();
-					file_.Clear();
-					lock_.Unlock();
-				}
-			}
-
-			JsonVariable Root()
-			{
-				return file_.Root();
-			}
-
-		protected:
-
-			JsonFile file_;
-			FileLock lock_;
-	};
-}
+#include <xtl/JsonDatabase.hpp>
 
 int main(int argc, const char * argv[])
 {
+	/*
+	XTL::JsonVariable root;
+	XTL::JsonObject obj = root.CreateObject();
+	XTL::JsonArray arr2 = obj["test"].CreateArray();
+	arr2 = arr2.PushBack().CreateArray();
+
+	arr2.PushBack("a");
+	arr2.PushBack("b");
+	arr2.PushBack("c");
+	arr2.PushBack("d");
+	arr2.PushBack("e");
+
+	obj["world"] = "of warcraft";
+
+
+	int i = 0;
+	for (XTL::JsonArray::Iterator itr(arr2); !itr.AtEnd(); )
+	{
+		if (i++ % 2 == 0) ++itr; else itr.Delete();
+	}
+
+	root.Print(stderr);
+	fprintf(stderr, "\n");
+
+	root.Destroy();
+	*/
+
 	try
 	{
-		XTL::JsonFile config("hit_stats.cfg");
+		XTL::JsonDatabase db("database.json");
 
+		db.Open() || db.Create();
+
+		XTL::JsonVariableRef root = db.Root();
+
+		if (root.IsNull())
+		{
+			root.CreateObject();
+		}
+		else if (!root.IsObject())
+		{
+			fprintf(stderr, "Root is not object\n");
+			return 1;
+		}
+
+		XTL::JsonObject obj = root.AsObject();
+
+//		obj[""]
+
+		db.Close();
+
+		/*
 		if (config.Load())
 		{
 			XTL::JsonConstant counterCfg = config.ConstRoot().Get("counter");
@@ -132,7 +64,14 @@ int main(int argc, const char * argv[])
 		{
 			fprintf(stderr, "File \"%s\" not found\n", config.FilePath());
 		}
+		*/
 	}
+	catch (...)
+	{
+		throw;
+	}
+
+/*
 	catch (const XTL::JsonFile::Error & e)
 	{
 		fprintf(stderr, "%s\n", e.What());
@@ -145,9 +84,11 @@ int main(int argc, const char * argv[])
 	{
 		fprintf(stderr, "Config error: %s\n", e.What());
 	}
+*/
 
 	return 0;
 
+	/*
 	XTL::JsonDatabase db(".", "testdb");
 
 	try
@@ -179,31 +120,7 @@ int main(int argc, const char * argv[])
 	{
 		fprintf(stderr, "%s\n", e.What());
 	}
-
-	return 0;
-
-	printf("JSON test.\n");
-
-	const char * source =
-	" { \n"
-	"\"a\" : [{}] , \"x\\\"y\\\"z\" : -1024e+3, \"obj\":{\"x\":1,\"y\":false, \"z\":null}, \"\\\\fucky\" : 123456.789000000000000000000000000000000, \"flags\" : [[true], [true, false], [   [   null   ,  [  null  ] , null ] ,  null  ] , null ]   \n"
-	" }";
-
-	fprintf(stderr, "%s\n", source);
-
-	try
-	{
-		XTL::JsonParser parser(source);
-		std::auto_ptr<XTL::JsonValue> root(parser.Release());
-		root->PrintPlain(stdout);
-		fprintf(stdout, "\n");
-		root->Print(stdout, 0, false);
-	}
-	catch (const XTL::JsonParser::Error & e)
-	{
-		fprintf(stderr, "[ERROR] Line %d, col %d: %s\n", e.Row(), e.Column(), e.What());
-	}
-
+	*/
 	return 0;
 }
 

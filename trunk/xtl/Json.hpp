@@ -42,11 +42,12 @@ namespace XTL
 
 			static const char * TypeNames[];
 
-			explicit JsonValue(JsonValue * parent) : parent_(parent) { ;; }
+			explicit JsonValue(JsonValue * parent)
+				: parent_(parent) { ;; }
 
- 			virtual ~JsonValue() throw() { ;; }
+ 			virtual ~JsonValue() throw()   { ;; }
 
-			JsonValue * Parent()  { return parent_; }
+			JsonValue * Parent()           { return parent_; }
 
 			virtual int Type() const = 0;
 
@@ -74,7 +75,8 @@ namespace XTL
 	{
 		public:
 
-			explicit JsonNullValue(JsonValue * parent) : JsonValue(parent) { ;; }
+			explicit JsonNullValue(JsonValue * parent)
+				: JsonValue(parent) { ;; }
 
 			virtual ~JsonNullValue() throw() { ;; }
 
@@ -82,20 +84,11 @@ namespace XTL
 
 			virtual void PrintPlain(FILE * stream);
 
-			virtual const long long AsInteger() const
-			{
-				return 0ll;
-			}
+			virtual const long long AsInteger() const   { return 0ll; }
 
-			virtual const double AsFloat() const
-			{
-				return 0.0;
-			}
+			virtual const double AsFloat() const        { return 0.0; }
 
-			virtual const std::string AsString() const
-			{
-				return std::string("");
-			}
+			virtual const std::string AsString() const  { return ""; }
 	};
 
 	class JsonIntegerValue : public JsonValue
@@ -111,24 +104,20 @@ namespace XTL
 
 			virtual void PrintPlain(FILE * stream);
 
-			void Set(const long long & value)
-			{
-				value_ = value;
-			}
+			virtual const long long AsInteger() const   { return value_; }
 
-			virtual const long long AsInteger() const
+			virtual const double AsFloat() const        { return IntegerToFloat(value_); }
+
+			virtual const std::string AsString() const  { return IntegerToString(value_); }
+
+			const long long Get() const
 			{
 				return value_;
 			}
 
-			virtual const double AsFloat() const
+			void Set(const long long & value)
 			{
-				return IntegerToFloat(value_);
-			}
-
-			virtual const std::string AsString() const
-			{
-				return IntegerToString(value_);
+				value_ = value;
 			}
 
 		protected:
@@ -149,19 +138,20 @@ namespace XTL
 
 			virtual void PrintPlain(FILE * stream);
 
-			virtual const long long AsInteger() const
-			{
-				return FloatToInteger(value_);
-			}
+			virtual const long long AsInteger() const   { return FloatToInteger(value_); }
 
-			virtual const double AsFloat() const
+			virtual const double AsFloat() const        { return value_; }
+
+			virtual const std::string AsString() const  { return FloatToString(value_); }
+
+			const double Get() const
 			{
 				return value_;
 			}
 
-			virtual const std::string AsString() const
+			void Set(const double & value)
 			{
-				return FloatToString(value_);
+				value_ = value;
 			}
 
 		protected:
@@ -182,6 +172,12 @@ namespace XTL
 
 			virtual void PrintPlain(FILE * stream);
 
+			virtual const long long AsInteger() const   { return StringToInteger(value_); }
+
+			virtual const double AsFloat() const        { return StringToFloat(value_); }
+
+			virtual const std::string AsString() const  { return value_; }
+
 			const std::string Get() const
 			{
 				return value_;
@@ -195,21 +191,6 @@ namespace XTL
 			void Set(const char * value)
 			{
 				value_.assign(value);
-			}
-
-			virtual const long long AsInteger() const
-			{
-				return StringToInteger(value_);
-			}
-
-			virtual const double AsFloat() const
-			{
-				return StringToFloat(value_);
-			}
-
-			virtual const std::string AsString() const
-			{
-				return value_;
 			}
 
 		protected:
@@ -230,19 +211,20 @@ namespace XTL
 
 			virtual void PrintPlain(FILE * stream);
 
-			virtual const long long AsInteger() const
+			virtual const long long AsInteger() const   { return value_ ? 1 : 0; }
+
+			virtual const double AsFloat() const        { return value_ ? 1.0 : 0.0; }
+
+			virtual const std::string AsString() const  { return value_ ? "true" : "false"; }
+
+			const bool Get() const
 			{
-				return value_ ? 1 : 0;
+				return value_;
 			}
 
-			virtual const double AsFloat() const
+			void Set(const long long & value)
 			{
-				return value_ ? 1.0 : 0.0;
-			}
-
-			virtual const std::string AsString() const
-			{
-				return std::string(value_ ? "true" : "false");
+				value_ = value;
 			}
 
 		protected:
@@ -255,6 +237,57 @@ namespace XTL
 		typedef std::list<JsonValue *> ValuesList;
 
 		public:
+
+			class Iterator
+			{
+				public:
+
+					Iterator(JsonArrayValue * array)
+						: values_(array->values_), itr_(array->values_.begin()) { ;; }
+
+					bool AtEnd() const
+					{
+						return itr_ == values_.end();
+					}
+
+					void Delete()
+					{
+						delete *itr_;
+						itr_ = values_.erase(itr_);
+					}
+
+					const JsonValue * operator* () const
+					{
+						return *itr_;
+					}
+
+					JsonValue *& operator* ()
+					{
+						return *itr_;
+					}
+
+					Iterator & operator++ ()
+					{
+						++itr_;
+						return *this;
+					}
+
+					Iterator operator++ (int)
+					{
+						Iterator temp(values_, itr_);
+						++itr_;
+						return temp;
+					}
+
+				protected:
+
+					Iterator(ValuesList & values, ValuesList::iterator & itr)
+						: values_(values), itr_(itr) { ;; }
+
+					ValuesList & values_;
+					ValuesList::iterator itr_;
+			};
+
 
 			explicit JsonArrayValue(JsonValue * parent)
 				: JsonValue(parent), values_() { ;; }
@@ -269,7 +302,13 @@ namespace XTL
 
 			bool Empty() const;
 
-			void Add(JsonValue * value);
+			JsonValue *& Front();
+
+			JsonValue *& Back();
+
+			JsonValue *& PushFront(JsonValue * value);
+
+			JsonValue *& PushBack(JsonValue * value);
 
 			virtual const long long AsInteger() const
 			{
@@ -361,6 +400,9 @@ namespace XTL
 			IndexMap   index_;
 	};
 
+
+
+
 	class JsonConstant
 	{
 		public:
@@ -371,6 +413,11 @@ namespace XTL
 			int Type() const
 			{
 				return value_ == 0 ? JsonValue::NIL : value_->Type();
+			}
+
+			const char * TypeName() const
+			{
+				return value_ == 0 ? "Null" : value_->TypeName();
 			}
 
 			bool IsNull()    const  { return Type() == JsonValue::NIL; }
@@ -424,7 +471,7 @@ namespace XTL
 				{
 					throw JsonException(
 						FormatString(
-							"Unhappy attempt of fetching value by key \"%s\" from object of type %s",
+							"Unsuccessful attempt of fetching value by key \"%s\" from object of type %s",
 							key.c_str(),
 							value_->TypeName()
 						)
@@ -435,12 +482,16 @@ namespace XTL
 			const JsonValue * value_;
 	};
 
-	class JsonVariable
+	template <typename ValueTypePtr>
+	class JsonVariableBase
 	{
 		public:
 
-			JsonVariable(JsonValue *& value)
-				: value_(value) { ;; }
+			JsonVariableBase(ValueTypePtr value)
+				: value_(value)
+			{
+				;;
+			}
 
 			int Type() const
 			{
@@ -448,101 +499,18 @@ namespace XTL
 			}
 
 			bool IsNull()    const  { return Type() == JsonValue::NIL; }
+
 			bool IsInteger() const  { return Type() == JsonValue::INTEGER; }
+
 			bool IsFloat()   const  { return Type() == JsonValue::FLOAT; }
+
 			bool IsString()  const  { return Type() == JsonValue::STRING; }
+
 			bool IsBoolean() const  { return Type() == JsonValue::BOOLEAN; }
+
 			bool IsArray()   const  { return Type() == JsonValue::ARRAY; }
+
 			bool IsObject()  const  { return Type() == JsonValue::OBJECT; }
-
-			const std::string AsString() const
-			{
-				if (IsString())
-				{
-					return static_cast<JsonStringValue *>(value_)->Get();
-				}
-				else
-				{
-					throw JsonException("");
-				}
-			}
-
-			JsonConstant operator[] (const std::string & key) const
-			{
-				if (IsObject())
-				{
-					return static_cast<const JsonObjectValue *>(value_)->Get(key);
-				}
-				else
-				{
-					throw JsonException("");
-				}
-			}
-
-			JsonVariable operator[] (const std::string & key)
-			{
-				if (IsObject())
-				{
-					return static_cast<JsonObjectValue *>(value_)->Get(key);
-				}
-				else
-				{
-					throw JsonException("");
-				}
-			}
-
-			JsonValue *& CreateObject()
-			{
-				Reset(new JsonObjectValue(value_->Parent()));
-				return value_;
-			}
-
-			JsonVariable & operator= (const long long & value)
-			{
-				if (IsInteger())
-				{
-					static_cast<JsonIntegerValue *>(value_)->Set(value);
-				}
-				else
-				{
-					Reset(new JsonIntegerValue(value_->Parent(), value));
-				}
-				return *this;
-			}
-
-			JsonVariable & operator= (const char * value)
-			{
-				if (IsString())
-				{
-					static_cast<JsonStringValue *>(value_)->Set(value);
-				}
-				else
-				{
-					Reset(new JsonStringValue(value_->Parent(), value));
-				}
-				return *this;
-			}
-
-			JsonVariable & operator= (const std::string & value)
-			{
-				if (Type() == JsonValue::STRING)
-				{
-					static_cast<JsonStringValue *>(value_)->Set(value);
-				}
-				else
-				{
-					Reset(new JsonStringValue(value_->Parent(), value));
-				}
-				return *this;
-			}
-
-		protected:
-
-			void Reset(JsonValue * newValue)
-			{
-				delete value_;
-				value_ = newValue;
-			}
 
 			void Destroy()
 			{
@@ -550,48 +518,325 @@ namespace XTL
 				value_ = 0;
 			}
 
-			JsonValue *& value_;
-	};
-
-	class JsonString
-	{
-		public:
-
-			JsonString(JsonValue ** value)
-				: value_(reinterpret_cast<JsonStringValue **>(value))
+			void Print(FILE * stream) const
 			{
+				if (value_ == 0)
+				{
+					fprintf(stream, "null");
+				}
+				else
+				{
+					value_->Print(stream, 0, false);
+				}
+			}
+
+			JsonVariableBase<JsonIntegerValue *> Set(const long long & value)
+			{
+				if (IsInteger())
+				{
+					static_cast<JsonIntegerValue *>(value_)->Set(value);
+				}
+				else
+				{
+					Reset(new JsonIntegerValue(Parent(), value));
+				}
+				return static_cast<JsonIntegerValue *>(value_);
+			}
+
+			JsonVariableBase<JsonFloatValue *> Set(const double & value)
+			{
+				if (IsFloat())
+				{
+					static_cast<JsonFloatValue *>(value_)->Set(value);
+				}
+				else
+				{
+					Reset(new JsonFloatValue(Parent(), value));
+				}
+				return static_cast<JsonFloatValue *>(value_);
+			}
+
+			JsonVariableBase<JsonStringValue *> Set(const char * value)
+			{
+				if (IsString())
+				{
+					static_cast<JsonStringValue *>(value_)->Set(value);
+				}
+				else
+				{
+					Reset(new JsonStringValue(Parent(), value));
+				}
+				return static_cast<JsonStringValue *>(value_);
+			}
+
+			JsonVariableBase<JsonStringValue *> Set(const std::string & value)
+			{
+				if (IsString())
+				{
+					static_cast<JsonStringValue *>(value_)->Set(value);
+				}
+				else
+				{
+					Reset(new JsonStringValue(Parent(), value));
+				}
+				return static_cast<JsonStringValue *>(value_);
+			}
+
+			JsonVariableBase<JsonBooleanValue *> Set(bool value)
+			{
+				if (IsString())
+				{
+					static_cast<JsonBooleanValue *>(value_)->Set(value);
+				}
+				else
+				{
+					Reset(new JsonBooleanValue(Parent(), value));
+				}
+				return static_cast<JsonBooleanValue *>(value_);
+			}
+
+			JsonVariableBase<JsonIntegerValue *> operator= (const long long & value)
+			{
+				return Set(value);
+			}
+
+			JsonVariableBase<JsonFloatValue *> operator= (const double & value)
+			{
+				return Set(value);
+			}
+
+			JsonVariableBase<JsonStringValue *> operator= (const char * value)
+			{
+				return Set(value);
+			}
+
+			JsonVariableBase<JsonStringValue *> operator= (const std::string & value)
+			{
+				return Set(value);
+			}
+
+			JsonVariableBase<JsonBooleanValue *> operator= (bool value)
+			{
+				return Set(value);
+			}
+
+			JsonVariableBase<JsonArrayValue *> CreateArray()
+			{
+				Reset(new JsonArrayValue(Parent()));
+				return static_cast<JsonArrayValue *>(value_);
+			}
+
+			JsonVariableBase<JsonObjectValue *> CreateObject()
+			{
+				Reset(new JsonObjectValue(Parent()));
+				return static_cast<JsonObjectValue *>(value_);
+			}
+
+			JsonVariableBase<JsonObjectValue *> AsObject()
+			{
+				// TODO: check Type()
+				return static_cast<JsonObjectValue *>(value_);
 			}
 
 		protected:
 
-			JsonStringValue ** Cast(JsonValue ** value)
+			JsonValue * Parent()
 			{
-				return 0;
+				return value_ == 0 ? 0 : value_->Parent();
 			}
 
-			JsonStringValue ** value_;
+			const JsonValue * Parent() const
+			{
+				return value_ == 0 ? 0 : value_->Parent();
+			}
+
+			void Reset(JsonValue * value)
+			{
+				delete value_;
+				value_ = value;
+			}
+
+			ValueTypePtr value_;
 	};
 
-	class JsonObject
+	class JsonVariable : protected JsonVariableBase<JsonValue *>
 	{
+		typedef JsonVariableBase<JsonValue *> Super;
+
 		public:
 
-			JsonObject(JsonValue * value)
-				: value_(reinterpret_cast<JsonObjectValue *>(value))
+			JsonVariable() : Super(0) { ;; }
+
+			JsonVariable(JsonValue * value) : Super(value) { ;; }
+
+			using Super::Type;
+			using Super::IsNull;
+			using Super::IsInteger;
+			using Super::IsFloat;
+			using Super::IsString;
+			using Super::IsBoolean;
+			using Super::IsArray;
+			using Super::IsObject;
+			using Super::Destroy;
+			using Super::Print;
+			using Super::Set;
+			using Super::CreateArray;
+			using Super::CreateObject;
+			using Super::operator=;
+			using Super::AsObject;
+	};
+
+	class JsonVariableRef : protected JsonVariableBase<JsonValue *&>
+	{
+		typedef JsonVariableBase<JsonValue *&> Super;
+
+		public:
+
+			JsonVariableRef(JsonValue *& value) : Super(value) { ;; }
+
+			using Super::Type;
+			using Super::IsNull;
+			using Super::IsInteger;
+			using Super::IsFloat;
+			using Super::IsString;
+			using Super::IsBoolean;
+			using Super::IsArray;
+			using Super::IsObject;
+			using Super::Destroy;
+			using Super::Print;
+			using Super::Set;
+			using Super::CreateArray;
+			using Super::CreateObject;
+			using Super::operator=;
+			using Super::AsObject;
+	};
+
+	class JsonArray : protected JsonVariableBase<JsonArrayValue *>
+	{
+		typedef JsonVariableBase<JsonArrayValue *> Super;
+
+		public:
+
+			class Iterator
 			{
-				// TODO: check (*value_)->Type() == OBJECT
+				public:
+
+					Iterator(JsonArray & array)
+						: itr_(array.value_)
+					{
+						;;
+					}
+
+					bool AtEnd() const
+					{
+						return itr_.AtEnd();
+					}
+
+					JsonVariableRef operator* ()
+					{
+						return *itr_;
+					}
+
+					Iterator & operator++ ()
+					{
+						++itr_;
+						return *this;
+					}
+
+					Iterator operator++ (int)
+					{
+						Iterator temp(itr_);
+						++itr_;
+						return temp;
+					}
+
+					void Delete()
+					{
+						itr_.Delete();
+					}
+
+				protected:
+
+					Iterator(const JsonArrayValue::Iterator & itr) : itr_(itr) { ;; }
+
+					JsonArrayValue::Iterator itr_;
+			};
+
+			JsonArray(Super value) : Super(value) { ;; }
+
+			Iterator Begin()
+			{
+				return Iterator(*this);
 			}
 
-			JsonVariable operator[] (const char * key)
+			JsonVariableRef PushBack()
 			{
-				return value_->Set(key, 0);
+				return value_->PushBack(0);
+			}
+
+			JsonArray & PushBackNull()
+			{
+				value_->PushBack(new JsonNullValue(value_));
+				return *this;
+			}
+
+			JsonArray & PushBack(int value)
+			{
+				value_->PushBack(new JsonIntegerValue(value_, value));
+				return *this;
+			}
+
+			JsonArray & PushBack(const long long & value)
+			{
+				value_->PushBack(new JsonIntegerValue(value_, value));
+				return *this;
+			}
+
+			JsonArray & PushBack(const char * value)
+			{
+				value_->PushBack(new JsonStringValue(value_, value));
+				return *this;
+			}
+
+			JsonArray & PushBack(const std::string & value)
+			{
+				value_->PushBack(new JsonStringValue(value_, value));
+				return *this;
+			}
+
+			JsonArray & PushBack(bool value)
+			{
+				value_->PushBack(new JsonBooleanValue(value_, value));
+				return *this;
+			}
+
+			JsonArray PushBackArray()
+			{
+				return static_cast<JsonArrayValue *>(value_->PushBack(new JsonArrayValue(value_)));
 			}
 
 		protected:
 
-			JsonObjectValue * value_;
+			JsonArray(JsonArrayValue * value) : Super(value) { ;; }
 	};
 
+	class JsonObject : protected JsonVariableBase<JsonObjectValue *>
+	{
+		typedef JsonVariableBase<JsonObjectValue *> Super;
+
+		public:
+
+			JsonObject(Super value) : Super(value) { ;; }
+
+			JsonVariableRef operator[] (const char * key)
+			{
+				return value_->Get(key);
+			}
+
+		protected:
+
+//			JsonObject(JsonObjectValue * value) : Super(value) { ;; }
+	};
 }
 
 #endif

@@ -134,7 +134,7 @@ namespace XTL
 
 		while (true)
 		{
-			array->Add(ReadValue(parent));
+			array->PushBack(ReadValue(parent));
 
 			SkipSpaces();
 
