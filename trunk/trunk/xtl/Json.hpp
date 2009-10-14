@@ -919,6 +919,8 @@ namespace XTL
 
 		public:
 
+			JsonObject() : Super(0) { ;; }
+
 			JsonObject(Super value) : Super(value) { ;; }
 
 			void Delete(const char * key)
