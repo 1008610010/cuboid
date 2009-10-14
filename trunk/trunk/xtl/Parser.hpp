@@ -12,7 +12,7 @@ namespace XTL
 			class Error
 			{
 				public:
-					Error(int row, int column, const char * what)
+					Error(int row, int column, const std::string & what)
 						: row_(row), column_(column), what_(what) { ;; }
 
 					int Row() const            { return row_; }
@@ -40,6 +40,11 @@ namespace XTL
 			void Advance()          { ++cur_; ++column_; }
 
 			void AdvanceNewLine()   { ++cur_; ++row_; column_ = 0; }
+
+			void RaiseError(const std::string & what)
+			{
+				throw Error(row_, column_, what);
+			}
 
 			void ParseIdentifier(std::string & s);
 

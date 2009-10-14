@@ -5,6 +5,7 @@
 namespace XTL
 {
 	const char * JsonValue::TypeNames[] = {
+		"Undefined",
 		"Null",
 		"Integer",
 		"Float",
@@ -89,7 +90,7 @@ namespace XTL
 		static const char * space = "    ";
 		for (; size > 0; --size)
 		{
-			::fprintf(stream, space);
+			::fprintf(stream, "%s", space);
 		}
 	}
 

@@ -75,7 +75,7 @@ namespace XTL
 				throw Error(
 					row_,
 					column_ - keyword.length(),
-					FormatString("Invalid bareword \"%s\", while value expected", keyword.c_str()).c_str()
+					FormatString("Invalid bareword \"%s\", while value expected", keyword.c_str())
 				);
 			}
 		}
@@ -89,7 +89,8 @@ namespace XTL
 		}
 		else
 		{
-			throw Error(row_, column_, "Invalid symbol, while value expected");
+			RaiseError("Invalid symbol, while value expected");
+			return 0;
 		}
 	}
 
@@ -151,7 +152,7 @@ namespace XTL
 			}
 			else
 			{
-				throw Error(row_, column_, "Comma or end of array expected");
+				RaiseError("Comma or end of array expected");
 			}
 		}
 	}
@@ -178,13 +179,13 @@ namespace XTL
 			}
 			else
 			{
-				throw Error(row_, column_, "Unexpected symbol, while waiting key of object");
+				RaiseError("Unexpected symbol, while waiting key of object");
 			}
 
 			SkipSpaces();
 			if (*cur_ != ':')
 			{
-				throw Error(row_, column_, "Colon expected");
+				RaiseError("Colon expected");
 			}
 			Advance();
 			SkipSpaces();
@@ -204,7 +205,7 @@ namespace XTL
 			}
 			else
 			{
-				throw Error(row_, column_, "Comma or end of object expected");
+				RaiseError("Comma or end of object expected");
 			}
 		}
 	}
@@ -218,7 +219,7 @@ namespace XTL
 		SkipSpaces();
 		if (*cur_ != '\0')
 		{
-			throw Error(row_, column_, "Unexpected symbol(s) at the end of file");
+			RaiseError("Unexpected symbol(s) at the end of file");
 		}
 
 		root_ = value.release();

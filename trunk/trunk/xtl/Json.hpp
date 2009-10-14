@@ -9,6 +9,18 @@
 
 namespace XTL
 {
+	enum JsonTypes
+	{
+		JSON_UNDEFINED = 0,
+		JSON_NULL      = 1,
+		JSON_INTEGER   = 2,
+		JSON_FLOAT     = 3,
+		JSON_STRING    = 4,
+		JSON_BOOLEAN   = 5,
+		JSON_ARRAY     = 6,
+		JSON_OBJECT    = 7
+	};
+
 	class JsonException
 	{
 		public:
@@ -27,18 +39,6 @@ namespace XTL
 	class JsonValue
 	{
 		public:
-
-			enum Type
-			{
-				UNDEFINED = -1,
-				NIL       =  0,
-				INTEGER   =  1,
-				FLOAT     =  2,
-				STRING    =  3,
-				BOOLEAN   =  4,
-				ARRAY     =  5,
-				OBJECT    =  6
-			};
 
 			static const char * TypeNames[];
 
@@ -80,7 +80,7 @@ namespace XTL
 
 			virtual ~JsonNullValue() throw() { ;; }
 
-			virtual int Type() const  { return NIL; }
+			virtual int Type() const  { return JSON_NULL; }
 
 			virtual void PrintPlain(FILE * stream);
 
@@ -100,7 +100,7 @@ namespace XTL
 
 			virtual ~JsonIntegerValue() throw() { ;; }
 
-			virtual int Type() const  { return INTEGER; }
+			virtual int Type() const  { return JSON_INTEGER; }
 
 			virtual void PrintPlain(FILE * stream);
 
@@ -134,7 +134,7 @@ namespace XTL
 
 			virtual ~JsonFloatValue() throw() { ;; }
 
-			virtual int Type() const  { return FLOAT; }
+			virtual int Type() const  { return JSON_FLOAT; }
 
 			virtual void PrintPlain(FILE * stream);
 
@@ -168,7 +168,7 @@ namespace XTL
 
 			virtual ~JsonStringValue() throw() { ;; }
 
-			virtual int Type() const  { return STRING; }
+			virtual int Type() const  { return JSON_STRING; }
 
 			virtual void PrintPlain(FILE * stream);
 
@@ -207,7 +207,7 @@ namespace XTL
 
 			virtual ~JsonBooleanValue() throw() { ;; }
 
-			virtual int Type() const  { return BOOLEAN; }
+			virtual int Type() const  { return JSON_BOOLEAN; }
 
 			virtual void PrintPlain(FILE * stream);
 
@@ -294,7 +294,7 @@ namespace XTL
 
 			virtual ~JsonArrayValue() throw();
 
-			virtual int Type() const  { return ARRAY; }
+			virtual int Type() const  { return JSON_ARRAY; }
 
 			virtual void PrintPlain(FILE * stream);
 
@@ -344,13 +344,24 @@ namespace XTL
 
 			virtual ~JsonObjectValue() throw();
 
-			virtual int Type() const  { return OBJECT; }
+			virtual int Type() const  { return JSON_OBJECT; }
 
 			virtual void PrintPlain(FILE * stream);
 
 			virtual void Print(FILE * stream, int indent, bool indentFirst);
 
 			bool Empty() const;
+			
+			void Delete(const std::string & key)
+			{
+				IndexMap::iterator itr = index_.find(key);
+				if (itr != index_.end())
+				{
+					delete itr->second->second;
+					values_.erase(itr->second);
+					index_.erase(itr);
+				}
+			}
 
 			const JsonValue * Get(const std::string & key) const
 			{
@@ -412,21 +423,21 @@ namespace XTL
 
 			int Type() const
 			{
-				return value_ == 0 ? JsonValue::NIL : value_->Type();
+				return value_ == 0 ? JSON_UNDEFINED : value_->Type();
 			}
 
 			const char * TypeName() const
 			{
-				return value_ == 0 ? "Null" : value_->TypeName();
+				return value_ == 0 ? "Undefined" : value_->TypeName();
 			}
 
-			bool IsNull()    const  { return Type() == JsonValue::NIL; }
-			bool IsInteger() const  { return Type() == JsonValue::INTEGER; }
-			bool IsFloat()   const  { return Type() == JsonValue::FLOAT; }
-			bool IsString()  const  { return Type() == JsonValue::STRING; }
-			bool IsBoolean() const  { return Type() == JsonValue::BOOLEAN; }
-			bool IsArray()   const  { return Type() == JsonValue::ARRAY; }
-			bool IsObject()  const  { return Type() == JsonValue::OBJECT; }
+			bool IsNull()    const  { return Type() == JSON_NULL; }
+			bool IsInteger() const  { return Type() == JSON_INTEGER; }
+			bool IsFloat()   const  { return Type() == JSON_FLOAT; }
+			bool IsString()  const  { return Type() == JSON_STRING; }
+			bool IsBoolean() const  { return Type() == JSON_BOOLEAN; }
+			bool IsArray()   const  { return Type() == JSON_ARRAY; }
+			bool IsObject()  const  { return Type() == JSON_OBJECT; }
 
 			const long long AsInteger() const
 			{
@@ -495,22 +506,22 @@ namespace XTL
 
 			int Type() const
 			{
-				return value_ == 0 ? JsonValue::NIL : value_->Type();
+				return value_ == 0 ? JSON_UNDEFINED : value_->Type();
 			}
 
-			bool IsNull()    const  { return Type() == JsonValue::NIL; }
+			bool IsNull()    const  { return Type() == JSON_NULL; }
 
-			bool IsInteger() const  { return Type() == JsonValue::INTEGER; }
+			bool IsInteger() const  { return Type() == JSON_INTEGER; }
 
-			bool IsFloat()   const  { return Type() == JsonValue::FLOAT; }
+			bool IsFloat()   const  { return Type() == JSON_FLOAT; }
 
-			bool IsString()  const  { return Type() == JsonValue::STRING; }
+			bool IsString()  const  { return Type() == JSON_STRING; }
 
-			bool IsBoolean() const  { return Type() == JsonValue::BOOLEAN; }
+			bool IsBoolean() const  { return Type() == JSON_BOOLEAN; }
 
-			bool IsArray()   const  { return Type() == JsonValue::ARRAY; }
+			bool IsArray()   const  { return Type() == JSON_ARRAY; }
 
-			bool IsObject()  const  { return Type() == JsonValue::OBJECT; }
+			bool IsObject()  const  { return Type() == JSON_OBJECT; }
 
 			void Destroy()
 			{
@@ -594,6 +605,11 @@ namespace XTL
 				}
 				return static_cast<JsonBooleanValue *>(value_);
 			}
+			
+			JsonVariableBase<JsonIntegerValue *> operator= (int value)
+			{
+				return Set(static_cast<long long>(value));
+			}
 
 			JsonVariableBase<JsonIntegerValue *> operator= (const long long & value)
 			{
@@ -631,13 +647,13 @@ namespace XTL
 				Reset(new JsonObjectValue(Parent()));
 				return static_cast<JsonObjectValue *>(value_);
 			}
-
+/*
 			JsonVariableBase<JsonObjectValue *> AsObject()
 			{
 				// TODO: check Type()
 				return static_cast<JsonObjectValue *>(value_);
 			}
-
+*/
 		protected:
 
 			JsonValue * Parent()
@@ -683,7 +699,7 @@ namespace XTL
 			using Super::CreateArray;
 			using Super::CreateObject;
 			using Super::operator=;
-			using Super::AsObject;
+//			using Super::AsObject;
 	};
 
 	class JsonVariableRef : protected JsonVariableBase<JsonValue *&>
@@ -708,7 +724,71 @@ namespace XTL
 			using Super::CreateArray;
 			using Super::CreateObject;
 			using Super::operator=;
-			using Super::AsObject;
+
+			bool IsScalar() const
+			{
+				switch (Type())
+				{
+					case JSON_NULL:
+					case JSON_INTEGER:
+					case JSON_FLOAT:
+					case JSON_STRING:
+					case JSON_BOOLEAN:
+						return true;
+
+					default:
+						return false;
+				}
+			}
+
+			const std::string AsString()
+			{
+				return IsScalar() ? value_->AsString() : "";
+			}
+			
+			const long long ToInteger(long long defaultValue = 0)
+			{
+				if (!IsInteger())
+				{
+					Reset(new JsonIntegerValue(Parent(), IsScalar() ? value_->AsInteger() : defaultValue));
+				}
+
+				return static_cast<JsonIntegerValue *>(value_)->Get();
+			}
+			
+			const std::string ToString()
+			{
+				if (!IsString())
+				{
+					Reset(new JsonStringValue(Parent(), IsScalar() ? value_->AsString() : ""));
+				}
+
+				return static_cast<JsonStringValue *>(value_)->Get();
+			}
+			
+			JsonVariableBase<JsonArrayValue *> AsArray()
+			{
+				if (IsArray())
+				{
+					return static_cast<JsonArrayValue *>(value_);
+				}
+				else
+				{
+					return CreateArray();
+				}
+			}
+			
+			JsonVariableBase<JsonObjectValue *> AsObject()
+			{
+				if (IsObject())
+				{
+					return static_cast<JsonObjectValue *>(value_);
+				}
+				else
+				{
+					return CreateObject();
+				}
+			}
 	};
 
 	class JsonArray : protected JsonVariableBase<JsonArrayValue *>
@@ -827,6 +907,11 @@ namespace XTL
 		public:
 
 			JsonObject(Super value) : Super(value) { ;; }
+
+			void Delete(const char * key)
+			{
+				value_->Delete(key);
+			}
 
 			JsonVariableRef operator[] (const char * key)
 			{
