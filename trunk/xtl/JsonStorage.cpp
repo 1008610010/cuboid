@@ -1,15 +1,15 @@
-#include "JsonDatabase.hpp"
+#include "JsonStorage.hpp"
 
 namespace XTL
 {
-	JsonDatabase::JsonDatabase(const std::string & filePath)
+	JsonStorage::JsonStorage(const std::string & filePath)
 		: file_(filePath),
 		  lock_(filePath + ".lock")
 	{
 		;;
 	}
 
-	bool JsonDatabase::Create(bool waitLock)
+	bool JsonStorage::Create(bool waitLock)
 	{
 		try
 		{
@@ -27,7 +27,7 @@ namespace XTL
 		}
 	}
 
-	bool JsonDatabase::Open(bool waitLock)
+	bool JsonStorage::Open(bool waitLock)
 	{
 		try
 		{
@@ -35,7 +35,7 @@ namespace XTL
 			{
 				throw Locked();
 			}
-
+			
 			if (!file_.Load())
 			{
 				lock_.Unlock();
@@ -44,11 +44,11 @@ namespace XTL
 
 			return true;
 		}
-		catch (const FileLock::Error &)
+		catch (const FileLock::Error & e)
 		{
 			throw;
 		}
-		catch (const JsonFile::Error &)
+		catch (const JsonFile::Error & e)
 		{
 			lock_.Unlock();
 			throw;
@@ -56,18 +56,11 @@ namespace XTL
 		catch (const JsonParser::Error & e)
 		{
 			lock_.Unlock();
-			throw Error(
-				FormatString(
-					"Database file corrupted (row %d, column %d): %s",
-					e.Row() + 1,
-					e.Column() + 1,
-					e.What()
-				)
-			);
+			throw;
 		}
 	}
 
-	bool JsonDatabase::Flush()
+	bool JsonStorage::Flush()
 	{
 		if (lock_.Locked())
 		{
@@ -80,7 +73,7 @@ namespace XTL
 		}
 	}
 
-	void JsonDatabase::Close()
+	void JsonStorage::Close()
 	{
 		if (lock_.Locked())
 		{
@@ -90,3 +83,4 @@ namespace XTL
 		}
 	}
 }
+

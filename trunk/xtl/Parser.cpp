@@ -32,7 +32,7 @@ namespace XTL
 			Advance();
 			if (!IsDigit(*cur_))
 			{
-				throw Error(row_, column_, "Decimal digit expected");
+				RaiseError("Decimal digit expected");
 			}
 		}
 
@@ -127,11 +127,11 @@ namespace XTL
 		{
 			if (*cur_ == '\0')
 			{
-				throw Error(row_, column_, "Unexpected end of file in double quoted string");
+				RaiseError("Unexpected end of file in double quoted string");
 			}
 			else if (*cur_ == '\n')
 			{
-				throw Error(row_, column_, "Multiline string literal");
+				RaiseError("Multiline string literal");
 			}
 			else if (*cur_ == '"')
 			{
@@ -153,7 +153,7 @@ namespace XTL
 				switch (*cur_)
 				{
 					case '\0':
-						throw Error(row_, column_, "Unexpected end of file in double quoted string");
+						RaiseError("Unexpected end of file in double quoted string");
 					case '\\':
 					case '/':
 					case '"':
@@ -171,11 +171,7 @@ namespace XTL
 					default:
 						// TODO: \uXXXX - char in hexademical digit
 
-						throw Error(
-							row_,
-							column_,
-							FormatString("Unknown escape sequence: \\%c", *cur_).c_str()
-						);
+						RaiseError(FormatString("Unknown escape sequence: \\%c", *cur_));
 				}
 			}
 			else

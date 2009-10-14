@@ -55,7 +55,7 @@ namespace XTL
 
 			buffer = static_cast<char *>(::malloc(fileSize + 1));
 			if (buffer == 0)
-			{
+			{	
 				::fclose(file);
 				throw Error(
 					FormatString(
@@ -64,7 +64,7 @@ namespace XTL
 					)
 				);
 			}
-
+			
 			long fileRead = ::fread(buffer, 1, fileSize, file);
 			if (fileRead != fileSize)
 			{
@@ -81,11 +81,11 @@ namespace XTL
 			buffer[fileSize] = '\0';
 
 			::fclose(file);
-
+			
 			JsonParser parser(buffer);
 
 			::free(buffer);
-
+			
 			root_ = parser.Release();
 
 			return true;

@@ -37,7 +37,7 @@ namespace XTL
 		}
 		else if (*cur_ != '\0')
 		{
-			throw Error(row_, column_, "Invalid symbol, while end of line expected");
+			RaiseError("Invalid symbol, while end of line expected");
 		}
 	}
 
@@ -53,11 +53,11 @@ namespace XTL
 		{
 			if (*cur_ == '\0')
 			{
-				throw Error(row_, column_, "Unexpected end of file, while unclosed section");
+				RaiseError("Unexpected end of file, while unclosed section");
 			}
 			else if (*cur_ == '\n')
 			{
-				throw Error(row_, column_, "Unexpected end of line, while unclosed section");
+				RaiseError("Unexpected end of line, while unclosed section");
 			}
 		}
 
@@ -66,7 +66,7 @@ namespace XTL
 		++end;
 		if (begin == end)
 		{
-			throw Error(row_, column_, "Empty section name");
+			RaiseError("Empty section name");
 		}
 		s.assign(begin, end - begin);
 
@@ -80,7 +80,7 @@ namespace XTL
 	{
 		if (section.empty())
 		{
-			throw Error(row_, column_, "Unexpected parameter, while section is not specified");
+			RaiseError("Unexpected parameter, while section is not specified");
 		}
 
 		std::string key;
@@ -114,7 +114,7 @@ namespace XTL
 		}
 		else
 		{
-			throw Error(row_, column_, "Invalid symbol, while value expected");
+			RaiseError("Invalid symbol, while value expected");
 		}
 
 		GotoNextLine();
@@ -145,7 +145,7 @@ namespace XTL
 			}
 			else
 			{
-				throw Error(row_, column_, "Section declaration or parameter key expected");
+				RaiseError("Section declaration or parameter key expected");
 			}
 		}
 	}

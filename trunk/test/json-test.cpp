@@ -1,4 +1,4 @@
-#include <xtl/JsonDatabase.hpp>
+#include <xtl/JsonStorage.hpp>
 
 int main(int argc, const char * argv[])
 {
@@ -31,12 +31,21 @@ int main(int argc, const char * argv[])
 
 	try
 	{
-		XTL::JsonDatabase db("database.json");
+		XTL::JsonStorage db("database.json");
 
 		db.Open() || db.Create();
 
-		XTL::JsonVariableRef root = db.Root();
+		XTL::JsonObject root = db.Root().AsObject();
+		
+		root.Delete("LastDumpPos");
 
+		root["LastDumpName"].ToString();
+		root["LastDumpPos"].ToInteger();
+
+		root["LastDumpName"] = "my-dump";
+//		root["LastDumpPos"] = -1234;
+		
+/*
 		if (root.IsNull())
 		{
 			root.CreateObject();
@@ -46,8 +55,8 @@ int main(int argc, const char * argv[])
 			fprintf(stderr, "Root is not object\n");
 			return 1;
 		}
-
-		XTL::JsonObject obj = root.AsObject();
+*/
+		/*XTL::JsonObject obj = */
 
 //		obj[""]
 
@@ -66,6 +75,14 @@ int main(int argc, const char * argv[])
 		}
 		*/
 	}
+	catch (const XTL::JsonParser::Error & e)
+	{
+		fprintf(stderr, "Storage parse error (row %d, column %d): %s\n", e.Row() + 1, e.Column() + 1, e.What());
+	}
+	catch (const XTL::JsonFile::Error & e)
+	{
+		fprintf(stderr, "Storage file error: %s\n", e.What());
+	}
 	catch (...)
 	{
 		throw;
@@ -75,10 +92,6 @@ int main(int argc, const char * argv[])
 	catch (const XTL::JsonFile::Error & e)
 	{
 		fprintf(stderr, "%s\n", e.What());
-	}
-	catch (const XTL::JsonParser::Error & e)
-	{
-		fprintf(stderr, "Parse error (row %d, column %d): %s\n", e.Row() + 1, e.Column() + 1, e.What());
 	}
 	catch (const XTL::JsonException & e)
 	{

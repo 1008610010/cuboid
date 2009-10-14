@@ -35,9 +35,6 @@ namespace XTL
 			void Parse();
 
 			JsonValue  * root_;
-			const char * cur_;
-			int          row_;
-			int          column_;
 	};
 }
 

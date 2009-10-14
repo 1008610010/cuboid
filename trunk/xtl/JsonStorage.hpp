@@ -1,5 +1,5 @@
-#ifndef _XTL__JSON_DATABASE_HPP__
-#define _XTL__JSON_DATABASE_HPP__ 1
+#ifndef _XTL__JSON_STORAGE_HPP__
+#define _XTL__JSON_STORAGE_HPP__ 1
 
 #include "FileLock.hpp"
 #include "Json.hpp"
@@ -7,7 +7,7 @@
 
 namespace XTL
 {
-	class JsonDatabase
+	class JsonStorage
 	{
 		public:
 
@@ -23,7 +23,9 @@ namespace XTL
 
 			class Locked { };
 
-			JsonDatabase(const std::string & filePath);
+			JsonStorage(const std::string & filePath);
+			
+			const char * FilePath() const { return file_.FilePath(); }
 
 			bool Create(bool waitLock = false);
 
@@ -43,3 +45,4 @@ namespace XTL
 }
 
 #endif
+
