@@ -24,8 +24,10 @@ namespace XTL
 			class Locked { };
 
 			JsonStorage(const std::string & filePath);
-			
+
 			const char * FilePath() const { return file_.FilePath(); }
+
+			const char * LockFilePath() const { return (std::string(file_.FilePath()) + ".lock").c_str(); }
 
 			bool Create(bool waitLock = false);
 
