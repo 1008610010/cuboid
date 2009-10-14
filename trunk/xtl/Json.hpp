@@ -310,6 +310,12 @@ namespace XTL
 
 			JsonValue *& PushBack(JsonValue * value);
 
+			void Clear()
+			{
+				Free();
+				values_.clear();
+			}
+
 			virtual const long long AsInteger() const
 			{
 				throw JsonException("Invalid using Array as Integer");
@@ -351,7 +357,7 @@ namespace XTL
 			virtual void Print(FILE * stream, int indent, bool indentFirst);
 
 			bool Empty() const;
-			
+
 			void Delete(const std::string & key)
 			{
 				IndexMap::iterator itr = index_.find(key);
@@ -605,7 +611,7 @@ namespace XTL
 				}
 				return static_cast<JsonBooleanValue *>(value_);
 			}
-			
+
 			JsonVariableBase<JsonIntegerValue *> operator= (int value)
 			{
 				return Set(static_cast<long long>(value));
@@ -614,6 +620,11 @@ namespace XTL
 			JsonVariableBase<JsonIntegerValue *> operator= (const long long & value)
 			{
 				return Set(value);
+			}
+
+			JsonVariableBase<JsonIntegerValue *> operator= (const unsigned long long & value)
+			{
+				return Set(static_cast<long long>(value));
 			}
 
 			JsonVariableBase<JsonFloatValue *> operator= (const double & value)
@@ -745,7 +756,7 @@ namespace XTL
 			{
 				return IsScalar() ? value_->AsString() : "";
 			}
-			
+
 			const long long ToInteger(long long defaultValue = 0)
 			{
 				if (!IsInteger())
@@ -755,7 +766,7 @@ namespace XTL
 
 				return static_cast<JsonIntegerValue *>(value_)->Get();
 			}
-			
+
 			const std::string ToString()
 			{
 				if (!IsString())
@@ -765,7 +776,7 @@ namespace XTL
 
 				return static_cast<JsonStringValue *>(value_)->Get();
 			}
-			
+
 			JsonVariableBase<JsonArrayValue *> AsArray()
 			{
 				if (IsArray())
@@ -777,7 +788,7 @@ namespace XTL
 					return CreateArray();
 				}
 			}
-			
+
 			JsonVariableBase<JsonObjectValue *> AsObject()
 			{
 				if (IsObject())
@@ -843,6 +854,8 @@ namespace XTL
 			};
 
 			JsonArray(Super value) : Super(value) { ;; }
+
+			void Clear() { value_->Clear(); }
 
 			Iterator Begin()
 			{
