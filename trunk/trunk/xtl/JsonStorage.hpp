@@ -25,9 +25,9 @@ namespace XTL
 
 			JsonStorage(const std::string & filePath);
 
-			const char * FilePath() const { return file_.FilePath(); }
+			const std::string FilePath() const { return file_.FilePath(); }
 
-			const char * LockFilePath() const { return (std::string(file_.FilePath()) + ".lock").c_str(); }
+			const std::string LockFilePath() const { return std::string(file_.FilePath()) + ".lock"; }
 
 			bool Create(bool waitLock = false);
 

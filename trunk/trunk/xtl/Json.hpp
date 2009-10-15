@@ -358,6 +358,11 @@ namespace XTL
 
 			bool Empty() const;
 
+			bool Exists(const std::string & key) const
+			{
+				return index_.find(key) != index_.end();
+			}
+
 			void Delete(const std::string & key)
 			{
 				IndexMap::iterator itr = index_.find(key);
@@ -922,6 +927,11 @@ namespace XTL
 			JsonObject() : Super(0) { ;; }
 
 			JsonObject(Super value) : Super(value) { ;; }
+
+			bool Exists(const char * key) const
+			{
+				return value_->Exists(key);
+			}
 
 			void Delete(const char * key)
 			{

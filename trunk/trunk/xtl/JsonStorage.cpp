@@ -35,7 +35,7 @@ namespace XTL
 			{
 				throw Locked();
 			}
-			
+
 			if (!file_.Load())
 			{
 				lock_.Unlock();
@@ -77,7 +77,6 @@ namespace XTL
 	{
 		if (lock_.Locked())
 		{
-			file_.Save();
 			file_.Clear();
 			lock_.Unlock();
 		}
