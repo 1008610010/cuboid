@@ -55,7 +55,7 @@ namespace XTL
 
 			buffer = static_cast<char *>(::malloc(fileSize + 1));
 			if (buffer == 0)
-			{	
+			{
 				::fclose(file);
 				throw Error(
 					FormatString(
@@ -64,7 +64,7 @@ namespace XTL
 					)
 				);
 			}
-			
+
 			long fileRead = ::fread(buffer, 1, fileSize, file);
 			if (fileRead != fileSize)
 			{
@@ -81,11 +81,11 @@ namespace XTL
 			buffer[fileSize] = '\0';
 
 			::fclose(file);
-			
+
 			JsonParser parser(buffer);
 
 			::free(buffer);
-			
+
 			root_ = parser.Release();
 
 			return true;
@@ -99,59 +99,50 @@ namespace XTL
 
 	void JsonFile::Save()
 	{
+		const std::string tempFilePath = TempFileName();
+
+		FILE * file = ::fopen(tempFilePath.c_str(), "w");
+		if (file == 0)
+		{
+			throw Error(
+				FormatString(
+					"Unable to open temporary file \"%s\" for writing: %s",
+					tempFilePath.c_str(),
+					::strerror(errno)
+				)
+			);
+		}
+
 		if (root_ == 0)
 		{
-			if (::unlink(filePath_.c_str()) == -1 && errno != ENOENT)
-			{
-				throw Error(
-					FormatString(
-						"Unable to remove file \"%s\": %s",
-						filePath_.c_str(),
-						::strerror(errno)
-					)
-				);
-			}
+			JsonValue::PrintNull(file, 0);
 		}
 		else
 		{
-			const std::string tempFilePath = TempFileName();
-
-			FILE * file = ::fopen(tempFilePath.c_str(), "w");
-			if (file == 0)
-			{
-				throw Error(
-					FormatString(
-						"Unable to open temporary file \"%s\" for writing: %s",
-						tempFilePath.c_str(),
-						::strerror(errno)
-					)
-				);
-			}
-
 			root_->Print(file, 0, 0);
+		}
 
-			if (::fclose(file) != 0)
-			{
-				throw Error(
-					FormatString(
-						"Unable to close temporary file \"%s\": %s",
-						tempFilePath.c_str(),
-						::strerror(errno)
-					)
-				);
-			}
+		if (::fclose(file) != 0)
+		{
+			throw Error(
+				FormatString(
+					"Unable to close temporary file \"%s\": %s",
+					tempFilePath.c_str(),
+					::strerror(errno)
+				)
+			);
+		}
 
-			if (::rename(tempFilePath.c_str(), filePath_.c_str()) != 0)
-			{
-				throw Error(
-					FormatString(
-						"Unable to rename temporary file \"%s\" to \"%s\": %s",
-						tempFilePath.c_str(),
-						filePath_.c_str(),
-						::strerror(errno)
-					)
-				);
-			}
+		if (::rename(tempFilePath.c_str(), filePath_.c_str()) != 0)
+		{
+			throw Error(
+				FormatString(
+					"Unable to rename temporary file \"%s\" to \"%s\": %s",
+					tempFilePath.c_str(),
+					filePath_.c_str(),
+					::strerror(errno)
+				)
+			);
 		}
 	}
 

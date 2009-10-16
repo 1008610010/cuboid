@@ -93,8 +93,9 @@ namespace XTL
 		}
 	}
 
-	void JsonNullValue::PrintPlain(FILE * stream)
+	void JsonValue::PrintNull(FILE * stream, int size)
 	{
+		PrintIndent(stream, size);
 		::fprintf(stream, "null");
 	}
 
@@ -144,7 +145,14 @@ namespace XTL
 		--last;
 		for (ValuesList::iterator itr = values_.begin(); itr != values_.end(); ++itr)
 		{
-			(*itr)->PrintPlain(stream);
+			if (*itr != 0)
+			{
+				(*itr)->PrintPlain(stream);
+			}
+			else
+			{
+				PrintNull(stream, 0);
+			}
 			if (itr != last)
 			{
 				::fprintf(stream, ", ");
@@ -164,9 +172,9 @@ namespace XTL
 		--last;
 		for (ValuesList::iterator itr = values_.begin(); itr != values_.end(); ++itr)
 		{
-			if ((*itr) == 0)
+			if (*itr == 0)
 			{
-				::fprintf(stream, "null");
+				PrintNull(stream, indent + 1);
 			}
 			else
 			{
@@ -235,7 +243,15 @@ namespace XTL
 		for (ValuesList::iterator itr = values_.begin(); itr != values_.end(); ++itr)
 		{
 			::fprintf(stream, "\"%s\" : ", EscapeString(itr->first).c_str());
-			itr->second->PrintPlain(stream);
+			if (itr->second == 0)
+			{
+				PrintNull(stream, 0);
+			}
+			else
+			{
+				itr->second->PrintPlain(stream);
+			}
+
 			if (itr != last)
 			{
 				::fprintf(stream, ", ");
@@ -259,7 +275,7 @@ namespace XTL
 			::fprintf(stream, "\"%s\" : ", EscapeString(itr->first).c_str());
 			if (itr->second == 0)
 			{
-				::fprintf(stream, "null");
+				PrintNull(stream, 0);
 			}
 			else
 			{

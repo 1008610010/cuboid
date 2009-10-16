@@ -55,7 +55,9 @@ namespace XTL
 
 			virtual void Print(FILE * stream, int indent, bool indentFirst);
 
-			void PrintIndent(FILE * stream, int size);
+			static void PrintIndent(FILE * stream, int size);
+
+			static void PrintNull(FILE * stream, int size);
 
 			virtual const long long   AsInteger() const = 0;
 			virtual const double      AsFloat()   const = 0;
@@ -88,7 +90,7 @@ namespace XTL
 			virtual const double AsFloat() const        { return IntegerToFloat(value_); }
 
 			virtual const std::string AsString() const  { return IntegerToString(value_); }
-			
+
 			virtual const bool AsBoolean() const        { return value_ != 0; }
 
 			const long long Get() const                 { return value_; }
@@ -118,7 +120,7 @@ namespace XTL
 			virtual const double AsFloat() const        { return value_; }
 
 			virtual const std::string AsString() const  { return FloatToString(value_); }
-			
+
 			virtual const bool AsBoolean() const        { return value_ != 0.0; }
 
 			const double Get() const                    { return value_; }
@@ -148,7 +150,7 @@ namespace XTL
 			virtual const double AsFloat() const        { return StringToFloat(value_); }
 
 			virtual const std::string AsString() const  { return value_; }
-			
+
 			virtual const bool AsBoolean() const        { return !value_.empty(); }
 
 			const std::string Get() const               { return value_; }
@@ -180,7 +182,7 @@ namespace XTL
 			virtual const double AsFloat() const        { return value_ ? 1.0 : 0.0; }
 
 			virtual const std::string AsString() const  { return value_ ? "true" : "false"; }
-			
+
 			virtual const bool AsBoolean() const        { return value_; }
 
 			const bool Get() const                      { return value_; }
@@ -280,7 +282,7 @@ namespace XTL
 			{
 				throw JsonException("Invalid using Array as String");
 			}
-			
+
 			virtual const bool AsBoolean() const
 			{
 				throw JsonException("Invalid using Array as Boolean");
@@ -334,7 +336,7 @@ namespace XTL
 				IndexMap::const_iterator itr = index_.find(key);
 				return itr == index_.end() ? 0 : itr->second->second;
 			}
-			
+
 			JsonValue * Get(const std::string & key)
 			{
 				IndexMap::iterator itr = index_.find(key);
@@ -374,11 +376,11 @@ namespace XTL
 			{
 				throw JsonException("Invalid using Object as String");
 			}
-			
+
 			virtual const bool AsBoolean() const
 			{
 				throw JsonException("Invalid using Object as Boolean");
-			} 
+			}
 
 		protected:
 
@@ -509,7 +511,7 @@ namespace XTL
 			{
 				if (value_ == 0)
 				{
-					fprintf(stream, "null");
+					JsonValue::PrintNull(stream, 0);
 				}
 				else
 				{
@@ -628,13 +630,21 @@ namespace XTL
 				Reset(new JsonObjectValue(Parent()));
 				return static_cast<JsonObjectValue *>(value_);
 			}
-/*
-			JsonVariableBase<JsonObjectValue *> AsObject()
+
+			JsonVariableBase<JsonArrayValue *> ToArray()
 			{
-				// TODO: check Type()
-				return static_cast<JsonObjectValue *>(value_);
+				return IsArray() ?
+				       static_cast<JsonArrayValue *>(value_) :
+				       CreateArray();
 			}
-*/
+
+			JsonVariableBase<JsonObjectValue *> ToObject()
+			{
+				return IsObject() ?
+				       static_cast<JsonObjectValue *>(value_) :
+				       CreateObject();
+			}
+
 		protected:
 
 			JsonValue * Parent()
@@ -656,6 +666,7 @@ namespace XTL
 			ValueTypePtr value_;
 	};
 
+	// TODO: make public inheritance and remove all these usings
 	class JsonVariable : protected JsonVariableBase<JsonValue *>
 	{
 		typedef JsonVariableBase<JsonValue *> Super;
@@ -679,8 +690,9 @@ namespace XTL
 			using Super::Set;
 			using Super::CreateArray;
 			using Super::CreateObject;
+			using Super::ToArray;
+			using Super::ToObject;
 			using Super::operator=;
-//			using Super::AsObject;
 	};
 
 	class JsonVariableRef : protected JsonVariableBase<JsonValue *&>
@@ -704,6 +716,8 @@ namespace XTL
 			using Super::Set;
 			using Super::CreateArray;
 			using Super::CreateObject;
+			using Super::ToArray;
+			using Super::ToObject;
 			using Super::operator=;
 
 			bool IsScalar() const
@@ -725,8 +739,8 @@ namespace XTL
 			{
 				return IsScalar() ? value_->AsInteger() : defaultValue;
 			}
-			
-			const double AsFloat(const long long & defaultValue = 0.0) const
+
+			const double AsFloat(const float & defaultValue = 0.0) const
 			{
 				return IsScalar() ? value_->AsFloat() : defaultValue;
 			}
@@ -735,12 +749,12 @@ namespace XTL
 			{
 				return IsScalar() ? value_->AsString() : defaultValue;
 			}
-			
+
 			const bool AsBoolean(bool defaultValue = false) const
 			{
 				return IsScalar() ? value_->AsBoolean() : defaultValue;
 			}
-			
+
 			const long long ToInteger(const long long & defaultValue = 0)
 			{
 				if (!IsInteger())
@@ -750,14 +764,14 @@ namespace XTL
 
 				return static_cast<JsonIntegerValue *>(value_)->Get();
 			}
-			
+
 			const double ToFloat(const double & defaultValue = 0.0)
 			{
 				if (!IsFloat())
 				{
 					Reset(new JsonFloatValue(Parent(), AsFloat(defaultValue)));
 				}
-				
+
 				return static_cast<JsonFloatValue *>(value_)->Get();
 			}
 
@@ -770,14 +784,14 @@ namespace XTL
 
 				return static_cast<JsonStringValue *>(value_)->Get();
 			}
-			
+
 			const bool AsBoolean(bool defaultValue)
 			{
 				if (!IsBoolean())
 				{
 					Reset(new JsonBooleanValue(Parent(), AsBoolean(defaultValue)));
 				}
-				
+
 				return static_cast<JsonBooleanValue *>(value_)->Get();
 			}
 
