@@ -5,7 +5,6 @@
 namespace XTL
 {
 	const char * JsonValue::TypeNames[] = {
-		"Undefined",
 		"Null",
 		"Integer",
 		"Float",

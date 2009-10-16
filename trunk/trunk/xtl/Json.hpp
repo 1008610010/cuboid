@@ -4,21 +4,19 @@
 #include <string>
 #include <map>
 #include <list>
-#include <vector>
 #include "StringUtils.hpp"
 
 namespace XTL
 {
 	enum JsonTypes
 	{
-		JSON_UNDEFINED = 0,
-		JSON_NULL      = 1,
-		JSON_INTEGER   = 2,
-		JSON_FLOAT     = 3,
-		JSON_STRING    = 4,
-		JSON_BOOLEAN   = 5,
-		JSON_ARRAY     = 6,
-		JSON_OBJECT    = 7
+		JSON_NULL      = 0,
+		JSON_INTEGER   = 1,
+		JSON_FLOAT     = 2,
+		JSON_STRING    = 3,
+		JSON_BOOLEAN   = 4,
+		JSON_ARRAY     = 5,
+		JSON_OBJECT    = 6
 	};
 
 	class JsonException
@@ -62,6 +60,7 @@ namespace XTL
 			virtual const long long   AsInteger() const = 0;
 			virtual const double      AsFloat()   const = 0;
 			virtual const std::string AsString()  const = 0;
+			virtual const bool        AsBoolean() const = 0;
 
 		protected:
 
@@ -69,26 +68,6 @@ namespace XTL
 			JsonValue & operator= (const JsonValue &);
 
 			JsonValue * parent_;
-	};
-
-	class JsonNullValue : public JsonValue
-	{
-		public:
-
-			explicit JsonNullValue(JsonValue * parent)
-				: JsonValue(parent) { ;; }
-
-			virtual ~JsonNullValue() throw() { ;; }
-
-			virtual int Type() const  { return JSON_NULL; }
-
-			virtual void PrintPlain(FILE * stream);
-
-			virtual const long long AsInteger() const   { return 0ll; }
-
-			virtual const double AsFloat() const        { return 0.0; }
-
-			virtual const std::string AsString() const  { return ""; }
 	};
 
 	class JsonIntegerValue : public JsonValue
@@ -109,16 +88,12 @@ namespace XTL
 			virtual const double AsFloat() const        { return IntegerToFloat(value_); }
 
 			virtual const std::string AsString() const  { return IntegerToString(value_); }
+			
+			virtual const bool AsBoolean() const        { return value_ != 0; }
 
-			const long long Get() const
-			{
-				return value_;
-			}
+			const long long Get() const                 { return value_; }
 
-			void Set(const long long & value)
-			{
-				value_ = value;
-			}
+			void Set(const long long & value)           { value_ = value; }
 
 		protected:
 
@@ -143,16 +118,12 @@ namespace XTL
 			virtual const double AsFloat() const        { return value_; }
 
 			virtual const std::string AsString() const  { return FloatToString(value_); }
+			
+			virtual const bool AsBoolean() const        { return value_ != 0.0; }
 
-			const double Get() const
-			{
-				return value_;
-			}
+			const double Get() const                    { return value_; }
 
-			void Set(const double & value)
-			{
-				value_ = value;
-			}
+			void Set(const double & value)              { value_ = value; }
 
 		protected:
 
@@ -177,21 +148,14 @@ namespace XTL
 			virtual const double AsFloat() const        { return StringToFloat(value_); }
 
 			virtual const std::string AsString() const  { return value_; }
+			
+			virtual const bool AsBoolean() const        { return !value_.empty(); }
 
-			const std::string Get() const
-			{
-				return value_;
-			}
+			const std::string Get() const               { return value_; }
 
-			void Set(const std::string & value)
-			{
-				value_ = value;
-			}
+			void Set(const std::string & value)         { value_ = value; }
 
-			void Set(const char * value)
-			{
-				value_.assign(value);
-			}
+			void Set(const char * value)                { value_.assign(value); }
 
 		protected:
 
@@ -216,16 +180,12 @@ namespace XTL
 			virtual const double AsFloat() const        { return value_ ? 1.0 : 0.0; }
 
 			virtual const std::string AsString() const  { return value_ ? "true" : "false"; }
+			
+			virtual const bool AsBoolean() const        { return value_; }
 
-			const bool Get() const
-			{
-				return value_;
-			}
+			const bool Get() const                      { return value_; }
 
-			void Set(const long long & value)
-			{
-				value_ = value;
-			}
+			void Set(const long long & value)           { value_ = value; }
 
 		protected:
 
@@ -245,10 +205,7 @@ namespace XTL
 					Iterator(JsonArrayValue * array)
 						: values_(array->values_), itr_(array->values_.begin()) { ;; }
 
-					bool AtEnd() const
-					{
-						return itr_ == values_.end();
-					}
+					bool AtEnd() const  { return itr_ == values_.end(); }
 
 					void Delete()
 					{
@@ -256,15 +213,9 @@ namespace XTL
 						itr_ = values_.erase(itr_);
 					}
 
-					const JsonValue * operator* () const
-					{
-						return *itr_;
-					}
+					const JsonValue * operator* () const  { return *itr_; }
 
-					JsonValue *& operator* ()
-					{
-						return *itr_;
-					}
+					JsonValue *& operator* ()             { return *itr_; }
 
 					Iterator & operator++ ()
 					{
@@ -288,7 +239,6 @@ namespace XTL
 					ValuesList::iterator itr_;
 			};
 
-
 			explicit JsonArrayValue(JsonValue * parent)
 				: JsonValue(parent), values_() { ;; }
 
@@ -302,6 +252,12 @@ namespace XTL
 
 			bool Empty() const;
 
+			void Clear()
+			{
+				Free();
+				values_.clear();
+			}
+
 			JsonValue *& Front();
 
 			JsonValue *& Back();
@@ -309,12 +265,6 @@ namespace XTL
 			JsonValue *& PushFront(JsonValue * value);
 
 			JsonValue *& PushBack(JsonValue * value);
-
-			void Clear()
-			{
-				Free();
-				values_.clear();
-			}
 
 			virtual const long long AsInteger() const
 			{
@@ -329,6 +279,11 @@ namespace XTL
 			virtual const std::string AsString() const
 			{
 				throw JsonException("Invalid using Array as String");
+			}
+			
+			virtual const bool AsBoolean() const
+			{
+				throw JsonException("Invalid using Array as Boolean");
 			}
 
 		protected:
@@ -379,8 +334,14 @@ namespace XTL
 				IndexMap::const_iterator itr = index_.find(key);
 				return itr == index_.end() ? 0 : itr->second->second;
 			}
+			
+			JsonValue * Get(const std::string & key)
+			{
+				IndexMap::iterator itr = index_.find(key);
+				return itr == index_.end() ? 0 : itr->second->second;
+			}
 
-			JsonValue *& Get(const std::string & key)
+			JsonValue *& Insert(const std::string & key)
 			{
 				IndexMap::iterator itr = index_.find(key);
 				if (itr != index_.end())
@@ -413,6 +374,11 @@ namespace XTL
 			{
 				throw JsonException("Invalid using Object as String");
 			}
+			
+			virtual const bool AsBoolean() const
+			{
+				throw JsonException("Invalid using Object as Boolean");
+			} 
 
 		protected:
 
@@ -422,9 +388,7 @@ namespace XTL
 			IndexMap   index_;
 	};
 
-
-
-
+/*
 	class JsonConstant
 	{
 		public:
@@ -503,6 +467,7 @@ namespace XTL
 
 			const JsonValue * value_;
 	};
+*/
 
 	template <typename ValueTypePtr>
 	class JsonVariableBase
@@ -517,7 +482,7 @@ namespace XTL
 
 			int Type() const
 			{
-				return value_ == 0 ? JSON_UNDEFINED : value_->Type();
+				return value_ == 0 ? JSON_NULL : value_->Type();
 			}
 
 			bool IsNull()    const  { return Type() == JSON_NULL; }
@@ -745,7 +710,6 @@ namespace XTL
 			{
 				switch (Type())
 				{
-					case JSON_NULL:
 					case JSON_INTEGER:
 					case JSON_FLOAT:
 					case JSON_STRING:
@@ -757,29 +721,64 @@ namespace XTL
 				}
 			}
 
-			const std::string AsString()
+			const long long AsInteger(const long long & defaultValue = 0) const
 			{
-				return IsScalar() ? value_->AsString() : "";
+				return IsScalar() ? value_->AsInteger() : defaultValue;
+			}
+			
+			const double AsFloat(const long long & defaultValue = 0.0) const
+			{
+				return IsScalar() ? value_->AsFloat() : defaultValue;
 			}
 
-			const long long ToInteger(long long defaultValue = 0)
+			const std::string AsString(const std::string & defaultValue = "") const
+			{
+				return IsScalar() ? value_->AsString() : defaultValue;
+			}
+			
+			const bool AsBoolean(bool defaultValue = false) const
+			{
+				return IsScalar() ? value_->AsBoolean() : defaultValue;
+			}
+			
+			const long long ToInteger(const long long & defaultValue = 0)
 			{
 				if (!IsInteger())
 				{
-					Reset(new JsonIntegerValue(Parent(), IsScalar() ? value_->AsInteger() : defaultValue));
+					Reset(new JsonIntegerValue(Parent(), AsInteger(defaultValue)));
 				}
 
 				return static_cast<JsonIntegerValue *>(value_)->Get();
 			}
+			
+			const double ToFloat(const double & defaultValue = 0.0)
+			{
+				if (!IsFloat())
+				{
+					Reset(new JsonFloatValue(Parent(), AsFloat(defaultValue)));
+				}
+				
+				return static_cast<JsonFloatValue *>(value_)->Get();
+			}
 
-			const std::string ToString()
+			const std::string ToString(const std::string & defaultValue = "")
 			{
 				if (!IsString())
 				{
-					Reset(new JsonStringValue(Parent(), IsScalar() ? value_->AsString() : ""));
+					Reset(new JsonStringValue(Parent(), AsString(defaultValue)));
 				}
 
 				return static_cast<JsonStringValue *>(value_)->Get();
+			}
+			
+			const bool AsBoolean(bool defaultValue)
+			{
+				if (!IsBoolean())
+				{
+					Reset(new JsonBooleanValue(Parent(), AsBoolean(defaultValue)));
+				}
+				
+				return static_cast<JsonBooleanValue *>(value_)->Get();
 			}
 
 			JsonVariableBase<JsonArrayValue *> AsArray()
@@ -872,12 +871,6 @@ namespace XTL
 				return value_->PushBack(0);
 			}
 
-			JsonArray & PushBackNull()
-			{
-				value_->PushBack(new JsonNullValue(value_));
-				return *this;
-			}
-
 			JsonArray & PushBack(int value)
 			{
 				value_->PushBack(new JsonIntegerValue(value_, value));
@@ -940,7 +933,7 @@ namespace XTL
 
 			JsonVariableRef operator[] (const char * key)
 			{
-				return value_->Get(key);
+				return value_->Insert(key);
 			}
 
 		protected:
