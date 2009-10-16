@@ -60,7 +60,7 @@ namespace XTL
 
 			if (keyword == "null")
 			{
-				return new JsonNullValue(parent);
+				return 0;
 			}
 			if (keyword == "true")
 			{

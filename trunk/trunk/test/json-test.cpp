@@ -2,6 +2,16 @@
 
 int main(int argc, const char * argv[])
 {
+	XTL::JsonFile f("abobo.json");
+	f.Load();
+
+	XTL::JsonArray arr = f.Root().CreateArray();
+	arr.PushBack();
+	arr.PushBack();
+	arr.PushBack();
+
+	f.Save();
+
 	/*
 	XTL::JsonVariable root;
 	XTL::JsonObject obj = root.CreateObject();
@@ -36,7 +46,7 @@ int main(int argc, const char * argv[])
 		db.Open() || db.Create();
 
 		XTL::JsonObject root = db.Root().AsObject();
-		
+
 		root.Delete("LastDumpPos");
 
 		root["LastDumpName"].ToString();
@@ -44,7 +54,7 @@ int main(int argc, const char * argv[])
 
 		root["LastDumpName"] = "my-dump";
 //		root["LastDumpPos"] = -1234;
-		
+
 /*
 		if (root.IsNull())
 		{
