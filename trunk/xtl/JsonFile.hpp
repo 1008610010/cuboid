@@ -34,7 +34,7 @@ namespace XTL
 
 			const char * FilePath() const   { return filePath_.c_str(); }
 
-			JsonConstant ConstRoot() const  { return root_; }
+//			JsonConstant ConstRoot() const  { return root_; }
 
 			JsonVariableRef Root()           { return root_; }
 
