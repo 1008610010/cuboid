@@ -74,3 +74,9 @@ ADD_EXECUTABLE (
 	test/file-lock-test.cpp
 	xtl/FileLock.cpp
 )
+
+ADD_EXECUTABLE (
+	test-program-arguments
+		test/test-program-arguments.cpp
+		xtl/ProgramArguments.cpp
+)
