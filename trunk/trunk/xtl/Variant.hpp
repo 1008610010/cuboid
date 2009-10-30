@@ -7,6 +7,12 @@
 
 namespace XTL
 {
+	/**
+	 * @class VariantValue
+	 * @brief Value of variant typed object.
+	 *
+	 * @retval 1
+	 */
 	class VariantValue
 	{
 		public:
