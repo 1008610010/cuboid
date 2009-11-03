@@ -9,6 +9,8 @@ int main(int argc, const char * argv[])
 	{
 		bool b = args.Parse(argc, argv);
 
+		fprintf(stderr, "selected: %d\n", args.Period().SelectedIndex());
+
 		if (b)
 		{
 			fprintf(stderr, "Ok!\n");
@@ -18,6 +20,12 @@ int main(int argc, const char * argv[])
 		{
 			fprintf(stderr, "Parse error\n");
 		}
+/*
+		if (args.Mood().IsDay())
+		{
+			fprintf(stderr, "Mood is day\n");
+		}
+*/
 	}
 	catch (const std::runtime_error & e)
 	{
