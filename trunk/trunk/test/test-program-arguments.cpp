@@ -9,6 +9,8 @@ int main(int argc, const char * argv[])
 	{
 		bool b = args.Parse(argc, argv);
 
+//		getc(stdin);
+
 		fprintf(stderr, "selected: %d\n", args.Period().SelectedIndex());
 
 		if (b)
@@ -26,6 +28,10 @@ int main(int argc, const char * argv[])
 			fprintf(stderr, "Mood is day\n");
 		}
 */
+	}
+	catch (const XTL::ProgramOptionsError & e)
+	{
+		fprintf(stderr, "%s\n", e.What());
 	}
 	catch (const std::runtime_error & e)
 	{

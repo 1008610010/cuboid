@@ -9,6 +9,24 @@
 
 namespace XTL
 {
+	class ProgramOptionsError
+	{
+		public:
+
+			ProgramOptionsError(const std::string & what)
+				: what_(what) { ;; }
+
+			const char * What() const
+			{
+				return what_.c_str();
+			}
+
+		protected:
+
+			std::string what_;
+	};
+
+	class OptionDesc;
 	class ArgumentsPool;
 
 	class ArgumentBase
@@ -22,8 +40,8 @@ namespace XTL
 				PASSWORD = 0x0002
 			};
 
-			ArgumentBase(const unsigned long long & flag)
-				: flag_(flag) { ;; }
+			ArgumentBase(const unsigned long long & id)
+				: id_(id) { ;; }
 
 			virtual ~ArgumentBase() { ;; }
 
@@ -31,91 +49,60 @@ namespace XTL
 
 			virtual ArgumentsPool * Set(const void * v) = 0;
 
+			const unsigned long long & Id() const
+			{
+				return id_;
+			}
+
+			virtual const OptionDesc * Desc() const
+			{
+				throw ProgramOptionsError("Internal logic error: abstract method Desc()");
+			}
+
 		protected:
 
-			unsigned long long flag_;
+			unsigned long long id_;
 	};
 
-	struct ArgumentDesc
+	struct OptionDesc
 	{
 		const char         * label1;
 		const char         * label2;
 		const char         * desc;
 		unsigned long long   flags;
-		ArgumentBase       * arg;
+
+		const std::string AsString() const;
 	};
 
 	class ArgumentsPool
 	{
 		public:
 
-			unsigned long long NextFlag()
-			{
-				return flag_ = (flag_ > 0 ? (flag_ << 1) : 1);
-			}
+			typedef std::list<std::pair<const OptionDesc *, ArgumentBase *> > ListOfOptions;
 
-			void SetFlag(const unsigned long long & flag)
-			{
-				set_ |= flag;
-			}
+			void AddOption(const OptionDesc * desc, ArgumentBase * arg);
 
-			void AddDesc(const ArgumentDesc & desc, ArgumentBase * arg)
-			{
-				fprintf(stderr, "AddDesc(%s, %s)\n", desc.label1, desc.label2);
-				// TODO: check for such label1 or label2 is already exists
-				ArgumentDesc newDesc(desc);
-				newDesc.arg = arg;
-				descList_.push_back(newDesc);
-			}
+			const unsigned long long NextId();
 
-			bool Contains(const unsigned long long & flag)
-			{
-				return (set_ & flag) != 0;
-			}
+			void SetPresent(const unsigned long long & id);
 
-			ArgumentDesc * FindByLabel1(const char * label1)
-			{
-				for (std::list<ArgumentDesc>::iterator itr = descList_.begin();
-				     itr != descList_.end();
-				     ++itr)
-				{
-					if (itr->label1 != 0 && ::strcmp(label1, itr->label1) == 0)
-					{
-						return &(*itr);
-					}
-				}
-				return 0;
-			}
-
-			ArgumentDesc * FindByLabel2(const char * label2)
-			{
-				for (std::list<ArgumentDesc>::iterator itr = descList_.begin();
-				     itr != descList_.end();
-				     ++itr)
-				{
-					if (itr->label2 != 0 && ::strcmp(label2, itr->label2) == 0)
-					{
-						return &(*itr);
-					}
-				}
-				return 0;
-			}
+			bool Contains(const unsigned long long & id);
 
 			bool Parse(int argc, const char * argv[]);
 
 		protected:
 
-			ArgumentsPool()
-				: flag_(0),
-				  set_(0),
-				  descList_(0)
-			{
-				;;
-			}
+			ArgumentsPool();
 
-			unsigned long long flag_;
+			const ListOfOptions::iterator FindByLabel1(const char * label1);
+
+			const ListOfOptions::iterator FindByLabel2(const char * label2);
+
+			void CheckRequiredOptions();
+
+			unsigned long long nextId_;
 			unsigned long long set_;
-			std::list<ArgumentDesc> descList_;
+			ListOfOptions      options_;
 	};
 
 	template <typename _PoolType>
@@ -128,24 +115,24 @@ namespace XTL
 				typedef _PoolType PoolType;
 
 				Argument()
-					: ArgumentBase(PoolType::Instance()->NextFlag())
+					: ArgumentBase(PoolType::Instance()->NextId())
 				{
 					;;
 				}
 
 				bool Exists() const
 				{
-					return PoolType::Instance()->Contains(flag_);
+					return PoolType::Instance()->Contains(id_);
 				}
 
-				void SetFlag()
+				void SetPresent()
 				{
-					PoolType::Instance()->SetFlag(flag_);
+					PoolType::Instance()->SetPresent(id_);
 				}
 
-				void AddDesc(const ArgumentDesc & desc, ArgumentBase * arg)
+				void AddToPool()
 				{
-					PoolType::Instance()->AddDesc(desc, arg);
+					PoolType::Instance()->AddOption(Desc(), this);
 				}
 		};
 
@@ -162,7 +149,7 @@ namespace XTL
 
 					DoSet(v);
 
-					Argument::SetFlag();
+					Argument::SetPresent();
 					return 0;
 				}
 
@@ -317,21 +304,27 @@ namespace XTL
 					return 0;
 				}
 
-				void Select(const ArgumentDesc * value, int index)
+				void Select(const OptionDesc * desc, int index)
 				{
 					if (Argument::Exists())
 					{
 						throw std::runtime_error("Doubled program mode");
 					}
 
-					Argument::SetFlag();
-					selected_ = value;
+					Argument::SetPresent();
+
+					selectedDesc_ = desc;
 					selectedIndex_ = index;
 				}
 
-				const ArgumentDesc * Selected() const
+				const OptionDesc * Selected() const
 				{
-					return selected_;
+					return selectedDesc_;
+				}
+
+				const int SelectedIndex() const
+				{
+					return selectedIndex_;
 				}
 
 				static int NextModeIndex()
@@ -339,22 +332,17 @@ namespace XTL
 					return Counter::NextIndex();
 				}
 
-				int SelectedIndex() const
-				{
-					return selectedIndex_;
-				}
-
 			protected:
 
 				ArgumentModes()
 					: Argument(),
-					  selected_(0),
+					  selectedDesc_(0),
 					  selectedIndex_(-1)
 				{
 					;;
 				}
 
-				const ArgumentDesc * selected_;
+				const OptionDesc * selectedDesc_;
 				int selectedIndex_;
 		};
 
@@ -446,12 +434,12 @@ namespace XTL
 				public: \
 					__Argument_##NAME() : ArgumentTypes<PoolType>::ArgumentString() \
 					{ \
-						Argument::AddDesc(Desc(), this); \
+						Argument::AddToPool(); \
 					} \
-					static ArgumentDesc & Desc() \
+					virtual const OptionDesc * Desc() const \
 					{ \
-						static ArgumentDesc desc = { LABEL1, LABEL2, DESC, FLAGS }; \
-						return desc; \
+						static OptionDesc desc = { LABEL1, LABEL2, DESC, FLAGS }; \
+						return &desc; \
 					} \
 			}; \
 			__Argument_##NAME __##NAME; \
@@ -466,12 +454,12 @@ namespace XTL
 				public: \
 					__ArgumentModes_##NAME() : ArgumentTypes<PoolType>::ArgumentModes<__ArgumentModes_##NAME>() \
 					{ \
-						Argument::AddDesc(Desc(), this); \
+						Argument::AddToPool(); \
 					} \
-					static ArgumentDesc & Desc() \
+					virtual const OptionDesc * Desc() const \
 					{ \
-						static ArgumentDesc desc = { 0, 0, DESC, FLAGS }; \
-						return desc; \
+						static OptionDesc desc = { 0, 0, DESC, FLAGS }; \
+						return &desc; \
 					} \
 					typedef __ArgumentModes_##NAME ParentType; \
 
@@ -494,16 +482,16 @@ namespace XTL
 				public: \
 					__ArgumentMode_##NAME() : Super(ParentType::NextModeIndex()) \
 					{ \
-						Argument::AddDesc(Desc(), this); \
+						Argument::AddToPool(); \
 					} \
-					static ArgumentDesc & Desc() \
+					virtual const OptionDesc * Desc() const \
 					{ \
-						static ArgumentDesc desc = { LABEL1, LABEL2, DESC, FLAGS }; \
-						return desc; \
+						static OptionDesc desc = { LABEL1, LABEL2, DESC, FLAGS }; \
+						return &desc; \
 					} \
 					virtual ArgumentsPool * Set(const void * v) \
 					{ \
-						ParentType::Instance()->Select(&(Desc()), Index()); \
+						ParentType::Instance()->Select(Desc(), Index()); \
 						args_.reset(new Arguments()); \
 						return Super::Set(v); \
 					} \
@@ -554,7 +542,7 @@ namespace XTL
 			ProgramArguments(const ProgramArguments &);
 			ProgramArguments & operator= (const ProgramArguments &);
 
-			ARGUMENT_STRING(Config, "c", "config", OPTIONAL, "Config file name")
+			ARGUMENT_STRING(Config, "c", "config", REQUIRED | PASSWORD, "Config file name")
 
 			ARGUMENT_MODES_BEGIN(Period, OPTIONAL, "Period of calculation")
 
