@@ -12,15 +12,15 @@ namespace XTL
 	SocketAddressInet::SocketAddressInet()
 	{
 		Clear();
-		address_.sin_addr.s_addr = ::htonl(INADDR_NONE);
+		address_.sin_addr.s_addr = htonl(INADDR_NONE);
 		address_.sin_port = 0;
 	}
 
 	SocketAddressInet::SocketAddressInet(int port)
 	{
 		Clear();
-		address_.sin_addr.s_addr = ::htonl(INADDR_ANY);
-		address_.sin_port = ::htons(port);
+		address_.sin_addr.s_addr = htonl(INADDR_ANY);
+		address_.sin_port = htons(port);
 	}
 
 	SocketAddressInet::SocketAddressInet(const char * host)
@@ -62,8 +62,8 @@ namespace XTL
 	void SocketAddressInet::Assign(int port)
 	{
 		Clear();
-		address_.sin_addr.s_addr = ::htonl(INADDR_ANY);
-		address_.sin_port = ::htons(port);
+		address_.sin_addr.s_addr = htonl(INADDR_ANY);
+		address_.sin_port = htons(port);
 	}
 
 	void SocketAddressInet::Assign(const char * host)
@@ -159,7 +159,7 @@ namespace XTL
 
 	int SocketAddressInet::Port() const
 	{
-		return ::ntohs(address_.sin_port);
+		return ntohs(address_.sin_port);
 	}
 
 	const ::sockaddr * SocketAddressInet::Data() const
@@ -174,12 +174,12 @@ namespace XTL
 
 	bool SocketAddressInet::IsAny() const
 	{
-		return address_.sin_addr.s_addr == ::htonl(INADDR_ANY);
+		return address_.sin_addr.s_addr == htonl(INADDR_ANY);
 	}
 
 	bool SocketAddressInet::IsNone() const
 	{
-		return address_.sin_addr.s_addr == ::htonl(INADDR_NONE);
+		return address_.sin_addr.s_addr == htonl(INADDR_NONE);
 	}
 
 	const std::string SocketAddressInet::AsString() const
