@@ -7,11 +7,18 @@ namespace XTL
 	{
 		if (label1 != 0)
 		{
-			return std::string("-") + label1;
+			if (label2 != 0)
+			{
+				return std::string("'-") + label1 + "|--" + label2 + "'";
+			}
+			else
+			{
+				return std::string("'-") + label1 + "'";
+			}
 		}
 		else if (label2 != 0)
 		{
-			return std::string("--") + label2;
+			return std::string("'--") + label2 + "'";
 		}
 		else
 		{
@@ -19,7 +26,7 @@ namespace XTL
 		}
 	}
 
-	ArgumentsPool::ArgumentsPool()
+	OptionsPool::OptionsPool()
 		: nextId_(0),
 		  set_(0),
 		  options_()
@@ -27,22 +34,23 @@ namespace XTL
 		;;
 	}
 
-	void ArgumentsPool::AddOption(const OptionDesc * desc, ArgumentBase * arg)
+	void OptionsPool::AddOption(const OptionDesc * desc, Option * option)
 	{
+		fprintf(stderr, "AddOption: %s\n", desc->label1);
 		if (desc->label1 != 0 && FindByLabel1(desc->label1) != options_.end())
 		{
-			throw ProgramOptionsError(FormatString("Internal logic error: doubled option '-%s'", desc->label1));
+			throw ProgramOptionsError(FormatString("Internal logic error: duplicate option '-%s'", desc->label1));
 		}
 
 		if (desc->label2 != 0 && FindByLabel2(desc->label2) != options_.end())
 		{
-			throw ProgramOptionsError(FormatString("Internal logic error: doubled options '--%s'", desc->label2));
+			throw ProgramOptionsError(FormatString("Internal logic error: duplicate options '--%s'", desc->label2));
 		}
 
-		options_.push_back(std::make_pair(desc, arg));
+		options_.push_back(std::make_pair(desc, option));
 	}
 	
-	const unsigned long long ArgumentsPool::NextId()
+	const unsigned long long OptionsPool::NextId()
 	{
 		if (nextId_ >= 9223372036854775808llu)
 		{
@@ -52,17 +60,17 @@ namespace XTL
 		return nextId_ = (nextId_ > 0 ? (nextId_ << 1) : 1);
 	}
 
-	void ArgumentsPool::SetPresent(const unsigned long long & id)
+	void OptionsPool::SetPresent(const unsigned long long & id)
 	{
 		set_ |= id;
 	}
 
-	bool ArgumentsPool::Contains(const unsigned long long & id)
+	bool OptionsPool::Contains(const unsigned long long & id)
 	{
 		return (set_ & id) != 0;
 	}
 
-	const ArgumentsPool::ListOfOptions::iterator ArgumentsPool::FindByLabel1(const char * label1)
+	const OptionsPool::ListOfOptions::iterator OptionsPool::FindByLabel1(const char * label1)
 	{
 		for (ListOfOptions::iterator itr = options_.begin();
 		     itr != options_.end();
@@ -76,7 +84,7 @@ namespace XTL
 		return options_.end();
 	}
 
-	const ArgumentsPool::ListOfOptions::iterator ArgumentsPool::FindByLabel2(const char * label2)
+	const OptionsPool::ListOfOptions::iterator OptionsPool::FindByLabel2(const char * label2)
 	{
 		for (ListOfOptions::iterator itr = options_.begin();
 		     itr != options_.end();
@@ -90,28 +98,28 @@ namespace XTL
 		return options_.end();
 	}
 
-	void ArgumentsPool::CheckRequiredOptions()
+	void OptionsPool::CheckRequiredOptions()
 	{
 		for (ListOfOptions::const_iterator itr = options_.begin();
 		     itr != options_.end();
 		     ++itr)
 		{
-			if ((itr->first->flags & ArgumentBase::REQUIRED) != 0 &&
+			if ((itr->first->flags & Option::REQUIRED) != 0 &&
 			    !Contains(itr->second->Id()))
 			{
-				throw ProgramOptionsError(FormatString("Required program option '%s' is not specified", itr->first->AsString().c_str()));
+				throw ProgramOptionsError(FormatString("Program option %s is required", itr->first->AsString().c_str()));
 			}
 		}
 	}
 
-	bool ArgumentsPool::Parse(int argc, const char * argv[])
+	bool OptionsPool::Parse(int argc, const char * argv[])
 	{
 		if (argc == 0)
 		{
 			CheckRequiredOptions();
 		}
 
-		std::list<ArgumentsPool *> pools;
+		std::list<OptionsPool *> pools;
 		pools.push_back(this);
 
 		std::string programName;
@@ -131,14 +139,14 @@ namespace XTL
 			}
 
 			const OptionDesc * desc = 0;
-			ArgumentBase * arg = 0;
+			Option * option = 0;
 
 			if (s[1] == '-')
 			{
 				const char * t = ::strchr(s + 2, '=');
 				if (t == 0)
 				{
-					for (std::list<ArgumentsPool *>::iterator itr = pools.begin();
+					for (std::list<OptionsPool *>::iterator itr = pools.begin();
 					     itr != pools.end();
 					     ++itr)
 					{
@@ -146,7 +154,7 @@ namespace XTL
 						if (opt != options_.end())
 						{
 							desc = opt->first;
-							arg = opt->second;
+							option = opt->second;
 							break;
 						}
 					}
@@ -156,12 +164,12 @@ namespace XTL
 						throw ProgramOptionsError(FormatString("Invalid program option: '--%s'", s + 2));
 					}
 
-					if (arg->NeedValue())
+					if (option->NeedValue())
 					{
 						throw ProgramOptionsError(FormatString("Value expected for program option '--%s'", s + 2));
 					}
 
-					ArgumentsPool * subpool = arg->Set(0);
+					OptionsPool * subpool = option->Set(0);
 					if (subpool != 0)
 					{
 						pools.push_front(subpool);
@@ -171,7 +179,7 @@ namespace XTL
 				{
 					std::string label2 = std::string(s + 2, t - (s + 2));
 
-					for (std::list<ArgumentsPool *>::iterator itr = pools.begin();
+					for (std::list<OptionsPool *>::iterator itr = pools.begin();
 					     itr != pools.end();
 					     ++itr)
 					{
@@ -179,7 +187,7 @@ namespace XTL
 						if (opt != options_.end())
 						{
 							desc = opt->first;
-							arg = opt->second;
+							option = opt->second;
 							break;
 						}
 					}
@@ -189,29 +197,29 @@ namespace XTL
 						throw ProgramOptionsError(FormatString("Invalid program option '--%s'", label2.c_str()));
 					}
 
-					if ((desc->flags & ArgumentBase::PASSWORD) != 0)
+					if (!option->NeedValue())
+					{
+						throw ProgramOptionsError(FormatString("Unexpected value for program option '--%s'", label2.c_str()));
+					}
+
+					OptionsPool * subpool = option->Set(t + 1);
+					if (subpool != 0)
+					{
+						pools.push_front(subpool);
+					}
+
+					if ((desc->flags & Option::PASSWORD) != 0)
 					{
 						for (++t; *t != '\0'; ++t)
 						{
 							*const_cast<char *>(t) = '*';
 						}
 					}
-
-					if (!arg->NeedValue())
-					{
-						throw ProgramOptionsError(FormatString("Unexpected value for program option '--%s'", label2.c_str()));
-					}
-
-					ArgumentsPool * subpool = arg->Set(t + 1);
-					if (subpool != 0)
-					{
-						pools.push_front(subpool);
-					}
 				}
 			}
 			else
 			{
-				for (std::list<ArgumentsPool *>::iterator itr = pools.begin();
+				for (std::list<OptionsPool *>::iterator itr = pools.begin();
 				     itr != pools.end();
 				     ++itr)
 				{
@@ -219,7 +227,7 @@ namespace XTL
 					if (opt != options_.end())
 					{
 						desc = opt->first;
-						arg = opt->second;
+						option = opt->second;
 						break;
 					}
 				}
@@ -229,7 +237,7 @@ namespace XTL
 					throw ProgramOptionsError(FormatString("Invalid program option '-%s'", s + 1));
 				}
 
-				if (arg->NeedValue())
+				if (option->NeedValue())
 				{
 					if (i >= argc - 1)
 					{
@@ -237,13 +245,13 @@ namespace XTL
 					}
 					++i;
 
-					ArgumentsPool * subpool = arg->Set(argv[i]);
+					OptionsPool * subpool = option->Set(argv[i]);
 					if (subpool != 0)
 					{
 						pools.push_front(subpool);
 					}
 
-					if ((desc->flags & ArgumentBase::PASSWORD) != 0)
+					if ((desc->flags & Option::PASSWORD) != 0)
 					{
 						for (char * t = const_cast<char *>(argv[i]); *t != '\0'; ++t)
 						{
@@ -253,7 +261,7 @@ namespace XTL
 				}
 				else
 				{
-					ArgumentsPool * subpool = arg->Set(0);
+					OptionsPool * subpool = option->Set(0);
 					if (subpool != 0)
 					{
 						pools.push_front(subpool);
@@ -262,11 +270,48 @@ namespace XTL
 			}
 		}
 
-		for (std::list<ArgumentsPool *>::const_iterator itr = pools.begin();
+		for (std::list<OptionsPool *>::const_iterator itr = pools.begin();
 		     itr != pools.end();
 		     ++itr)
 		{
 			(*itr)->CheckRequiredOptions();
+		}
+
+		return true;
+	}
+
+	bool OptionStringToInteger(const char * s, long long & i)
+	{
+		const char * p = s;
+
+		bool neg = false;
+		if (*p == '-')
+		{
+			neg = true;
+			++p;
+		}
+		else if (*p == '+')
+		{
+			++p;
+		}
+
+		i = 0;
+		for (; *p != '\0'; ++p)
+		{
+			if (*p < '0' || *p > '9')
+			{
+				if (neg)
+				{
+					i = -i;
+				}
+				return false;
+			}
+			i = (i << 3) + (i << 1) + (*p - '0');
+		}
+
+		if (neg)
+		{
+			i = -i;
 		}
 
 		return true;
