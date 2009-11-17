@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include <xtl/SocketAddressInet.hpp>
-#include <xtl/TcpSocket.hpp>
+//#include <xtl/SocketAddressInet.hpp>
+//#include <xtl/TcpSocket.hpp>
 
 static const int SERVER_PORT    = 1133;
 static const int SERVER_BACKLOG =   64;
@@ -165,8 +165,20 @@ static const int SERVER_BACKLOG =   64;
 	};
 */
 
+class Ex {};
+
 int main(int argc, const char * argv[])
 {
+	try
+	{
+		throw Ex();
+	}
+	catch (...)
+	{
+		fprintf(stderr, "Error\n");
+	}
+
+/*
 	XTL::SocketAddressInet sa("77.88.21.11");
 
 	printf("%s\n", sa.Host().c_str());
@@ -179,7 +191,7 @@ int main(int argc, const char * argv[])
 	socket.SetBlocking(false);
 
 	printf("%d\n", socket.GetBlocking());
-
+*/
 	return 0;
 
 	/*
