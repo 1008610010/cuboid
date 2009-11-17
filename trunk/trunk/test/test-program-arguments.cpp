@@ -1,26 +1,85 @@
 #include <stdio.h>
-#include <xtl/ProgramArguments.hpp>
+#include <xtl/ProgramOptions.hpp>
+
+namespace XTL
+{
+	class SimpleOptionsPrinter
+	{
+		public:
+
+			SimpleOptionsPrinter(FILE * file, int columnSize)
+				: f_(file), column_(columnSize, ' ')
+			{
+				;;
+			}
+
+			void OnMode(const OptionDesc * desc, const Option * option, int depth)
+			{
+				fprintf(f_, "  %s:\n", (Space(depth * 2) + desc->desc).c_str());
+			}
+
+			void OnModeValue(const OptionDesc * desc, const Option * option, int depth)
+			{
+				Print(std::string("  ") + Space(depth * 2) + desc->AsString(), desc->desc);
+			}
+
+			void OnOption(const OptionDesc * desc, const Option * option, int depth)
+			{
+				Print(std::string("  ") + Space(depth * 2) + desc->AsString(), desc->desc);
+			}
+
+		protected:
+
+			void Indent(int depth)
+			{
+				for (; depth > 0; --depth)
+				{
+					fprintf(f_, "  ");
+				}
+			}
+
+			const std::string Space(int size) const
+			{
+				return std::string(size, ' ');
+			}
+
+			void Print(const std::string & first, const std::string second)
+			{
+				if (first.length() >= column_.length())
+				{
+					fprintf(
+						f_,
+						"%s\n%s%s\n",
+						first.c_str(),
+						column_.c_str(),
+						second.c_str()
+					);
+				}
+				else
+				{
+					fprintf(
+						f_,
+						"%s%s\n",
+						(first + Space(column_.length() - first.length())).c_str(),
+						second.c_str()
+					);
+				}
+			}
+
+			FILE * f_;
+			std::string column_;
+	};
+}
 
 int main(int argc, const char * argv[])
 {
-//	int i, N=20; for (i = 0 ; i < N ; i--) { printf("*"); }
-/*
-	ABCDXYZ
-	X = A^B
-	Y = X^C
-	Z = Y^D
-
-	P1 = (X == A^B)
-	P2 = (Y == X^C)
-	P3 = (Z == Y^D)
-
-	P1 P2 P3
-	0  X  X  CDYZ X=C^Y, 
-*/
-
 	try
 	{
 		XTL::ProgramArguments & args = XTL::ProgramArguments::Instance();
+
+//		XTL::ProgramArguments::PrintHelp(stderr);
+		XTL::ProgramArguments::Instance().Iterate(XTL::SimpleOptionsPrinter(stderr, 28));
+		return 0;
 
 		bool b = args.Parse(argc, argv);
 

@@ -17,7 +17,7 @@ IF("${CMAKE_SYSTEM_NAME}" MATCHES "SunOS")
 	MESSAGE(STATUS "#### Building for SunOS")
 ENDIF("${CMAKE_SYSTEM_NAME}" MATCHES "SunOS")
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall -Wundef -Wsign-compare -Wpointer-arith -Wparentheses -Wno-long-long -pedantic")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O2 -Wall -Wundef -Wsign-compare -Wpointer-arith -Wparentheses -Wno-long-long -pedantic")
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall -Wundef -Wsign-compare -Wpointer-arith -Wparentheses -Wno-long-long -pedantic -D_DEBUG")
 
 INCLUDE_DIRECTORIES(
@@ -78,6 +78,6 @@ ADD_EXECUTABLE (
 ADD_EXECUTABLE (
 	test-program-arguments
 		test/test-program-arguments.cpp
-		xtl/ProgramArguments.cpp
+		xtl/ProgramOptions.cpp
 		xtl/StringUtils.cpp
 )
