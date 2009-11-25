@@ -1,5 +1,6 @@
 #include "ProgramOptions.hpp"
 #include "StringUtils.hpp"
+#include <string.h> // strchr, strcmp
 
 namespace XTL
 {
@@ -11,7 +12,7 @@ namespace XTL
 			{
 				if (value2 != 0)
 				{
-					return std::string("-") + label1 + ", --" + label2 + "=" + value2;
+					return std::string("-") + label1 + " " + value2 + ", --" + label2 + "=" + value2;
 				}
 				else
 				{
@@ -20,7 +21,14 @@ namespace XTL
 			}
 			else
 			{
-				return std::string("-") + label1;
+				if (value2 != 0)
+				{
+					return std::string("-") + label1 + " " + value2;
+				}
+				else
+				{
+					return std::string("-") + label1;
+				}
 			}
 		}
 		else if (label2 != 0)
@@ -36,11 +44,16 @@ namespace XTL
 		}
 		else
 		{
-			return desc;
+			return text;
 		}
 	}
 
-	void OptionValueString::Set(const char * s)
+	bool OptionDesc::Required() const
+	{
+		return (flags & Option::REQUIRED) != 0;
+	}
+
+	void OptionValueString::Set(const OptionDesc * desc, const char * s)
 	{
 		this->value_.assign(s);
 	}
@@ -82,7 +95,7 @@ namespace XTL
 		return true;
 	}
 
-	void OptionValueInteger::Set(const char * s)
+	void OptionValueInteger::Set(const OptionDesc * desc, const char * s)
 	{
 		if (!OptionStringToInteger(s, this->value_))
 		{
@@ -91,14 +104,12 @@ namespace XTL
 	}
 
 	OptionsPool::OptionsPool()
-		: nextId_(0),
-		  set_(0),
-		  options_()
+		: options_()
 	{
 		;;
 	}
 
-	void OptionsPool::AddOption(const OptionDesc * desc, Option * option, OptionValue * value)
+	void OptionsPool::RegisterOption(const OptionDesc * desc, Option * option, OptionValue * value, unsigned int flags)
 	{
 //		fprintf(stderr, "AddOption: %s to %p\n", desc->AsString().c_str(), (void *) this);
 		if (desc->label1 != 0 && FindByLabel1(desc->label1) != 0)
@@ -111,27 +122,7 @@ namespace XTL
 			throw ProgramOptionsError(FormatString("Internal logic error: duplicate options '--%s'", desc->label2));
 		}
 
-		options_.push_back(OptionEntry(desc, option, value));
-	}
-
-	const unsigned long long OptionsPool::NextId()
-	{
-		if (nextId_ >= 9223372036854775808llu)
-		{
-			throw ProgramOptionsError("Internal logic error: too many options in the same pool");
-		}
-
-		return nextId_ = (nextId_ > 0 ? (nextId_ << 1) : 1);
-	}
-
-	void OptionsPool::SetPresent(const unsigned long long & id)
-	{
-		set_ |= id;
-	}
-
-	bool OptionsPool::Contains(const unsigned long long & id)
-	{
-		return (set_ & id) != 0;
+		options_.push_back(OptionEntry(desc, option, value, flags));
 	}
 
 	OptionsPool::OptionEntry * OptionsPool::FindByLabel1(const char * label1)
@@ -168,15 +159,16 @@ namespace XTL
 		     itr != options_.end();
 		     ++itr)
 		{
-			if ((itr->desc->flags & Option::REQUIRED) != 0 &&
-			    !Contains(itr->option->Id()))
+//			fprintf(stderr, "%s\n", itr->desc->AsString().c_str());
+
+			if (!itr->SkipCheck() && itr->desc->Required() && !itr->option->Exists())
 			{
 				throw ProgramOptionsError(FormatString("Program option '%s' is required", itr->desc->AsString().c_str()));
 			}
 		}
 	}
 
-	bool OptionsPool::Parse(int argc, const char * argv[])
+	void OptionsPool::Parse(int argc, const char * argv[], std::string & programName)
 	{
 		if (argc == 0)
 		{
@@ -186,7 +178,6 @@ namespace XTL
 		std::list<OptionsPool *> pools;
 		pools.push_back(this);
 
-		std::string programName;
 		programName.assign(argv[0]);
 
 		for (int i = 1; i < argc; ++i)
@@ -223,7 +214,14 @@ namespace XTL
 
 					if (entry->value != 0)
 					{
-						throw ProgramOptionsError(FormatString("Value expected for program option '--%s'", s + 2));
+						if (entry->value->NeedValue())
+						{
+							throw ProgramOptionsError(FormatString("Value expected for program option '--%s'", s + 2));
+						}
+						else
+						{
+							entry->value->Set(entry->desc, 0);
+						}
 					}
 				}
 				else
@@ -242,12 +240,12 @@ namespace XTL
 						throw ProgramOptionsError(FormatString("Invalid program option '--%s'", label2.c_str()));
 					}
 
-					if (entry->value == 0)
+					if (entry->value == 0 || !entry->value->NeedValue())
 					{
 						throw ProgramOptionsError(FormatString("Unexpected value for program option '--%s'", label2.c_str()));
 					}
 
-					entry->value->Set(t + 1);
+					entry->value->Set(entry->desc, t + 1);
 
 					if ((entry->desc->flags & Option::PASSWORD) != 0)
 					{
@@ -274,21 +272,28 @@ namespace XTL
 
 				if (entry->value != 0)
 				{
-					if (i >= argc - 1)
+					if (entry->value->NeedValue())
 					{
-						throw ProgramOptionsError(FormatString("Value expected for program option '-%s'", s + 1));
-					}
-
-					++i;
-
-					entry->value->Set(argv[i]);
-
-					if ((entry->desc->flags & Option::PASSWORD) != 0)
-					{
-						for (char * t = const_cast<char *>(argv[i]); *t != '\0'; ++t)
+						if (i >= argc - 1)
 						{
-							*t = '*';
+							throw ProgramOptionsError(FormatString("Value expected for program option '-%s'", s + 1));
 						}
+
+						++i;
+
+						entry->value->Set(entry->desc, argv[i]);
+
+						if ((entry->desc->flags & Option::PASSWORD) != 0)
+						{
+							for (char * t = const_cast<char *>(argv[i]); *t != '\0'; ++t)
+							{
+								*t = '*';
+							}
+						}
+					}
+					else
+					{
+						entry->value->Set(entry->desc, 0);
 					}
 				}
 			}
@@ -306,7 +311,5 @@ namespace XTL
 		{
 			(*itr)->CheckRequiredOptions();
 		}
-
-		return true;
 	}
 }

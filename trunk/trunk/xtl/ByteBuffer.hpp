@@ -38,7 +38,7 @@ namespace XTL
 			/**
 			 * @brief Copy constructor
 			 * @param buffer Another buffer object.
-			 * @exception OutOfMemoryException
+			 * @exception OutOfMemoryException Not enough memory for allocating buffer size.
 			 */
 			ByteBuffer(const ByteBuffer & buffer);
 
@@ -75,7 +75,7 @@ namespace XTL
 			/**
 			 * @brief Reserve buffer memory for appending 'size' bytes.
 			 * @param size Size of additional memory to reserve.
-			 * @exception OutOfMemoryException
+			 * @exception OutOfMemoryException Not enough memory for reallocating buffer size.
 			 */
 			void Reserve(int size);
 
