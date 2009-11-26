@@ -62,7 +62,9 @@ ARGUMENTS_BEGIN
 			ARGUMENT_GROUP_INTEGER (Blue,  "b", 0, "#", REQUIRED, "Blue component")
 			ARGUMENT_GROUP_FLAG    (Short, 0, "short", "Scale color component by 16, not by 256")
 		ARGUMENT_MODE_GROUP_END(RGB)
-
+		ARGUMENT_MODE_INTEGER_BEGIN(Grayscale, "gs", "grayscale", "#", OPTIONAL, "Grayscale color")
+			ARGUMENT_INTEGER(Scale, 0, "max", "#", OPTIONAL, "Luminosity value of white color")
+		ARGUMENT_MODE_INTEGER_END(Grayscale)
 /*
 		ARGUMENT_MODE_STRING(RGB, "rgb", "rgb", "RRGGBB", "Red-green-blue color representation")
 		ARGUMENT_MODE_INTEGER_BEGIN(Grayscale, "gs", "grayscale", "#", "Grayscale color")

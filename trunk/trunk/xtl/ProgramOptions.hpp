@@ -184,6 +184,7 @@ namespace XTL
 			OptionValue & operator= (const OptionValue &);
 	};
 
+	// TODO: add value handler (in Set() method)
 	template <typename T>
 	class OptionValueScalar : public OptionValue
 	{
@@ -225,30 +226,33 @@ namespace XTL
 			virtual void Set(const OptionDesc * desc, const char * s);
 	};
 
-	typedef void (*OptionHandler)(const OptionDesc * desc, const char * s);
-
-	class OptionValueTrigger : public OptionValue
+	template <typename _Handler>
+	class OptionValueHandler : public OptionValue
 	{
 		public:
 
-			OptionValueTrigger(OptionHandler handler, bool needValue = false)
-				: handler_(handler), needValue_(needValue) { ;; }
+			OptionValueHandler(_Handler handler, bool needValue)
+				: handler_(handler) { ;; }
 
-			virtual bool NeedValue() const
+			virtual bool NeedValue() const 
 			{
 				return needValue_;
 			}
-
+			
 			virtual void Set(const OptionDesc * desc, const char * s)
 			{
 				handler_(desc, s);
 			}
 
-		public:
+		protected:
 
-			OptionHandler handler_;
-			bool needValue_;
+			_Handler handler_;
+			bool     needValue_;
 	};
+
+	typedef void (*OptionHandler)(const OptionDesc * desc, const char * s);
+
+	typedef OptionValueHandler<OptionHandler> OptionValueTrigger;
 
 	class OptionsPool
 	{
@@ -902,7 +906,7 @@ namespace XTL
 					virtual OptionsPool * SubPool() \
 					{ \
 						if (options_.get() == 0) { options_.reset(new Options()); } \
-						return this->SubPool(); \
+						return Super::SubPool(); \
 					} \
 					class Options : public OptionsBase \
 					{
@@ -933,7 +937,7 @@ namespace XTL
 					virtual OptionsPool * SubPool() \
 					{ \
 						if (options_.get() == 0) { options_.reset(new Options()); } \
-						return this->SubPool(); \
+						return Super::SubPool(); \
 					} \
 					class Options : public OptionsBase \
 					{
