@@ -84,3 +84,8 @@ ADD_EXECUTABLE (
 		xtl/ProgramOptionsPrinter.cpp
 		xtl/StringUtils.cpp
 )
+
+ADD_EXECUTABLE (
+	crc32
+		test/crc32.cpp
+)

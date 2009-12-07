@@ -41,7 +41,7 @@ namespace XTL
 
 		protected:
 
-			std::string what_; /// Текстовое представление ошибки.
+			std::string what_; ///< Текстовое представление ошибки.
 	};
 
 	/**
@@ -89,11 +89,11 @@ namespace XTL
 	 */
 	struct OptionDesc
 	{
-		const char         * label1; /// Метка -label1 [value1].
-		const char         * label2; /// Метка --label2[=value2].
-		const char         * value2; /// Шаблон значания для label2.
-		const char         * text;   /// Текстовое описание аргумента.
-		unsigned long long   flags;  /// Флаги аргумента.
+		const char         * label1; ///< Метка -label1 [value1].
+		const char         * label2; ///< Метка --label2[=value2].
+		const char         * value2; ///< Шаблон значания для label2.
+		const char         * text;   ///< Текстовое описание аргумента.
+		unsigned long long   flags;  ///< Флаги аргумента.
 
 		/**
 		 * @brief Получить текстовое представление аргумента.

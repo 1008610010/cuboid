@@ -47,6 +47,7 @@ ARGUMENTS_END
 */
 
 ARGUMENTS_BEGIN
+	ARGUMENT_FLAG(Flag, "f", "flag", "Simple flag")
 	ARGUMENT_TRIGGER (Help, "h", "help", "Show this help message", ShowHelp)
 
 	ARGUMENT_MODES_BEGIN(Color, REQUIRED, "Color value")
