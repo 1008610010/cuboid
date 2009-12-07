@@ -86,7 +86,7 @@ namespace XTL
 	{
 		public:
 
-			static const int CHARS_COUNT = 256;
+			static const int CHARS_COUNT = (1 << sizeof(char));
 
 			enum
 			{
