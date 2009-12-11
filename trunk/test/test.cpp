@@ -119,75 +119,128 @@ class IpAddress
 #include <xtl/BitUtils.hpp>
 #include <xtl/Types.hpp>
 
-template <typename _KeyType,
-          typename _ValueType,
-          unsigned int CAPACITY = (1 << (sizeof(_KeyType) << 3))>
-class ArrayMap
+namespace XTL
 {
-	public:
+	template <typename _KeyType, typename _ValueType>
+	class StaticArrayMap
+	{
+		static const unsigned int CAPACITY = (1 << (sizeof(_KeyType) << 3));
 
-		typedef _KeyType   KeyType;
-		typedef _ValueType ValueType;
+		public:
 
-		ValueType & Get(const KeyType & key)
-		{
-			return array_[AsUint(key)];
-		}
+			typedef _KeyType   KeyType;
+			typedef _ValueType ValueType;
 
-		const ValueType & Get(const KeyType & key) const
-		{
-			return array_[AsUint(key)];
-		}
-
-		ValueType & operator[] (const KeyType & key)
-		{
-			return Get(key);
-		}
-
-		const ValueType & operator[] (const KeyType & key) const
-		{
-			return Get(key);
-		}
-
-		ArrayMap & Set(const KeyType & key, const ValueType & value)
-		{
-			array_[AsUint(key)] = value;
-			return *this;
-		}
-
-		ArrayMap & Set(const KeyType & keyFrom, const KeyType & keyTo, const ValueType & value)
-		{
-			ValueType * end = array_ + AsUint(keyTo);
-			for (ValueType * p = array_ + AsUint(keyFrom); p <= end; ++p)
+			static const unsigned int Capacity()
 			{
-				*p = value;
+				return CAPACITY;
 			}
-			return *this;
-		}
 
-		ArrayMap & SetAll(const ValueType & value)
-		{
-			ValueType * end = array_ + CAPACITY;
-			for (ValueType * p = array_; p < end; ++p)
+			const ValueType & Get(const KeyType & key) const
 			{
-				*p = value;
+				return values_[Index(key)];
 			}
-			return *this;
-		}
 
-	protected:
+			ValueType & Get(const KeyType & key)
+			{
+				return values_[Index(key)];
+			}
 
-		static unsigned int AsUint(const KeyType & key)
-		{
-			return static_cast<unsigned int>(
-				static_cast<typename UnsignedInt<sizeof(key)>::Type>(
-					key
-				)
-			);
-		}
+			const ValueType & operator[] (const KeyType & key) const
+			{
+				return Get(key);
+			}
 
-		ValueType array_[CAPACITY];
-};
+			ValueType & operator[] (const KeyType & key)
+			{
+				return Get(key);
+			}
+
+			StaticArrayMap & Init(const ValueType & value)
+			{
+				ValueType * end = values_ + Capacity();
+				for (ValueType * p = values_; p < end; ++p)
+				{
+					*p = value;
+				}
+				return *this;
+			}
+
+			StaticArrayMap & Set(const KeyType & key, const ValueType & value)
+			{
+				values_[Index(key)] = value;
+				return *this;
+			}
+
+			StaticArrayMap & Set(const KeyType & keyFrom, const KeyType & keyTo, const ValueType & value)
+			{
+				ValueType * end = values_ + Index(keyTo);
+				for (ValueType * p = values_ + Index(keyFrom); p <= end; ++p)
+				{
+					*p = value;
+				}
+				return *this;
+			}
+
+		protected:
+
+			static const unsigned int Index(const KeyType & key)
+			{
+				return static_cast<unsigned int>(
+					static_cast<typename UnsignedInt<sizeof(KeyType)>::Type>(
+						key
+					)
+				);
+			}
+
+			_ValueType values_[CAPACITY];
+	};
+
+	class DigitClassifier : protected StaticArrayMap<char, signed char>
+	{
+		typedef StaticArrayMap<char, signed char> Super;
+
+		public:
+
+			DigitClassifier(bool upperHex, bool lowerHex)
+				: Super()
+			{
+				Init(-1);
+				Set('0', 0); Set('1', 1); Set('2', 2); Set('3', 3);
+				Set('4', 4); Set('5', 5); Set('6', 6); Set('7', 7);
+				Set('8', 8); Set('9', 9);
+				if (upperHex)
+				{
+					Set('A', 10); Set('B', 11); Set('C', 12);
+					Set('D', 13); Set('E', 14); Set('F', 15);
+				}
+				if (lowerHex)
+				{
+					Set('a', 10); Set('b', 11); Set('c', 12);
+					Set('d', 13); Set('e', 14); Set('f', 15);
+				}
+			}
+
+			const int operator() (char ch) const
+			{
+				return Super::Get(ch);
+			}
+
+		protected:
+	};
+
+	DigitClassifier & DecDigitClassifier()
+	{
+		static DigitClassifier instance(false, false);
+		return instance;
+	}
+
+	DigitClassifier & HexDigitClassifier()
+	{
+		static DigitClassifier instance(true, true);
+		return instance;
+	}
+}
 
 class HexCharClassifier
 {
@@ -208,7 +261,7 @@ class HexCharClassifier
 
 		HexCharClassifier()
 		{
-			map_.SetAll(-1);
+			map_.Init(-1);
 
 			for (char ch = '0'; ch <= '9'; ++ch)
 			{
@@ -224,7 +277,7 @@ class HexCharClassifier
 			}
 		};
 
-		ArrayMap<char, signed char> map_;
+		XTL::StaticArrayMap<char, signed char> map_;
 };
 
 namespace XTL
@@ -238,19 +291,29 @@ namespace XTL
 			CharFilter & Add(char ch)
 			{
 				set_.Set(static_cast<unsigned char>(ch));
+				return *this;
 			}
 
 			CharFilter & Remove(char ch)
 			{
 				set_.Clear(static_cast<unsigned char>(ch));
+				return *this;
 			}
 
-			
+			const bool operator() (char ch) const
+			{
+				return set_.Get(ch);
+			}
 
 		protected:
 
 			StaticBitSet<32> set_;
 	};
+
+	class CharClassifier
+	{
+	};
+	
 }
 
 class CharClassifier
@@ -351,7 +414,7 @@ CHAR_STAR // '*'
 			*/
 		}
 
-		ArrayMap<char, unsigned int> map_;
+		XTL::StaticArrayMap<char, unsigned int> map_;
 };
 
 
@@ -397,86 +460,441 @@ class CharSource
 //		CharClassMap
 };
 
-class IntegerToken
+namespace XTL
 {
-	static bool Digit(char ch)
+	class NullTerminatedCharSource
 	{
-		return ch >= '0' && ch <= '9';
-	}
+		public:
 
+			NullTerminatedCharSource(const void * ptr)
+				: ptr_(static_cast<const char *>(ptr)) { ;; }
+
+			const bool AtEnd() const
+			{
+				return *ptr_ == '\0';
+			}
+
+			const bool NotAtEnd() const
+			{
+				return *ptr_ != '\0';
+			}
+
+			void Advance()
+			{
+				++ptr_;
+			}
+
+			const char Char() const
+			{
+				return *ptr_;
+			}
+
+			const bool Skip(char ch)
+			{
+				if (AtEnd())
+				{
+					return false;
+				}
+
+				if (Char() == ch)
+				{
+					Advance();
+					return true;
+				}
+
+				return false;
+			}
+
+		protected:
+
+			const char * ptr_;
+	};
+
+	class BoundedCharSource : protected NullTerminatedCharSource
+	{
+		typedef NullTerminatedCharSource Super;
+
+		public:
+
+			BoundedCharSource(const void * begin, unsigned int length)
+				: Super(begin),
+				  end_(static_cast<const char *>(begin) + length)
+			{
+				;;
+			}
+
+			BoundedCharSource(const void * begin, const void * end)
+				: Super(begin),
+				  end_(static_cast<const char *>(end))
+			{
+				;;
+			}
+
+			const bool AtEnd() const
+			{
+				return ptr_ >= end_;
+			}
+
+			const bool NotAtEnd() const
+			{
+				return ptr_ < end_;
+			}
+
+			using Super::Advance;
+			using Super::Char;
+			using Super::Skip;
+
+		protected:
+
+			const char * end_;
+	};
+
+	class TextPosition
+	{
+		public:
+
+			TextPosition()
+				: row_(0), column_(0) { ;; }
+
+			TextPosition(unsigned int row)
+				: row_(row), column_(0) { ;; }
+
+			TextPosition(unsigned int row, unsigned int column)
+				: row_(row), column_(column) { ;; }
+
+			const unsigned int Row() const
+			{
+				return row_;
+			}
+
+			const unsigned int Column() const
+			{
+				return column_;
+			}
+
+			void NextRow()
+			{
+				++row_;
+				column_ = 0;
+			}
+
+			void NextColumn()
+			{
+				++column_;
+			}
+
+		protected:
+
+			unsigned int row_;
+			unsigned int column_;
+	};
+
+	template <typename _CharSource>
+	class TextSource
+	{
+		public:
+
+			typedef _CharSource CharSource;
+
+			TextSource(const CharSource & charSource)
+				: charSource_(charSource), position_()
+			{
+				;;
+			}
+
+			TextSource(const CharSource & charSource, const TextPosition & position)
+				: charSource_(charSource), position_(position)
+			{
+				;;
+			}
+
+			const bool AtEnd() const
+			{
+				return charSource_.AtEnd();
+			}
+
+			const bool NotAtEnd() const
+			{
+				return charSource_.NotAtEnd();
+			}
+
+			void Advance()
+			{
+				// TODO: may be add IsNewLine() method to char source
+				if (Char() == '\n')
+				{
+					position_.NextRow();
+				}
+				else
+				{
+					position_.NextColumn();
+				}
+
+				charSource_.Advance();
+			}
+
+			const char Char() const
+			{
+				return charSource_.Char();
+			}
+
+			const CharSource & Source() const
+			{
+				return charSource_;
+			}
+
+			const TextPosition & Position() const
+			{
+				return position_;
+			}
+
+			const unsigned int Row() const
+			{
+				return position_.Row();
+			}
+
+			const unsigned int Column() const
+			{
+				return position_.Column();
+			}
+
+			const bool Skip(char ch)
+			{
+				if (AtEnd())
+				{
+					return false;
+				}
+
+				if (Char() == ch)
+				{
+					Advance();
+					return true;
+				}
+
+				return false;
+			}
+
+		protected:
+
+			CharSource   charSource_;
+			TextPosition position_;
+	};
+
+	class NullTerminatedTextSource : public TextSource<NullTerminatedCharSource>
+	{
+		typedef TextSource<NullTerminatedCharSource> Super;
+
+		public:
+
+			NullTerminatedTextSource(const void * ptr)
+				: Super(NullTerminatedCharSource(ptr))
+			{
+				;;
+			}
+
+			NullTerminatedTextSource(const void * ptr, const TextPosition & position)
+				: Super(NullTerminatedCharSource(ptr), position)
+			{
+				;;
+			}
+	};
+}
+
+#include <sys/time.h>
+
+template <typename _CharSource, typename _CharFilter>
+bool GobbleChars(_CharSource & charSource, _CharFilter filter, unsigned int & count)
+{
+	for (; charSource.NotAtEnd(); charSource.Advance())
+	{
+		if (!filter(charSource.Char()))
+		{
+			return true;
+		}
+		++count;
+	}
+	return false;
+}
+
+class CharGobbler
+{
 	public:
 
-		IntegerToken()
-			: value_(0) { ;; }
+		CharGobbler()
+			: count_(0) { ;; }
 
-		template <typename _CharSource>
-		void Read(_CharSource & source)
+		template <typename _CharSource, typename _CharFilter>
+		bool operator() (_CharSource & charSource, _CharFilter filter)
 		{
-			value_ = 0;
-			bool negative = false;
-			if (source.Read('-'))
-			{
-				negative = true;
-			}
-			else
-			{
-				while (source.Read(Digit))
-				{
-					value_ = (value_ << 3) + (value_ << 1) + (source.Char() - '0');
-				}
-			}
+			count_ = 0;
 
+			return GobbleChars(charSource, filter, count_);
 		}
 
-		const long long int & Value() const
+		const unsigned int Count() const
 		{
-			return value_;
+			return count_;
 		}
 
 	protected:
 
-		long long int value_;
+		unsigned int count_;
 };
 
-class Lexer
+namespace XTL
 {
-	public:
+	class DecimalClassifier : protected StaticArrayMap<char, signed char>
+	{
+		typedef StaticArrayMap<char, signed char> Super;
 
-		enum
-		{
-			TOKEN_EOF  = 0x0000,
-			TOKEN_BOF  = 0x0001,
-			TOKEN_CHAR = 0x0002
-		};
-};
+		public:
 
-#include <sys/time.h>
+			DecimalClassifier()
+				: Super()
+			{
+				Init(-1);
+				Set('0', 0); Set('1', 1); Set('2', 2); Set('3', 3);
+				Set('4', 4); Set('5', 5); Set('6', 6); Set('7', 7);
+				Set('8', 8); Set('9', 9);
+			}
+
+			const int operator() (char ch) const
+			{
+				return Get(ch);
+			}
+
+			static DecimalClassifier & Instance()
+			{
+				static DecimalClassifier instance;
+				return instance;
+			}
+	};
+
+	class HexadecimalClassifier : protected DecimalClassifier
+	{
+		public:
+
+			HexadecimalClassifier()
+				: DecimalClassifier()
+			{
+				Set('A', 10); Set('a', 10);
+				Set('B', 11); Set('b', 11);
+				Set('C', 12); Set('c', 12);
+				Set('D', 13); Set('d', 13);
+				Set('E', 14); Set('e', 14);
+				Set('F', 15); Set('f', 15);
+			}
+			
+			const int operator() (char ch) const
+			{
+				return Get(ch);
+			}
+	};
+
+	class UnsignedIntegerParser
+	{
+		public:
+
+			UnsignedIntegerParser()
+				: value_(0) { ;; }
+
+			template <typename _CharSource>
+			bool operator() (_CharSource & charSource)
+			{
+				value_ = 0;
+
+				for (; charSource.NotAtEnd(); charSource.Advance())
+				{
+					int digit = DecimalClassifier::Instance()(charSource.Char());
+					if (digit < 0)
+					{
+						return true;
+					}
+
+					value_ = (value_ << 3) + (value_ << 1) + digit;
+				}
+
+				return false;
+			}
+
+			const unsigned long long int Value() const
+			{
+				return value_;
+			}
+
+		protected:
+
+			unsigned long long int value_;
+	};
+
+	class IntegerParser
+	{
+		public:
+
+			IntegerParser()
+				: value_(0) { ;; }
+
+			template <typename _CharSource>
+			bool operator() (_CharSource & charSource)
+			{
+				value_ = 0;
+
+				bool negative = false;
+
+				if (charSource.Skip('-'))
+				{
+					negative = true;
+				}
+				else
+				{
+					charSource.Skip('+');
+				}
+
+				UnsignedIntegerParser parser;
+				bool result = parser(charSource);
+
+				value_ = (negative ? -parser.Value() : parser.Value());
+
+				return result;
+			}
+
+		protected:
+
+			signed long long int value_;
+	};
+}
 
 int main(int argc, const char * argv[])
 {
-	XTL::StaticBitSet<16> bs;
+	const char * const s = "123456\nasd\n\nqwer";
 
-	for (unsigned int i = 0; i < 64; ++i)
+	XTL::NullTerminatedTextSource src(s);
+
+	for (; src.NotAtEnd(); src.Advance())
 	{
-		bs.Invert(i, 127 - i);
+		fprintf(stderr, "%02x (%u, %u)\n", src.Char(), src.Row(), src.Column());
 	}
-
-	for (unsigned int i = 0; i < bs.Capacity(); ++i)
-	{
-		fprintf(stderr, "%d ", bs.Get(i) ? 1 : 0);
-	}
-
-	fprintf(stderr, "\n");
 
 	return 0;
 
 	timeval t;
 
+	char buffer[1000000];
+
 	gettimeofday(&t, NULL);
 	double value = (double) t.tv_sec + (double) t.tv_usec / 1000000.0;
 
+	for (int i = 0; i < 10000; ++i)
+	{
+		memset(buffer, '\xff', sizeof(buffer));
+		//SetChars(buffer, '\xff', sizeof(buffer));
+	}
+
 	gettimeofday(&t, NULL);
 	value = (double) t.tv_sec + (double) t.tv_usec / 1000000.0 - value;
+
+	fprintf(stderr, "%0.3f\n", value);
+
 	return 0;
 
 	for (int i = 0; i < 256; ++i)
