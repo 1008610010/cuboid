@@ -29,6 +29,7 @@ INCLUDE_DIRECTORIES(
 ADD_EXECUTABLE(
 	test
 	test/test.cpp
+	xtl/BitUtils.cpp
 	xtl/ByteBuffer.cpp
 	xtl/TcpSocket.cpp
 	xtl/TcpClient.cpp
