@@ -140,3 +140,14 @@ TARGET_LINK_LIBRARIES (
 )
 
 
+INSTALL (
+	TARGETS
+		xtl-common
+		xtl-common-st
+		xtl-pgsql
+		xtl-pgsql-st
+	DESTINATION
+		lib
+)
+
+

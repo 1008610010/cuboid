@@ -51,6 +51,7 @@ INCLUDE_DIRECTORIES (
 )
 
 
+
 ADD_EXECUTABLE (
 	program_options
 		tests/program_options.cpp
@@ -63,4 +64,27 @@ TARGET_LINK_LIBRARIES (
 
 
 ADD_SUBDIRECTORY (unittests)
+
+
+#INSTALL (
+#	TARGETS
+#		xc3_calc_ratings
+#		xc3_ratings_fetch_journals
+#		xc3_ratings_fetch_posts
+#		xc3_ratings_read_journal
+#		xc3_ratings_read_post
+#		xc3_ratings_read_header
+#	DESTINATION
+#		bin
+#)
+
+INSTALL (
+	DIRECTORY   lib/xtl
+	DESTINATION include
+	PATTERN "*.hpp"
+	PATTERN "*.cpp" EXCLUDE
+	PATTERN ".svn" EXCLUDE
+)
+
+
 
