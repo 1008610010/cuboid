@@ -1,0 +1,175 @@
+class AccessMode
+{
+	public:
+
+		explicit AccessMode(int mode)
+			: mode_(mode)
+		{
+			;;
+		}
+
+		int Get() const
+		{
+			return mode_;
+		}
+
+	private:
+
+		int mode_;
+};
+
+class IpcKey
+{
+	public:
+
+		IpcKey(const char * pathName, char projId)
+			: key_(::ftok(pathName, projId))
+		{
+			if (key_ < 0)
+			{
+				// TODO: throw UnixError here
+			}
+		}
+
+		key_t Get() const
+		{
+			return key_;
+		}
+
+	private:
+
+		key_t key_;
+};
+
+class SharedMemory
+{
+	public:
+
+		static const AccessMode DefaultAccessMode()
+		{
+			static AccessMode defaultMode(0666);
+			return defaultMode;
+		}
+
+		SharedMemory(const IpcKey & key, size_t size, AccessMode mode = DefaultAccessMode())
+			: id_(::shmget(key.Get(), size, IPC_CREAT | IPC_EXCL | mode.Get())),
+			  size_(0),
+			  ptr_(0)
+		{
+			if (id_ < 0)
+			{
+				throw std::runtime_error(strerror(errno));
+			}
+		}
+
+		explicit SharedMemory(const IpcKey & key)
+			: id_(::shmget(key.Get(), 0, 0)),
+			  size_(0),
+			  ptr_(0)
+		{
+			if (id_ < 0)
+			{
+				throw std::runtime_error(strerror(errno));
+			}
+		}
+
+		~SharedMemory() throw()
+		{
+			try
+			{
+				Detach();
+			}
+			catch (...)
+			{
+				;;
+			}
+		}
+
+		size_t Size() const
+		{
+			return size_;
+		}
+
+		void Attach()
+		{
+			if (ptr_ != 0)
+			{
+				return;
+				// throw std::runtime_error("Already attached");
+			}
+
+			ptr_ = ::shmat(id_, 0, 0);
+			if (ptr_ == (void *) -1)
+			{
+				ptr_ = 0;
+				throw std::runtime_error(strerror(errno));
+			}
+		}
+
+		void Detach()
+		{
+			if (ptr_ == 0)
+			{
+				return;
+			}
+
+			printf("Detach()\n");
+
+			if (::shmdt(ptr_) < 0)
+			{
+				printf("    Detach failed\n");
+				throw std::runtime_error(strerror(errno));
+			}
+
+			ptr_ = 0;
+		}
+
+		void * Pointer() const
+		{
+			return ptr_;
+		}
+
+	private:
+
+		void UpdateSize()
+		{
+			struct shmid_ds info; 
+			if (::shmctl(id_, IPC_STAT, &info) < 0)
+			{
+				throw std::runtime_error(strerror(errno));
+			}
+
+			size_ = info.shm_segsz;
+		}
+
+		int id_;
+		size_t size_;
+		void * ptr_;
+};
+
+int main(int argc, char * argv[])
+{
+	IpcKey key(".", 'b');
+
+	if (argc >= 2 && std::string("--create") == argv[1])
+	{
+		SharedMemory mem(key, 1 << 30);
+		printf("SharedMemory was created.\n");
+		return 0;
+	}
+
+	SharedMemory mem(key);
+
+	time_t now = time(0);
+	mem.Attach();
+
+	time_t * t = static_cast<time_t *>(mem.Pointer());
+	int delta = now - *t;
+	*t = now;
+	mem.Detach();
+
+	printf("memsize = %lu\n", mem.Size());
+	printf("delta   = %d\n", delta);
+	return 0;
+}
+

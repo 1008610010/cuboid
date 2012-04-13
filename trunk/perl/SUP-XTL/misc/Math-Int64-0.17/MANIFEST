@@ -1,0 +1,18 @@
+Changes
+Int64.xs
+lib/Math/Int64.pm
+Makefile.PL
+MANIFEST
+ppport.h
+strtoint64.h
+isaac64.h
+README
+t/Math-Int64.t
+t/Math-UInt64.t
+t/Math-Int64-Native.t
+t/Math-UInt64-Native.t
+t/pods.t
+c_api/perl_math_int64.h
+c_api/perl_math_int64.c
+c_api/typemap
+META.yml                                 Module meta-data (added by MakeMaker)
