@@ -1,0 +1,197 @@
+﻿??* Program
+
+  * Code Style
+  * VIM Cheat Sheet
+
+  * Documenting Tool
+    + Links Diagram
+    + Examples
+
+  * Autotest Tool
+
+  * Types
+
+  * Errors
+    - Exceptions or Return-code (Struct or Class)
+    - Exception
+      - const char         * file_;
+      - const unsigned int   line_;
+      - const std::string    what_;
+    - #define THROW(EXCEPTION_CLASS, WHAT) throw EXCEPTION_CLASS(__FILE__, __LINE__, WHAT)
+    
+  * class Status
+    - Status(const char * what);
+    - Status(const std::string & what);
+    - Status(Status & other);
+    - const char * What() const;
+    - const int Code() const;
+      - SUCCESS
+      - RUNTIME_ERROR
+      - ILLEGAL_ARGUMENT
+    - const bool Success() const;
+    - const bool Failed() const;
+    
+  * CharSource
+    - const bool HasChar() const;
+    - const bool AtEnd() const;
+    - const CharType GetChar() const;
+    - void Advance();
+    - IndexedCharSource
+      - const bool WaitChar(CharType ch);
+    - ChunkedCharSource
+      - const bool WaitChar(CharType);
+      - const bool AtChunkEnd() const;
+
+  * BinaryRecord
+    a) save id and type before each field (Google: varint (id << 3) + type)
+    b) save record signature in the file header (such as "I4,I8,{I4,S,S,I4}[]")
+
+      record Name1 {
+          field1 : type1;
+          ...
+      }
+
+      required posts : Post[];
+
+      TYPE := int32 | uint32 | int64 | uint64 | string | TYPE[]
+      
+
+
+  * CharBuffer
+    - void Append(const char *, size_t)
+    - std::string ToString()
+    - Clear()
+    - Delete(size_t from, size_t to)
+
+  * Logger
+
+  * Timing Tool
+
+  * HTTP
+    - v1.0
+    - v1.1
+
+  * Apache
+
+  * String Template
+    * Type:
+      * char;
+      * string;
+      * boolean;
+      * integer (signed, unsigned);
+      * real;
+      * pointer?
+      * const T & - any object;
+    * Field size in chars;
+      * Minimum
+        * Filler-char
+      * Maximum
+        * Need to truncate?
+    * Alignment:
+      * left;
+      * right;
+      * center;
+    * Arguments:
+      * Integer: 0, 1024, -854, +237;
+      * Real:    0.0, -1024.56, +13.3, -11e11, +8.854E+5,
+        * Need class for Real numbers? Without loss of precision (from template)
+      * String: a 'b' "c" d, 'ab"cd', "ab'cd", 'ab,cd', "ab}cd"
+      * Boolean: true, FaLSe
+    * Choice operator:
+      * ${1?if_true:if_false} - $1 must be castable to boolean
+      * ${1?$2:${3}}
+    * Select operator:
+      * ${1#value_0,value_1,value_2,...} - $1 must be castable to integer
+    * Default value operator:
+      * ${1=scv,default_value} === ${X?$1:default_value}, where $X = ($1 == scv);
+    * $1, $2, $3, ...
+    * ${  1 }, ${2 }, ${3}, ...
+    * ${1:ARG1,ARG2,ARG3,...}
+
+  * Template
+
+  * ASCII Parser
+
+  * Daemons
+  * Services
+
+  * Sockets
+    - TCP
+    - UDP
+
+  * Unix IPC
+
+  * Worker
+    - full logs of executing jobs
+
+  * ProgramOptions
+
+  * PostgreSqlConnection, MySqlConnection
+    - Connection::Config
+    - errors
+    - autoreconnect
+    - nested loops by results of SQL queries
+    - PreparedQuery
+    - EscapeString
+
+  * ORM
+
+  * Parser
+    - config.ini
+    - JSON
+    - HTML
+    - XML
+
+  * Synth
+    - приоритет операций
+    - порядок применения операции (слева-направо, справа-налево - Самоприоритет)
+
+  * mod_perl framework
+
+
+
+
+
+
+
+
+
+
+* PC Games
+  - Serious Sam
+  - Heroes of Might and Magic I
+  - Heroes of Might and Magic II
+  - Heroes of Might and Magic III
+  - Heroes of Might and Magic IV
+  - Heroes of Might and Magic V
+
+* Console Games
+  - Nintendo
+  - Super Nintendo
+  - Nintendo 64
+  - Sega Genesis
+  - Gameboy
+  - Gameboy Advance
+  - Panasonic 3DO
+  - Atari ...
+  - Sega Saturn
+  - Nintendo DS
+
+
+* Vim cheat sheet
+* Apache configs manual
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

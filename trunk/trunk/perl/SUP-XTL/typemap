@@ -1,0 +1,12 @@
+TYPEMAP
+
+XTL::FileInputStreamBuffered * CPP_OBJECT_PTR
+
+OUTPUT
+CPP_OBJECT_PTR
+	sv_setref_iv($arg, CLASS, (IV) (void *) $var);
+
+INPUT
+CPP_OBJECT_PTR
+	$var = ($type) SvIV((SV *) SvRV($arg));
+
