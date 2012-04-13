@@ -50,62 +50,6 @@ INCLUDE_DIRECTORIES (
 	${GEN_SRC_PATH}
 )
 
-ADD_EXECUTABLE (
-	xc3_dump_users_table
-		tests/xc3_dump_users_table.cpp
-		lib/xc3/db/ReaderWeight.cpp
-		lib/xc3/db/UsersTableLoader.cpp
-)
-
-TARGET_LINK_LIBRARIES (
-	xc3_dump_users_table
-		xtl-pgsql-st
-		xtl-common-st
-)
-
-ADD_EXECUTABLE (
-	xc3_calc_post_ratings
-		tests/xc3_calc_post_ratings.cpp
-		lib/xc3/ratings/UsersArray.cpp
-		lib/xc3/ratings/PostRating.cpp
-		lib/xc3/ratings/PostRatingMassFilter.cpp
-)
-
-TARGET_LINK_LIBRARIES (
-	xc3_calc_post_ratings
-		xtl-common-st
-)
-
-
-
-#	--cpp_out=${GEN_SRC_PATH}
-# ADD_CUSTOM_COMMAND (
-# 	TARGET xc3_import_users
-# 	PRE_BUILD
-# 	COMMAND /home/dnikolaev/Dropbox/Projects/cxx/xtl/generate-source.pl ${GEN_SRC_PATH}
-# 	COMMENT "Generating file"
-# )
-
-ADD_EXECUTABLE (
-	comment_stats_reader
-		tests/comment_stats_reader.cpp
-)
-
-TARGET_LINK_LIBRARIES (
-	comment_stats_reader
-		xtl-common
-)
-
-ADD_EXECUTABLE (
-	calc_rating
-		tests/calc_rating.cpp
-)
-
-TARGET_LINK_LIBRARIES (
-	calc_rating
-		xtl-common
-)
-
 
 ADD_EXECUTABLE (
 	program_options
