@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#include <xtl/StringUtils.hpp>
+
 namespace XTL
 {
 namespace MYSQL
@@ -27,17 +29,17 @@ namespace MYSQL
 		values_.clear();
 	}
 
-	const bool QueryResultRow::IsEmpty() const
+	bool QueryResultRow::IsEmpty() const
 	{
 		return values_.empty();
 	}
 
-	const unsigned int QueryResultRow::Size() const
+	unsigned int QueryResultRow::Size() const
 	{
 		return values_.size();
 	}
 
-	const bool QueryResultRow::IsNull(unsigned int index) const
+	bool QueryResultRow::IsNull(unsigned int index) const
 	{
 		return values_[index] == 0;
 	}
@@ -47,9 +49,9 @@ namespace MYSQL
 		return IsNull(index) ? "" : values_[index];
 	}
 
-	const long long QueryResultRow::GetInteger(unsigned int index) const
+	long long QueryResultRow::GetInteger(unsigned int index) const
 	{
-		return IsNull(index) ? 0 : StringToInteger(values_[index]);
+		return IsNull(index) ? 0 : XTL::StringToInteger<long long int>(values_[index]);
 	}
 
 	void QueryResultRow::PushBack(const char * s)

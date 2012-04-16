@@ -1,38 +1,41 @@
-#ifndef XTL_PGSQL__EXCEPTION_HPP__
-#define XTL_PGSQL__EXCEPTION_HPP__ 1
+#ifndef XTL_MYSQL__EXCEPTION_HPP__
+#define XTL_MYSQL__EXCEPTION_HPP__ 1
 
 #include <memory>
 #include <string>
 
-#include "QueryState.hpp"
+// #include "QueryState.hpp"
 #include "../Exception.hpp"
 
 namespace XTL
 {
-namespace PGSQL
+namespace MYSQL
 {
-	class QueryResult;
+	// class QueryResult;
 
 	class Exception : public XTL::Exception
 	{
 		public:
 
-			explicit Exception(const char * what);
+			explicit Exception(const char * what, unsigned int code);
 
 			virtual ~Exception() throw();
 
 			virtual const std::string What() const;
 
+			unsigned int Code() const;
+
 		private:
 
-			const std::string what_;
+			const std::string  what_;
+			const unsigned int code_;
 	};
 
 	class ConnectError : public Exception
 	{
 		public:
 
-			explicit ConnectError(const char * what);
+			explicit ConnectError(const char * what, unsigned int code);
 
 			virtual ~ConnectError() throw();
 	};
@@ -41,18 +44,15 @@ namespace PGSQL
 	{
 		public:
 
-			QueryError(const char * what, const char * query, const QueryResult & result);
+			QueryError(const char * what, unsigned int code, const std::string & query);
 
 			virtual ~QueryError() throw();
 
-			const std::string GetQuery() const;
-
-			const QueryState GetState() const;
+			const std::string Query() const;
 
 		private:
 
 			const std::string query_;
-			const QueryState  state_;
 	};
 }
 }

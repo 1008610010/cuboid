@@ -1,8 +1,6 @@
 #ifndef XTL_MYSQL__QUERY_RESULT_HPP__
 #define XTL_MYSQL__QUERY_RESULT_HPP__ 1
 
-#include <mysql.h>
-
 #include <string>
 #include <vector>
 
@@ -14,15 +12,30 @@ namespace MYSQL
 
 	class QueryResult
 	{
+		private:
+
+			struct Reference
+			{
+				Reference(void * handle) : handle_(handle) { ;; }
+
+				void * handle_;
+			};
+
 		public:
 
 			QueryResult();
 
-			QueryResult(MYSQL_RES * result);
+			QueryResult(Reference ref);
+
+			QueryResult(QueryResult & other);
 
 			~QueryResult() throw();
 
-			QueryResult & operator= (MYSQL_RES * result);
+			operator Reference();
+
+			QueryResult & operator= (Reference ref);
+
+			QueryResult & operator= (QueryResult & other);
 
 			void Free();
 
@@ -32,19 +45,18 @@ namespace MYSQL
 
 			unsigned int ColumnsCount() const;
 
-			const std::string ColumnName(unsigned int index) const;
+			void GetColumnsNames(std::vector<std::string> & columns) const;
 
 			bool Fetch(QueryResultRow & row);
 
-		protected:
+		private:
 
-			QueryResult(const QueryResult &);
+			friend class Connection;
+
+			// QueryResult(const QueryResult &);
 			QueryResult & operator= (const QueryResult &);
 
-			void Init();
-
-			MYSQL_RES * result_;
-			std::vector<std::string> columns_;
+			void * handle_;
 	};
 }
 }

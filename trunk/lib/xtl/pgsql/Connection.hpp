@@ -1,5 +1,5 @@
-#ifndef XTL__PGSQL__CONNECTION_HPP__
-#define XTL__PGSQL__CONNECTION_HPP__ 1
+#ifndef XTL_PGSQL__CONNECTION_HPP__
+#define XTL_PGSQL__CONNECTION_HPP__ 1
 
 #include <string>
 
@@ -20,9 +20,9 @@ namespace PGSQL
 			/*
 			 * "host=172.16.11.250 port=5432 dbname=stats user=stats"
 			 */
-			Connection(const std::string & connectionString);
+			explicit Connection(const std::string & connectionString);
 
-			Connection(const ConnectionConfig & config);
+			explicit Connection(const ConnectionConfig & config);
 
 			~Connection() throw();
 

@@ -140,10 +140,43 @@ TARGET_LINK_LIBRARIES (
 )
 
 
+SET (
+	XTL_MYSQL_SOURCES
+		xtl/mysql/Connection.cpp
+		xtl/mysql/Exception.cpp
+		xtl/mysql/QueryResult.cpp
+		xtl/mysql/QueryResultRow.cpp
+)
+
+ADD_LIBRARY (
+	xtl-mysql SHARED
+		${XTL_MYSQL_SOURCES}
+)
+
+TARGET_LINK_LIBRARIES (
+	xtl-mysql
+		xtl-common
+		mysqlclient
+)
+
+ADD_LIBRARY (
+	xtl-mysql-st
+		${XTL_MYSQL_SOURCES}
+)
+
+TARGET_LINK_LIBRARIES (
+	xtl-mysql-st
+		mysqlclient
+)
+
+
+
 INSTALL (
 	TARGETS
 		xtl-common
 		xtl-common-st
+		xtl-mysql
+		xtl-mysql-st
 		xtl-pgsql
 		xtl-pgsql-st
 	DESTINATION

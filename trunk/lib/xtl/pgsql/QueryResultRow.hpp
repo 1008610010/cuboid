@@ -1,5 +1,5 @@
-#ifndef XTL__PGSQL__QUERY_RESULT_ROW_HPP__
-#define XTL__PGSQL__QUERY_RESULT_ROW_HPP__ 1
+#ifndef XTL_PGSQL__QUERY_RESULT_ROW_HPP__
+#define XTL_PGSQL__QUERY_RESULT_ROW_HPP__ 1
 
 #include "QueryResult.hpp"
 

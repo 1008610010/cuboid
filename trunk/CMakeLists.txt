@@ -63,6 +63,18 @@ TARGET_LINK_LIBRARIES (
 )
 
 
+ADD_EXECUTABLE (
+	mysql_test
+		tests/mysql_test.cpp
+)
+
+TARGET_LINK_LIBRARIES (
+	mysql_test
+		xtl-common
+		xtl-mysql
+)
+
+
 ADD_SUBDIRECTORY (unittests)
 
 
