@@ -1,5 +1,5 @@
-#ifndef XTL_MYSQL__MYSQL_CONNECTION_HPP__
-#define XTL_MYSQL__MYSQL_CONNECTION_HPP__ 1
+#ifndef XTL_MYSQL__CONNECTION_HPP__
+#define XTL_MYSQL__CONNECTION_HPP__ 1
 
 #include <mysql.h>
 #include <mysql/errmsg.h>
@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "MySqlResult.hpp"
+// #include "QueryResult.hpp"
 
 namespace XTL
 {

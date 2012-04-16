@@ -1,6 +1,8 @@
 #ifndef XTL_MYSQL__CONNECTION_CONFIG_HPP__
 #define XTL_MYSQL__CONNECTION_CONFIG_HPP__ 1
 
+#include <string>
+
 namespace XTL
 {
 namespace MYSQL

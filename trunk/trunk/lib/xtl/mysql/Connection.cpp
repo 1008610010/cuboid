@@ -1,4 +1,4 @@
-#include "MySqlConnection.hpp"
+#include "Connection.hpp"
 
 // #include <strings.h>
 
