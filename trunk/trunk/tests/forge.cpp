@@ -1355,6 +1355,7 @@ class Scalar
 		const char * s_;
 };
 
+
 int main(int argc, const char * argv[])
 {
 	printf("%lu\n", sizeof(Scalar));

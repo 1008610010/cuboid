@@ -14,15 +14,6 @@ namespace XTL
 
 			MySqlEmbeddedConnection(const std::string & appName, const std::string & configFile);
 
-			using Super::LastErrorCode;
-			using Super::LastError;
-			using Super::Escape;
-			using Super::Opened;
-			using Super::Close;
-			using Super::Execute;
-			using Super::Select;
-			using Super::GetRowsNumber;
-
 			const bool Open1();
 
 		protected:
