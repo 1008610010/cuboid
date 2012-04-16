@@ -1,29 +1,33 @@
-#include "MySqlResult.hpp"
-#include <xtl/StringUtils.hpp>
+#include "QueryResult.hpp"
+
 #include <string.h>
+
+#include <xtl/StringUtils.hpp>
+
+#include "QueryResultRow.hpp"
 
 namespace XTL
 {
 namespace MYSQL
 {
-	MySqlResult::MySqlResult()
+	QueryResult::QueryResult()
 		: result_(0), columns_()
 	{
 		;;
 	}
 
-	MySqlResult::MySqlResult(MYSQL_RES * result)
+	QueryResult::QueryResult(MYSQL_RES * result)
 		: result_(result), columns_()
 	{
 		Init();
 	}
 
-	MySqlResult::~MySqlResult()
+	QueryResult::~QueryResult() throw()
 	{
 		Free();
 	}
 
-	MySqlResult & MySqlResult::operator= (MYSQL_RES * result)
+	QueryResult & QueryResult::operator= (MYSQL_RES * result)
 	{
 		if (result_ != result)
 		{
@@ -34,7 +38,7 @@ namespace MYSQL
 		return *this;
 	}
 
-	void MySqlResult::Init()
+	void QueryResult::Init()
 	{
 		if (result_ != 0)
 		{
@@ -46,7 +50,7 @@ namespace MYSQL
 		}
 	}
 
-	void MySqlResult::Free()
+	void QueryResult::Free()
 	{
 		if (result_ != 0)
 		{
@@ -56,27 +60,27 @@ namespace MYSQL
 		}
 	}
 
-	bool MySqlResult::IsNull() const
+	bool QueryResult::IsNull() const
 	{
 		return result_ == 0;
 	}
 
-	unsigned int MySqlResult::RowsCount() const
+	unsigned int QueryResult::RowsCount() const
 	{
 		return ::mysql_num_rows(result_);
 	}
 
-	unsigned int MySqlResult::ColumnsCount() const
+	unsigned int QueryResult::ColumnsCount() const
 	{
 		return columns_.size();
 	}
 
-	const std::string MySqlResult::ColumnName(unsigned int index) const
+	const std::string QueryResult::ColumnName(unsigned int index) const
 	{
 		return columns_[index];
 	}
 
-	bool MySqlResult::Fetch(MySqlRow & row)
+	bool QueryResult::Fetch(QueryResultRow & row)
 	{
 		row.Clear();
 
@@ -93,72 +97,6 @@ namespace MYSQL
 		}
 
 		return true;
-	}
-
-
-	MySqlRow::MySqlRow()
-		: values_()
-	{
-		;;
-	}
-
-	MySqlRow::~MySqlRow() throw()
-	{
-		Clear();
-	}
-
-	void MySqlRow::Clear()
-	{
-		for (std::vector<char *>::iterator itr = values_.begin(); itr != values_.end(); ++itr)
-		{
-			delete [] *itr;
-		}
-
-		values_.clear();
-	}
-
-	const bool MySqlRow::Empty() const
-	{
-		return values_.empty();
-	}
-
-	const unsigned int MySqlRow::Size() const
-	{
-		return values_.size();
-	}
-
-	const bool MySqlRow::IsNull(unsigned int index) const
-	{
-		return values_[index] == 0;
-	}
-
-	const long long MySqlRow::Integer(unsigned int index) const
-	{
-		return IsNull(index) ? 0 : StringToInteger(values_[index]);
-	}
-
-	const std::string MySqlRow::String(unsigned int index) const
-	{
-		return IsNull(index) ? "" : values_[index];
-	}
-
-	const std::string MySqlRow::operator[] (unsigned int index) const
-	{
-		return String(index);
-	}
-
-	void MySqlRow::PushBack(const char * s)
-	{
-		if (s == 0)
-		{
-			values_.push_back(0);
-		}
-		else
-		{
-			char * tmp = new char[::strlen(s) + 1];
-			strcpy(tmp, s);
-			values_.push_back(tmp);
-		}
 	}
 }
 }

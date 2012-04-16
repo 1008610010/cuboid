@@ -1,5 +1,5 @@
-#ifndef XTL_MYSQL__MYSQL_RESULT_HPP__
-#define XTL_MYSQL__MYSQL_RESULT_HPP__ 1
+#ifndef XTL_MYSQL__QUERY_RESULT_HPP__
+#define XTL_MYSQL__QUERY_RESULT_HPP__ 1
 
 #include <mysql.h>
 
@@ -10,19 +10,19 @@ namespace XTL
 {
 namespace MYSQL
 {
-	class MySqlRow;
+	class QueryResultRow;
 
-	class MySqlResult
+	class QueryResult
 	{
 		public:
 
-			MySqlResult();
+			QueryResult();
 
-			MySqlResult(MYSQL_RES * result);
+			QueryResult(MYSQL_RES * result);
 
-			~MySqlResult();
+			~QueryResult() throw();
 
-			MySqlResult & operator= (MYSQL_RES * result);
+			QueryResult & operator= (MYSQL_RES * result);
 
 			void Free();
 
@@ -34,51 +34,17 @@ namespace MYSQL
 
 			const std::string ColumnName(unsigned int index) const;
 
-			bool Fetch(MySqlRow & row);
+			bool Fetch(QueryResultRow & row);
 
 		protected:
 
-			MySqlResult(const MySqlResult &);
-			MySqlResult & operator= (const MySqlResult &);
+			QueryResult(const QueryResult &);
+			QueryResult & operator= (const QueryResult &);
 
 			void Init();
 
 			MYSQL_RES * result_;
 			std::vector<std::string> columns_;
-	};
-
-	class MySqlRow
-	{
-		public:
-
-			MySqlRow();
-
-			~MySqlRow() throw();
-
-			void Clear();
-
-			const bool Empty() const;
-
-			const unsigned int Size() const;
-
-			const bool IsNull(unsigned int index) const;
-
-			const long long Integer(unsigned int index) const;
-
-			const std::string String(unsigned int index) const;
-
-			const std::string operator[] (unsigned int index) const;
-
-		protected:
-
-			MySqlRow(const MySqlRow &);
-			MySqlRow & operator= (const MySqlRow &);
-
-			void PushBack(const char * s);
-
-			friend class MySqlResult;
-
-			std::vector<char *> values_;
 	};
 }
 }
