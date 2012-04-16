@@ -13,26 +13,18 @@ namespace XTL
 {
 namespace MYSQL
 {
-	class MySqlConnection
+	class Connection
 	{
 		public:
 
-			MySqlConnection(const std::string & host,
-			                int port,
-			                const std::string & user,
-			                const std::string & password,
-			                const std::string & database)
+			Connection(const ConnectionConfig & config)
 				: mysql_(0),
-				  host_(host),
-				  port_(port),
-				  user_(user),
-				  password_(password),
-				  database_(database)
+				  config_(config)
 			{
 				;;
 			}
 
-			~MySqlConnection() throw()
+			~Connection() throw()
 			{
 				Close();
 			}
@@ -131,20 +123,15 @@ namespace MYSQL
 
 		private:
 
-			MySqlConnection(const MySqlConnection &);
-			MySqlConnection & operator= (const MySqlConnection &);
+			Connection(const Connection &);
+			Connection & operator= (const Connection &);
 
 			MYSQL * mysql_;
-
-			const std::string host_;
-			int               port_;
-			const std::string user_;
-			const std::string password_;
-			const std::string database_;
+			ConnectionConfig config_;
 	};
 
 /*
-	bool IsDatabaseExists(MySqlConnection & dbc, const std::string & database)
+	bool IsDatabaseExists(Connection & dbc, const std::string & database)
 	{
 		MySqlResult result(dbc.Select("SHOW DATABASES;"));
 		if (result.IsNull())
@@ -163,8 +150,7 @@ namespace MYSQL
 		return false;
 	}
 
-	template <typename MySqlConnector>
-	bool MySqlCreateDatabase(MySqlConnector & dbc, const std::string & database)
+	bool MySqlCreateDatabase(Connection & dbc, const std::string & database)
 	{
 		return dbc.Execute(std::string("CREATE DATABASE ") + database) >= 0;
 	}

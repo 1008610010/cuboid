@@ -28,7 +28,7 @@ namespace MYSQL
 
 			long long GetInteger(unsigned int index) const;
 
-		protected:
+		private:
 
 			QueryResultRow(const QueryResultRow &);
 			QueryResultRow & operator= (const QueryResultRow &);
