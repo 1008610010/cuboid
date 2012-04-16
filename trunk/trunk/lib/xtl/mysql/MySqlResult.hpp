@@ -26,15 +26,15 @@ namespace MYSQL
 
 			void Free();
 
-			const bool IsNull() const;
+			bool IsNull() const;
 
-			const unsigned int RowsCount() const;
+			unsigned int RowsCount() const;
 
-			const unsigned int ColumnsCount() const;
+			unsigned int ColumnsCount() const;
 
 			const std::string ColumnName(unsigned int index) const;
 
-			const bool Fetch(MySqlRow & row);
+			bool Fetch(MySqlRow & row);
 
 		protected:
 
