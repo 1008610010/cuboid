@@ -17,32 +17,11 @@ namespace XTL
 
 			~MySqlBaseConnection() throw();
 
-			const unsigned int LastErrorCode() const;
-
-			const char * LastError() const;
-
-			const std::string Escape(const std::string & s);
-
-			const bool Opened() const;
-
-			const bool Open1();
-
-			void Close();
-
-			/*
-				Значение -1 показывает, что данный запрос возвратил ошибку или
-				что для запроса SELECT функция mysql_affected_rows() была
-				вызвана прежде вызова функции mysql_store_result().
-			*/
 			const long long Execute(const std::string & query);
 
 			MYSQL_RES * Select(const std::string & query);
 
 			const int GetRowsNumber(const std::string & query);
-
-		protected:
-
-			MYSQL * mysql_;
 	};
 
 	template <typename MySqlConnector>
