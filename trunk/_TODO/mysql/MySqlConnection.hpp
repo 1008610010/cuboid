@@ -134,6 +134,33 @@ namespace MYSQL
 			const std::string password_;
 			const std::string database_;
 	};
+
+/*
+	bool IsDatabaseExists(MySqlConnection & dbc, const std::string & database)
+	{
+		MySqlResult result(dbc.Select("SHOW DATABASES;"));
+		if (result.IsNull())
+		{
+			return false;
+		}
+
+		for (MySqlRow row; result.Fetch(row); )
+		{
+			if (::strcasecmp(row[0].c_str(), database.c_str()) == 0)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	template <typename MySqlConnector>
+	bool MySqlCreateDatabase(MySqlConnector & dbc, const std::string & database)
+	{
+		return dbc.Execute(std::string("CREATE DATABASE ") + database) >= 0;
+	}
+*/
 }
 }
 
