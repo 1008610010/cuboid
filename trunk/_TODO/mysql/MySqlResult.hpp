@@ -1,11 +1,14 @@
-#ifndef _XTL__MYSQL_RESULT_HPP__
-#define _XTL__MYSQL_RESULT_HPP__ 1
+#ifndef XTL_MYSQL__MYSQL_RESULT_HPP__
+#define XTL_MYSQL__MYSQL_RESULT_HPP__ 1
 
 #include <mysql.h>
-#include <vector>
+
 #include <string>
+#include <vector>
 
 namespace XTL
+{
+namespace MYSQL
 {
 	class MySqlRow;
 
@@ -77,6 +80,7 @@ namespace XTL
 
 			std::vector<char *> values_;
 	};
+}
 }
 
 #endif
