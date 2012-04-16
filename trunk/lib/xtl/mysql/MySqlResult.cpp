@@ -4,6 +4,8 @@
 
 namespace XTL
 {
+namespace MYSQL
+{
 	MySqlResult::MySqlResult()
 		: result_(0), columns_()
 	{
@@ -54,17 +56,17 @@ namespace XTL
 		}
 	}
 
-	const bool MySqlResult::IsNull() const
+	bool MySqlResult::IsNull() const
 	{
 		return result_ == 0;
 	}
 
-	const unsigned int MySqlResult::RowsCount() const
+	unsigned int MySqlResult::RowsCount() const
 	{
 		return ::mysql_num_rows(result_);
 	}
 
-	const unsigned int MySqlResult::ColumnsCount() const
+	unsigned int MySqlResult::ColumnsCount() const
 	{
 		return columns_.size();
 	}
@@ -74,7 +76,7 @@ namespace XTL
 		return columns_[index];
 	}
 
-	const bool MySqlResult::Fetch(MySqlRow & row)
+	bool MySqlResult::Fetch(MySqlRow & row)
 	{
 		row.Clear();
 
@@ -159,3 +161,5 @@ namespace XTL
 		}
 	}
 }
+}
+
