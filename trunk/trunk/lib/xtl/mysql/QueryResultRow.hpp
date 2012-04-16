@@ -22,7 +22,7 @@ namespace MYSQL
 
 			unsigned int Size() const;
 
-			const bool IsNull(unsigned int index) const;
+			bool IsNull(unsigned int index) const;
 
 			const std::string GetString(unsigned int index) const;
 
