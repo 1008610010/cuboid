@@ -135,6 +135,12 @@ ADD_LIBRARY (
 )
 
 
+FIND_LIBRARY (
+	MYSQL_CLIENT_LIBRARY
+		NAMES mysqlclient
+		PATHS /opt/lib /usr/lib /usr/local/lib /usr/lib64/mysql
+		DOC "Path where the MySQL client library can be found"
+)
 
 SET (
 	XTL_MYSQL_SOURCES
@@ -152,7 +158,7 @@ ADD_LIBRARY (
 TARGET_LINK_LIBRARIES (
 	xtl-mysql
 		xtl-common
-		mysqlclient
+		${MYSQL_CLIENT_LIBRARY}
 )
 
 ADD_LIBRARY (
