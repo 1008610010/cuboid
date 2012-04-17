@@ -82,6 +82,13 @@ ADD_LIBRARY (
 
 
 
+FIND_LIBRARY (
+	POSTGRESQL_CLIENT_LIBRARY
+		NAMES pq
+		PATHS /opt/lib /usr/lib /usr/local/lib
+		DOC "Path where the PostgreSQL client library can be found"
+)
+
 SET (LIBPQ_FE_H libpq-fe.h)
 
 FIND_PATH (
@@ -126,7 +133,7 @@ ADD_LIBRARY (
 
 TARGET_LINK_LIBRARIES (
 	xtl-pgsql
-		pq
+		${POSTGRESQL_CLIENT_LIBRARY}
 )
 
 ADD_LIBRARY (
