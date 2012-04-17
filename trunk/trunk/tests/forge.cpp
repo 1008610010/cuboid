@@ -1079,17 +1079,6 @@ struct S
 	char         country[2];
 };
 
-template <typename T>
-class StructConverter
-{
-	public:
-
-		// Unpack(const XTL::PLAIN::Struct & from, )
-
-	private:
-
-		
-};
 
 template <typename T> struct Fuck
 {
@@ -1125,37 +1114,6 @@ struct Alignment
 
 	static const unsigned int Value = offsetof(Dummy, value);
 };
-
-namespace XTL
-{
-	template <typename RecordType>
-	class RecordWriter
-	{
-		public:
-
-			explicit RecordWriter(OutputStream & stream)
-				: stream_(stream),
-				  record_()
-			{
-				;;
-			}
-
-			RecordType * operator-> ()
-			{
-				return &record_;
-			}
-
-			void Write()
-			{
-				record_.Write(stream_);
-			}
-
-		private:
-
-			OutputStream & stream_;
-			RecordType     record_;
-	};
-}
 
 class Scalar
 {
@@ -1338,40 +1296,296 @@ class IntegerParser
 		const bool minusAllowed_;
 };
 
-
-
-
-int main(int argc, const char * argv[])
+class StringEscapeSequenceParser
 {
-	CharSourceTextCharPtr charSource("aaa\\tbbbbb");
+	public:
 
-	std::string result;
-	charSource.Mark();
-	while (charSource.NotAtEnd())
-	{
-		if (charSource.GetChar() == '\\')
+		virtual ~StringEscapeSequenceParser() throw() { ;; }
+
+		virtual char Parse(CharSourceText & charSource) = 0;
+};
+
+#include <map>
+
+template <typename KeyType_, typename ValueType_>
+class AutoPtrMap
+{
+	public:
+
+		typedef KeyType_   KeyType;
+		typedef ValueType_ ValueType;
+
+		AutoPtrMap()
+			: map_()
 		{
-			result += charSource.GetString();
-			charSource.Advance();
-			if (charSource.GetChar() == 't')
+			;;
+		}
+
+		~AutoPtrMap() throw()
+		{
+			const typename std::map<KeyType, ValueType *>::iterator end = map_.end();
+			for (typename std::map<KeyType, ValueType *>::iterator itr = map_.begin(); itr != end; ++itr)
 			{
-				result += '\t';
+				delete itr->second;
+			}
+		}
+
+		AutoPtrMap & Set(const KeyType & key, std::auto_ptr<ValueType> value)
+		{
+			typename std::map<KeyType, ValueType *>::iterator itr = map_.find(key);
+
+			if (itr != map_.end())
+			{
+				delete itr->second;
+				itr->second = value.release();
 			}
 			else
 			{
-				throw std::runtime_error("FUUUUUUUUU!!!");
+				map_[key] = value.release();
 			}
+
+			return *this;
+		}
+
+		ValueType * operator[] (const KeyType & key) const
+		{
+			typename std::map<KeyType, ValueType *>::const_iterator itr = map_.find(key);
+
+			return itr == map_.end() ? 0 : itr->second;
+		}
+
+	private:
+
+		AutoPtrMap(const AutoPtrMap &);
+		AutoPtrMap & operator= (const AutoPtrMap &);
+
+		std::map<KeyType, ValueType *> map_;
+};
+
+class EscapeSequenceParser
+{
+	public:
+
+		class Subparser
+		{
+			public:
+
+				virtual ~Subparser() throw() { ;; }
+
+				virtual void Parse(CharSourceText & charSource, std::string & result) const = 0;
+		};
+
+		EscapeSequenceParser()
+			: subparsers_()
+		{
+			;;
+		}
+
+		bool Parse(CharSourceText & charSource, std::string & result) const
+		{
+			Subparser * subparser = subparsers_[charSource.GetChar()];
+			if (subparser != 0)
+			{
+				subparser->Parse(charSource, result);
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+	protected:
+
+		void AddSubparser(char key, std::auto_ptr<Subparser> subparser)
+		{
+			subparsers_.Set(key, subparser);
+		}
+
+	private:
+
+		AutoPtrMap<char, Subparser> subparsers_;
+};
+
+class JsonEscapeSequenceParser : public EscapeSequenceParser
+{
+	public:
+
+		JsonEscapeSequenceParser()
+			: EscapeSequenceParser()
+		{
+			AddSubparser('\\', ParseEscapeChar('\\'));
+			AddSubparser('/', ParseEscapeChar('/'));
+			AddSubparser('"', ParseEscapeChar('"'));
+			AddSubparser('t', ParseEscapeChar('\t'));
+			AddSubparser('r', ParseEscapeChar('\r'));
+			AddSubparser('n', ParseEscapeChar('\n'));
+			AddSubparser('b', ParseEscapeChar('\b'));
+			AddSubparser('f', ParseEscapeChar('\f'));
+			// AddSubparser('u', ParseUnicodeChar());
+		}
+
+	protected:
+
+		class EscapeChar : public Subparser
+		{
+			public:
+
+				explicit EscapeChar(char ch)
+					: Subparser(),
+					  ch_(ch)
+				{
+					;;
+				}
+
+				virtual ~EscapeChar() throw()
+				{
+					;;
+				}
+
+				virtual void Parse(CharSourceText & charSource, std::string & result) const
+				{
+					charSource.Advance();
+					result.append(1, ch_);
+				}
+
+			private:
+
+				const char ch_;
+		};
+
+		class UnicodeChar : public Subparser
+		{
+			public:
+
+				virtual ~UnicodeChar() throw()
+				{
+					;;
+				}
+
+				virtual void Parse(CharSourceText & charSource, std::string & result) const
+				{
+					charSource.Advance();
+
+					// TODO: realize it!!!
+				}
+
+			private:
+		};
+
+		std::auto_ptr<Subparser> ParseEscapeChar(char ch) const
+		{
+			return std::auto_ptr<Subparser>(new EscapeChar(ch));
+		}
+
+		std::auto_ptr<Subparser> ParseUnicodeChar() const
+		{
+			return std::auto_ptr<Subparser>(new UnicodeChar());
+		}
+};
+
+class StringLiteralParser
+{
+	public:
+
+		StringLiteralParser(char boundingChar, char escapeSequenceChar)
+			: boundingChar_(boundingChar),
+			  escapeSequenceChar_(escapeSequenceChar)
+		{
+			;;
+		}
+
+		virtual ~StringLiteralParser() throw()
+		{
+			;;
+		}
+
+		const std::string Parse(CharSourceText & charSource) const
+		{
+			// ASSERT(charSource.GetChar() == boundingChar_)
+
+			std::string result;
+
 			charSource.Advance();
 			charSource.Mark();
-		}
-		else
-		{
-			charSource.Advance();
-		}
-	}
-	result += charSource.GetString();
 
-	printf("%s\n", result.c_str());
+			char c;
+			while ((c = charSource.GetChar()) != boundingChar_)
+			{
+				if (charSource.AtEnd())
+				{
+					throw std::runtime_error("Error");
+				}
+				else if (c == escapeSequenceChar_)
+				{
+					result.append(charSource.GetString());
+					charSource.Unmark();
+
+					charSource.Advance();
+
+					if (GetEscapeSequenceParser().Parse(charSource, result))
+					{
+						charSource.Mark();
+					}
+					else
+					{
+						throw std::runtime_error(XTL::FormatString("Invalid escape sequence in string literal: %c%c", escapeSequenceChar_, charSource.GetChar()));
+					}
+				}
+				else
+				{
+					charSource.Advance();
+				}
+			}
+
+			result.append(charSource.GetString());
+			charSource.Unmark();
+
+			return result;
+		}
+
+	protected:
+
+		virtual const EscapeSequenceParser & GetEscapeSequenceParser() const = 0;
+
+	private:
+
+		const char boundingChar_;
+		const char escapeSequenceChar_;
+};
+
+class JsonStringLiteralParser : public StringLiteralParser
+{
+	public:
+
+		JsonStringLiteralParser()
+			: StringLiteralParser('"', '\\')
+		{
+			;;
+		}
+
+		virtual ~JsonStringLiteralParser() throw()
+		{
+			;;
+		}
+
+	protected:
+
+		virtual const EscapeSequenceParser & GetEscapeSequenceParser() const
+		{
+			static JsonEscapeSequenceParser instance;
+
+			return instance;
+		}
+};
+
+int main(int argc, const char * argv[])
+{
+	CharSourceTextCharPtr charSource("\"aaa\\t\\\"\\\"\\\\bbbbb\"");
+
+	JsonStringLiteralParser parser;
+
+	printf("%s\n", parser.Parse(charSource).c_str());
 
 //	printf("%lu\n", sizeof(Scalar));
 	return 0;
