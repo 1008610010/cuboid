@@ -450,189 +450,6 @@ void TestTree(const MyTree & tree)
 	}
 }
 
-class CharSource
-{
-	public:
-
-		virtual ~CharSource() throw()
-		{
-			;;
-		}
-
-		virtual bool AtEnd() const = 0;
-
-		virtual char GetChar() const = 0;
-
-		virtual void Advance() = 0;
-
-		bool NotAtEnd() const
-		{
-			return !AtEnd();
-		}
-};
-
-class CharSourceIndexed : public CharSource
-{
-	public:
-
-		CharSourceIndexed()
-			: currentIndex_(0)
-		{
-			;;
-		}
-	
-		virtual ~CharSourceIndexed() throw() { ;; }
-
-		virtual char GetChar() const
-		{
-			return GetChar(currentIndex_);
-		}
-
-		virtual void Advance()
-		{
-			++currentIndex_;
-		}
-
-		unsigned int GetIndex() const
-		{
-			return currentIndex_;
-		}
-
-	protected:
-
-		virtual char GetChar(unsigned int index) const = 0;
-
-	private:
-
-		unsigned int currentIndex_;
-};
-
-class CharSourceText : public CharSourceIndexed
-{
-	public:
-
-		static const char CHAR_NULL = '\0';
-
-		CharSourceText()
-			: CharSourceIndexed()
-		{
-			;;
-		}
-
-		virtual bool AtEnd() const
-		{
-			return GetChar() == CHAR_NULL;
-		}
-};
-
-class CharSourceTextCharPtr : public CharSourceText
-{
-	public:
-
-		CharSourceTextCharPtr(const char * ptr)
-			: ptr_(ptr)
-		{
-			;;
-		}
-
-	protected:
-
-		virtual char GetChar(unsigned int index) const
-		{
-			return ptr_[index];
-		}
-
-	private:
-
-		const char * ptr_;
-};
-
-class IntegerParser
-{
-	public:
-
-		IntegerParser(bool plusAllowed, bool minusAllowed)
-			: plusAllowed_(plusAllowed),
-			  minusAllowed_(minusAllowed)
-		{
-			;;
-		}
-
-		template <typename T>
-		const T Parse(CharSourceText & charSource)
-		{
-			bool negative = false;
-
-			char c = charSource.GetChar();
-			if (c == '+')
-			{
-				if (IsPlusAllowed())
-				{
-					charSource.Advance();
-				}
-				else
-				{
-					throw std::runtime_error("IntegerParser - plus is not allowed");
-				}
-			}
-			else if (c == '-')
-			{
-				if (IsMinusAllowed())
-				{
-					negative = true;
-					charSource.Advance();
-				}
-				else
-				{
-					throw std::runtime_error("IntegerParser - minus is not allowed");
-				}
-			}
-
-			if (!IsDigit(c))
-			{
-				throw std::runtime_error("IntegerParser - decimal digit expected");
-			}
-
-			T result = CharToDigit(c);
-
-			charSource.Advance();
-			c = charSource.GetChar();
-
-			while (IsDigit(c))
-			{
-				result = 10 * result + CharToDigit(c);
-				charSource.Advance();
-				c = charSource.GetChar();
-			}
-
-			return negative ? -result : result;
-		}
-
-	private:
-
-		bool IsPlusAllowed() const
-		{
-			return plusAllowed_;
-		}
-
-		bool IsMinusAllowed() const
-		{
-			return minusAllowed_;
-		}
-
-		bool IsDigit(char c) const
-		{
-			return c >= '0' && c <= '9';
-		}
-
-		int CharToDigit(char c) const
-		{
-			return c - '0';
-		}
-
-		const bool plusAllowed_;
-		const bool minusAllowed_;
-};
 
 #include <xtl/linux/fs/FilePath.hpp>
 #include <xtl/linux/fs/FilePathTokenizer.hpp>
@@ -1355,10 +1172,208 @@ class Scalar
 		const char * s_;
 };
 
+class CharSourceText
+{
+	public:
+
+		static const char CHAR_NULL = '\0';
+
+		virtual ~CharSourceText() throw()
+		{
+			;;
+		}
+
+		virtual bool NotAtEnd() const
+		{
+			return GetChar() != CHAR_NULL;
+		}
+
+		virtual char GetChar() const = 0;
+
+		virtual void Advance() = 0;
+
+		virtual void Mark() = 0;
+
+		virtual void Unmark() = 0;
+
+		virtual const std::string GetString() const = 0;
+
+		bool AtEnd() const
+		{
+			return !NotAtEnd();
+		}
+};
+
+class CharSourceTextCharPtr : public CharSourceText
+{
+	public:
+
+		explicit CharSourceTextCharPtr(const char * ptr)
+			: ptr_(ptr),
+			  marked_(ptr)
+		{
+			;;
+		}
+
+		~CharSourceTextCharPtr() throw()
+		{
+			;;
+		}
+
+		virtual char GetChar() const
+		{
+			return *ptr_;
+		}
+
+		virtual void Advance()
+		{
+			++ptr_;
+		}
+
+		virtual void Mark()
+		{
+			marked_ = ptr_;
+		}
+
+		virtual void Unmark()
+		{
+			marked_ = 0;
+		}
+
+		virtual const std::string GetString() const
+		{
+			return std::string(marked_, ptr_ - marked_);
+		}
+
+	private:
+
+		const char * ptr_;
+		const char * marked_;
+};
+
+class IntegerParser
+{
+	public:
+
+		IntegerParser(bool plusAllowed, bool minusAllowed)
+			: plusAllowed_(plusAllowed),
+			  minusAllowed_(minusAllowed)
+		{
+			;;
+		}
+
+		template <typename T>
+		const T Parse(CharSourceText & charSource)
+		{
+			bool negative = false;
+
+			char c = charSource.GetChar();
+			if (c == '+')
+			{
+				if (IsPlusAllowed())
+				{
+					charSource.Advance();
+				}
+				else
+				{
+					throw std::runtime_error("IntegerParser - plus is not allowed");
+				}
+			}
+			else if (c == '-')
+			{
+				if (IsMinusAllowed())
+				{
+					negative = true;
+					charSource.Advance();
+				}
+				else
+				{
+					throw std::runtime_error("IntegerParser - minus is not allowed");
+				}
+			}
+
+			if (!IsDigit(c))
+			{
+				throw std::runtime_error("IntegerParser - decimal digit expected");
+			}
+
+			T result = CharToDigit(c);
+
+			charSource.Advance();
+			c = charSource.GetChar();
+
+			while (IsDigit(c))
+			{
+				result = 10 * result + CharToDigit(c);
+				charSource.Advance();
+				c = charSource.GetChar();
+			}
+
+			return negative ? -result : result;
+		}
+
+	private:
+
+		bool IsPlusAllowed() const
+		{
+			return plusAllowed_;
+		}
+
+		bool IsMinusAllowed() const
+		{
+			return minusAllowed_;
+		}
+
+		bool IsDigit(char c) const
+		{
+			return c >= '0' && c <= '9';
+		}
+
+		int CharToDigit(char c) const
+		{
+			return c - '0';
+		}
+
+		const bool plusAllowed_;
+		const bool minusAllowed_;
+};
+
+
+
 
 int main(int argc, const char * argv[])
 {
-	printf("%lu\n", sizeof(Scalar));
+	CharSourceTextCharPtr charSource("aaa\\tbbbbb");
+
+	std::string result;
+	charSource.Mark();
+	while (charSource.NotAtEnd())
+	{
+		if (charSource.GetChar() == '\\')
+		{
+			result += charSource.GetString();
+			charSource.Advance();
+			if (charSource.GetChar() == 't')
+			{
+				result += '\t';
+			}
+			else
+			{
+				throw std::runtime_error("FUUUUUUUUU!!!");
+			}
+			charSource.Advance();
+			charSource.Mark();
+		}
+		else
+		{
+			charSource.Advance();
+		}
+	}
+	result += charSource.GetString();
+
+	printf("%s\n", result.c_str());
+
+//	printf("%lu\n", sizeof(Scalar));
 	return 0;
 
 	HexOutputStream hos(16);
@@ -1374,9 +1389,9 @@ int main(int argc, const char * argv[])
 	printf("void * = %u\n", Alignment<void *>::Value);
 	printf("S      = %u\n", Alignment<S>::Value);
 
-	printf("%lu\n", offsetof(S, journal_id));
-	printf("%lu\n", offsetof(S, data_offset));
-	printf("%lu\n", offsetof(S, country));
+	printf("%lu\n", (unsigned long) offsetof(S, journal_id));
+	printf("%lu\n", (unsigned long) offsetof(S, data_offset));
+	printf("%lu\n", (unsigned long) offsetof(S, country));
 
 	return 0;
 

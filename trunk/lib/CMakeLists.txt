@@ -134,10 +134,6 @@ ADD_LIBRARY (
 		${XTL_PGSQL_SOURCES}
 )
 
-TARGET_LINK_LIBRARIES (
-	xtl-pgsql-st
-		pq
-)
 
 
 SET (
@@ -162,11 +158,6 @@ TARGET_LINK_LIBRARIES (
 ADD_LIBRARY (
 	xtl-mysql-st
 		${XTL_MYSQL_SOURCES}
-)
-
-TARGET_LINK_LIBRARIES (
-	xtl-mysql-st
-		mysqlclient
 )
 
 
