@@ -3,9 +3,9 @@
 #include "Connection.hpp"
 #include "QueryResult.hpp"
 #include "../Exception.hpp"
-#include "../tp/SimpleTemplate.hpp"
-#include "../tp/SimpleTemplateValueInteger.hpp"
-#include "../tp/SimpleTemplateValueString.hpp"
+#include "../simple_template/SimpleTemplate.hpp"
+#include "../simple_template/SimpleTemplateValueInteger.hpp"
+#include "../simple_template/SimpleTemplateValueString.hpp"
 
 namespace XTL
 {
