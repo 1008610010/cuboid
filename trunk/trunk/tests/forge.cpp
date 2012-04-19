@@ -1130,171 +1130,8 @@ class Scalar
 		const char * s_;
 };
 
-class CharSourceText
-{
-	public:
+#include <xtl/tp/TextCharSource.hpp>
 
-		static const char CHAR_NULL = '\0';
-
-		virtual ~CharSourceText() throw()
-		{
-			;;
-		}
-
-		virtual bool NotAtEnd() const
-		{
-			return GetChar() != CHAR_NULL;
-		}
-
-		virtual char GetChar() const = 0;
-
-		virtual void Advance() = 0;
-
-		virtual void Mark() = 0;
-
-		virtual void Unmark() = 0;
-
-		virtual const std::string GetString() const = 0;
-
-		bool AtEnd() const
-		{
-			return !NotAtEnd();
-		}
-};
-
-class CharSourceTextCharPtr : public CharSourceText
-{
-	public:
-
-		explicit CharSourceTextCharPtr(const char * ptr)
-			: ptr_(ptr),
-			  marked_(ptr)
-		{
-			;;
-		}
-
-		~CharSourceTextCharPtr() throw()
-		{
-			;;
-		}
-
-		virtual char GetChar() const
-		{
-			return *ptr_;
-		}
-
-		virtual void Advance()
-		{
-			++ptr_;
-		}
-
-		virtual void Mark()
-		{
-			marked_ = ptr_;
-		}
-
-		virtual void Unmark()
-		{
-			marked_ = 0;
-		}
-
-		virtual const std::string GetString() const
-		{
-			return std::string(marked_, ptr_ - marked_);
-		}
-
-	private:
-
-		const char * ptr_;
-		const char * marked_;
-};
-
-class IntegerParser
-{
-	public:
-
-		IntegerParser(bool plusAllowed, bool minusAllowed)
-			: plusAllowed_(plusAllowed),
-			  minusAllowed_(minusAllowed)
-		{
-			;;
-		}
-
-		template <typename T>
-		const T Parse(CharSourceText & charSource)
-		{
-			bool negative = false;
-
-			char c = charSource.GetChar();
-			if (c == '+')
-			{
-				if (IsPlusAllowed())
-				{
-					charSource.Advance();
-				}
-				else
-				{
-					throw std::runtime_error("IntegerParser - plus is not allowed");
-				}
-			}
-			else if (c == '-')
-			{
-				if (IsMinusAllowed())
-				{
-					negative = true;
-					charSource.Advance();
-				}
-				else
-				{
-					throw std::runtime_error("IntegerParser - minus is not allowed");
-				}
-			}
-
-			if (!IsDigit(c))
-			{
-				throw std::runtime_error("IntegerParser - decimal digit expected");
-			}
-
-			T result = CharToDigit(c);
-
-			charSource.Advance();
-			c = charSource.GetChar();
-
-			while (IsDigit(c))
-			{
-				result = 10 * result + CharToDigit(c);
-				charSource.Advance();
-				c = charSource.GetChar();
-			}
-
-			return negative ? -result : result;
-		}
-
-	private:
-
-		bool IsPlusAllowed() const
-		{
-			return plusAllowed_;
-		}
-
-		bool IsMinusAllowed() const
-		{
-			return minusAllowed_;
-		}
-
-		bool IsDigit(char c) const
-		{
-			return c >= '0' && c <= '9';
-		}
-
-		int CharToDigit(char c) const
-		{
-			return c - '0';
-		}
-
-		const bool plusAllowed_;
-		const bool minusAllowed_;
-};
 
 class StringEscapeSequenceParser
 {
@@ -1302,65 +1139,11 @@ class StringEscapeSequenceParser
 
 		virtual ~StringEscapeSequenceParser() throw() { ;; }
 
-		virtual char Parse(CharSourceText & charSource) = 0;
+		virtual char Parse(XTL::TextCharSource & charSource) = 0;
 };
 
-#include <map>
 
-template <typename KeyType_, typename ValueType_>
-class AutoPtrMap
-{
-	public:
-
-		typedef KeyType_   KeyType;
-		typedef ValueType_ ValueType;
-
-		AutoPtrMap()
-			: map_()
-		{
-			;;
-		}
-
-		~AutoPtrMap() throw()
-		{
-			const typename std::map<KeyType, ValueType *>::iterator end = map_.end();
-			for (typename std::map<KeyType, ValueType *>::iterator itr = map_.begin(); itr != end; ++itr)
-			{
-				delete itr->second;
-			}
-		}
-
-		AutoPtrMap & Set(const KeyType & key, std::auto_ptr<ValueType> value)
-		{
-			typename std::map<KeyType, ValueType *>::iterator itr = map_.find(key);
-
-			if (itr != map_.end())
-			{
-				delete itr->second;
-				itr->second = value.release();
-			}
-			else
-			{
-				map_[key] = value.release();
-			}
-
-			return *this;
-		}
-
-		ValueType * operator[] (const KeyType & key) const
-		{
-			typename std::map<KeyType, ValueType *>::const_iterator itr = map_.find(key);
-
-			return itr == map_.end() ? 0 : itr->second;
-		}
-
-	private:
-
-		AutoPtrMap(const AutoPtrMap &);
-		AutoPtrMap & operator= (const AutoPtrMap &);
-
-		std::map<KeyType, ValueType *> map_;
-};
+#include <xtl/utils/AutoPtrMap.hpp>
 
 class EscapeSequenceParser
 {
@@ -1372,7 +1155,7 @@ class EscapeSequenceParser
 
 				virtual ~Subparser() throw() { ;; }
 
-				virtual void Parse(CharSourceText & charSource, std::string & result) const = 0;
+				virtual void Parse(XTL::TextCharSource & charSource, std::string & result) const = 0;
 		};
 
 		EscapeSequenceParser()
@@ -1381,7 +1164,7 @@ class EscapeSequenceParser
 			;;
 		}
 
-		bool Parse(CharSourceText & charSource, std::string & result) const
+		bool Parse(XTL::TextCharSource & charSource, std::string & result) const
 		{
 			Subparser * subparser = subparsers_[charSource.GetChar()];
 			if (subparser != 0)
@@ -1404,7 +1187,7 @@ class EscapeSequenceParser
 
 	private:
 
-		AutoPtrMap<char, Subparser> subparsers_;
+		XTL::AutoPtrMap<char, Subparser> subparsers_;
 };
 
 class JsonEscapeSequenceParser : public EscapeSequenceParser
@@ -1443,7 +1226,7 @@ class JsonEscapeSequenceParser : public EscapeSequenceParser
 					;;
 				}
 
-				virtual void Parse(CharSourceText & charSource, std::string & result) const
+				virtual void Parse(XTL::TextCharSource & charSource, std::string & result) const
 				{
 					charSource.Advance();
 					result.append(1, ch_);
@@ -1463,11 +1246,10 @@ class JsonEscapeSequenceParser : public EscapeSequenceParser
 					;;
 				}
 
-				virtual void Parse(CharSourceText & charSource, std::string & result) const
+				virtual void Parse(XTL::TextCharSource & charSource, std::string & result) const
 				{
 					charSource.Advance();
-
-					// TODO: realize it!!!
+					throw std::runtime_error("UnicodeChar::Parse() is unimplemented");
 				}
 
 			private:
@@ -1500,7 +1282,7 @@ class StringLiteralParser
 			;;
 		}
 
-		const std::string Parse(CharSourceText & charSource) const
+		const std::string Parse(XTL::TextCharSource & charSource) const
 		{
 			// ASSERT(charSource.GetChar() == boundingChar_)
 
@@ -1579,9 +1361,259 @@ class JsonStringLiteralParser : public StringLiteralParser
 		}
 };
 
+class CharClassifier
+{
+	public:
+
+		static const unsigned int CAPACITY = sizeof(char);
+
+		CharClassifier()
+		{
+			::memset(classes_, '\0', CAPACITY * sizeof(classes_[0]));
+		}
+
+		XTL::UINT_64 GetClass(char c) const
+		{
+			return classes_[ToIndex(c)];
+		}
+
+		bool HasClass(char c, XTL::UINT_64 charClass) const
+		{
+			return (GetClass(c) & charClass) != 0;
+		}
+
+	protected:
+
+		CharClassifier & AddClass(XTL::UINT_64 charClass, char c)
+		{
+			classes_[ToIndex(c)] &= charClass;
+			return *this;
+		}
+
+		CharClassifier & AddClass(XTL::UINT_64 charClass, char from, char to)
+		{
+			unsigned char indexFrom = ToIndex(from);
+			unsigned char indexTo = ToIndex(to);
+
+			for (unsigned char i = indexFrom; i <= indexTo; ++i)
+			{
+				classes_[i] &= charClass;
+			}
+
+			return *this;
+		}
+
+	private:
+
+		unsigned char ToIndex(char c) const
+		{
+			return static_cast<unsigned char>(c);
+		}
+
+		XTL::UINT_64 classes_[CAPACITY];
+};
+
+/*
+    NUL SOH STX ETX EOT ENQ ACK BEL BS  TAB LF  VT  FF  CR  SO  SI
+    DLE DC1 DC2 DC3 DC4 NAK SYN ETB CAN EM  SUB ESC FS  GS  RS  US
+        !   "   #   $   %   &   '   (   )   *   +   ,   —   .   /
+    0   1   2   3   4   5   6   7   8   9   :   ;   <   =   >   ?
+    @   A   B   C   D   E   F   G   H   I   J   K   L   M   N   O
+    P   Q   R   S   T   U   V   W   X   Y   Z   [   \   ]   ^   _
+    `   a   b   c   d   e   f   g   h   i   j   k   l   m   n   o
+    p   q   r   s   t   u   v   w   x   y   z   {   |   }   ~   DEL
+*/
+
+namespace XTL
+{
+class TextParser
+{
+	public:
+
+		static const XTL::UINT_64 CHAR_DIGIT            = 0x00000001; // '0' .. '9'
+		static const XTL::UINT_64 CHAR_LETTER_UPPERCASE = 0x00000002; // 'A' .. 'Z'
+		static const XTL::UINT_64 CHAR_LETTER_LOWERCASE = 0x00000004; // 'a' .. 'z'
+		static const XTL::UINT_64 CHAR_HEX_UPPERCASE    = 0x00000008; // 'A' .. 'F'
+		static const XTL::UINT_64 CHAR_HEX_LOWERCASE    = 0x00000010; // 'a' .. 'f'
+		static const XTL::UINT_64 CHAR_SPACE            = 0x00000020; // ' '
+		static const XTL::UINT_64 CHAR_TAB              = 0x00000040; // '\t'
+		static const XTL::UINT_64 CHAR_CARRIAGE_RETURN  = 0x00000080; // '\r'
+		static const XTL::UINT_64 CHAR_LINE_FEED        = 0x00000100; // '\n'
+		static const XTL::UINT_64 CHAR_PLUS             = 0x00000200; // '+'
+		static const XTL::UINT_64 CHAR_MINUS            = 0x00000400; // '-'
+		static const XTL::UINT_64 CHAR_UNDERSCORE       = 0x00000800; // '_'
+
+		class Error : public Exception
+		{
+			public:
+
+				Error(const TextCursor & cursor, const std::string & what)
+					: Exception(),
+					  cursor_(cursor),
+					  what_(what)
+				{
+					;;
+				}
+
+				virtual ~Error() throw()
+				{
+					;;
+				}
+
+				virtual const std::string What() const
+				{
+					return what_;
+				}
+
+			private:
+
+				const TextCursor  cursor_;
+				const std::string what_;
+		};
+
+		static bool IsWhiteSpace(char c)
+		{
+			return HasClass(c, CHAR_SPACE | CHAR_TAB | CHAR_CARRIAGE_RETURN | CHAR_LINE_FEED);
+		}
+
+		static bool IsAlpha(char c)
+		{
+			return HasClass(c, CHAR_LETTER_UPPERCASE | CHAR_LETTER_LOWERCASE);
+		}
+
+		static bool IsDigit(char c)
+		{
+			return HasClass(c, CHAR_DIGIT);
+		}
+
+		static bool IsIdentifierHead(char c)
+		{
+			return HasClass(c, CHAR_LETTER_UPPERCASE | CHAR_LETTER_LOWERCASE | CHAR_UNDERSCORE);
+		}
+
+		static bool IsIdentifierTail(char c)
+		{
+			return HasClass(c, CHAR_LETTER_UPPERCASE | CHAR_LETTER_LOWERCASE | CHAR_UNDERSCORE | CHAR_DIGIT);
+		}
+
+		static int HexToInt(char c)
+		{
+			if (c >= 'A' && c <= 'F')
+			{
+				return 10 + (c - 'A');
+			}
+			else if (c >= 'a' && c <= 'f')
+			{
+				return 10 + (c - 'a');
+			}
+			else
+			{
+				return DecToInt(c);
+			}
+		}
+
+		static int DecToInt(char c)
+		{
+			if (c >= '0' && c <= '9')
+			{
+				return c - '0';
+			}
+
+			return -1;
+		}
+
+		static const std::string ParseIdentifier(TextCharSource & charSource)
+		{
+			return "";
+		}
+
+		template <typename T>
+		static void ParseDecInteger(TextCharSource & charSource, T & result)
+		{
+			int digit = DecToInt(charSource.GetChar());
+			if (digit < 0)
+			{
+				throw TextParser::Error(charSource.GetCursor(), "ParseDecInteger requires decimal digit");
+			}
+
+			result = digit;
+			charSource.Advance();
+
+			while ((digit = DecToInt(charSource.GetChar())) >= 0)
+			{
+				result *= 10;
+				result += digit;
+				charSource.Advance();
+			}
+		}
+
+		template <typename T>
+		static void ParseHexInteger(TextCharSource & charSource, T & result)
+		{
+			int digit = HexToInt(charSource.GetChar());
+			if (digit < 0)
+			{
+				throw TextParser::Error(charSource.GetCursor(), "ParseHexInteger requires hex digit");
+			}
+
+			result = digit;
+			charSource.Advance();
+
+			while ((digit = HexToInt(charSource.GetChar())) >= 0)
+			{
+				result <<= 4;
+				result += digit;
+				charSource.Advance();
+			}
+		}
+
+
+
+	protected:
+
+		class BaseCharClassifier : public CharClassifier
+		{
+			public:
+
+				static const BaseCharClassifier & Instance()
+				{
+					static BaseCharClassifier instance;
+
+					return instance;
+				}
+
+			protected:
+
+				BaseCharClassifier()
+					: CharClassifier()
+				{
+					AddClass(CHAR_DIGIT,            '0', '9');
+					AddClass(CHAR_LETTER_UPPERCASE, 'A', 'Z');
+					AddClass(CHAR_LETTER_LOWERCASE, 'a', 'z');
+					AddClass(CHAR_HEX_UPPERCASE,    'A', 'F');
+					AddClass(CHAR_HEX_LOWERCASE,    'a', 'f');
+					AddClass(CHAR_SPACE,            ' ');
+					AddClass(CHAR_TAB,              '\t');
+					AddClass(CHAR_CARRIAGE_RETURN,  '\r');
+					AddClass(CHAR_LINE_FEED,        '\n');
+					AddClass(CHAR_PLUS,             '+');
+					AddClass(CHAR_MINUS,            '-');
+					AddClass(CHAR_UNDERSCORE,       '_');
+				}
+		};
+
+	private:
+
+		static bool HasClass(char c, XTL::UINT_64 charClass)
+		{
+			return BaseCharClassifier::Instance().HasClass(c, charClass);
+		}
+};
+}
+
 int main(int argc, const char * argv[])
 {
-	CharSourceTextCharPtr charSource("\"aaa\\t\\\"\\\"\\\\bbbbb\"");
+	XTL::TextCharSource::ConstCharPtr charSource("\"aaa\\t\\\"\\\"\\\\bbbbb\"");
 
 	JsonStringLiteralParser parser;
 
@@ -1734,10 +1766,6 @@ int main(int argc, const char * argv[])
 
 	return 0;
 */
-	CharSourceTextCharPtr cs("-0001234567890");
-	IntegerParser p(true, true);
-	printf("%d\n", p.Parse<unsigned int>(cs));
-	return 0;
 
 	printf("Ok!\n");
 

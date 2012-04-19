@@ -65,9 +65,9 @@ SET (
 		xtl/io/FileOutputStreamBuffered.cpp
 		xtl/io/StringOutputStream.cpp
 
-		xtl/tp/SimpleTemplate.cpp
-		xtl/tp/SimpleTemplateItem.cpp
-		xtl/tp/SimpleTemplateWriter.cpp
+		xtl/simple_template/SimpleTemplate.cpp
+		xtl/simple_template/SimpleTemplateItem.cpp
+		xtl/simple_template/SimpleTemplateWriter.cpp
 )
 
 ADD_LIBRARY (
