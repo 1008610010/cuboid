@@ -7,7 +7,7 @@ namespace XTL
 namespace PGSQL
 {
 	Exception::Exception(const char * what)
-		: what_(what)
+		: what_(what == 0 ? "(nil)" : what)
 	{
 		;;
 	}

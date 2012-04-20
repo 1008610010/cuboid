@@ -4,6 +4,7 @@
 #include <string>
 
 #include "ConnectionConfig.hpp"
+#include "QueryResult.hpp"
 
 namespace XTL
 {
@@ -47,7 +48,16 @@ namespace PGSQL
 
 			QueryResult Execute(const std::string & query);
 
-			void CopyTable(const char * tableName/*, CopyDataConsumer & consumer*/);
+			class CopyDataConsumer
+			{
+				public:
+
+					virtual ~CopyDataConsumer() throw() { ;; }
+
+					virtual void OnRow(const char * buffer, unsigned int size) = 0;
+			};
+
+			void CopyTable(const char * tableName, CopyDataConsumer & dataConsumer);
 
 			bool BeginTransaction();
 

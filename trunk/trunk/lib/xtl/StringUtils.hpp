@@ -9,13 +9,14 @@
 namespace XTL
 {
 	template <typename T>
-	T StringToInteger(const char * src)
+	const char * StringToInteger(const char * src, T & result)
 	{
 		const char * p = src;
+		result = 0;
 
 		if (p == 0 || *p == '\0')
 		{
-			return 0;
+			return p;
 		}
 
 		bool negative = false;
@@ -25,13 +26,25 @@ namespace XTL
 			++p;
 		}
 
-		T result = 0;
 		for (; *p >= '0' && *p <= '9'; ++p)
 		{
 			result = 10 * result + (*p - '0');
 		}
 
-		return negative ? -result : result;
+		if (negative)
+		{
+			result = -result;
+		}
+
+		return p;
+	}
+
+	template <typename T>
+	T StringToInteger(const char * src)
+	{
+		T result = 0;
+		StringToInteger(src, result);
+		return result;
 	}
 
 	template <typename T>
