@@ -54,6 +54,9 @@ namespace PGSQL
 
 					virtual ~CopyDataConsumer() throw() { ;; }
 
+					/*
+						The returned string is always null-terminated, though this is probably only useful for textual COPY.
+					*/
 					virtual void OnRow(const char * buffer, unsigned int size) = 0;
 			};
 

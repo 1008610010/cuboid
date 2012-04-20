@@ -86,32 +86,17 @@ namespace PGSQL
 
 		if (IsOpened())
 		{
-			printf("ZZZ\n");
 			result.ResetHandle(PQexec(HANDLE_, query));
 			if (result.Success())
 			{
-				printf("1\n");
 				return result;
 			}
 
-			printf("2\n");
 			if (IsOpened())
 			{
-				printf("3\n");
-				printf("%s\n", query);
-				if (LastError() == 0)
-				{
-					printf(">>> LastError() is null\n");
-				}
-				else
-				{
-					printf("LastError: %s\n", LastError());
-				}
 				throw QueryError(LastError(), query, result);
 			}
 		}
-
-		printf("4\n");
 
 		// TODO: Делать или нет автореконнект должен решать класс Connection.
 		Open();
@@ -129,18 +114,15 @@ namespace PGSQL
 		return Execute(query.c_str());
 	}
 
-	// pg_dump -U stats -f users.dat --table=users --data-only usersdb
 	void Connection::CopyTable(const char * tableName, CopyDataConsumer & dataConsumer)
 	{
-		/*
-			The returned string is always null-terminated, though this is probably only useful for textual COPY.
-		*/
-		// PGresult * result = PQexec(HANDLE_, XTL::FormatString("COPY BINARY %s TO STDOUT;", tableName).c_str());
-		PGresult * result = PQexec(HANDLE_, XTL::FormatString("COPY %s TO STDOUT;", tableName).c_str());
+		const std::string query = XTL::FormatString("COPY %s TO STDOUT;", tableName);
 
-		if (result == 0)
+		PGresult * result = PQexec(HANDLE_, query.c_str());
+
+		if (PQresultStatus(result) != PGRES_COPY_OUT)
 		{
-			// throw exception here
+			throw Exception(LastError());
 		}
 
 		char * buffer = 0;
@@ -152,13 +134,11 @@ namespace PGSQL
 			PQfreemem(buffer);
 
 			copyResult = PQgetCopyData(HANDLE_, &buffer, 0);
-
-			// consumer.OnCopyData(buffer);
 		}
 
 		if (copyResult == -2)
 		{
-			// throw error here
+			throw Exception(LastError());
 		}
 	}
 
