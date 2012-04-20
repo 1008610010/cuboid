@@ -92,23 +92,19 @@ namespace PGSQL
 
 	bool QueryResult::Success() const
 	{
-		if (handle_ != 0)
-		{
-			ExecStatusType status = PQresultStatus(CONST_HANDLE_);
-			if (status == PGRES_COPY_OUT)
-			{
-				printf("PGRES_COPY_OUT\n");
-			}
-			else if (status == PGRES_COPY_IN)
-			{
-				printf("PGRES_COPY_IN\n");
-			}
-			return status == PGRES_COMMAND_OK || status == PGRES_TUPLES_OK;
-		}
-		else
+		if (handle_ == 0)
 		{
 			return false;
 		}
+
+		ExecStatusType status = PQresultStatus(CONST_HANDLE_);
+		/*
+		if (status == PGRES_COPY_IN)
+		{
+			printf("PGRES_COPY_IN\n");
+		}
+		*/
+		return status == PGRES_COMMAND_OK || status == PGRES_TUPLES_OK;
 	}
 
 	int QueryResult::RowsCount() const
