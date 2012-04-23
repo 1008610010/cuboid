@@ -1611,8 +1611,48 @@ class TextParser
 };
 }
 
+#include <xtl/BitSet.hpp>
+
+template <typename T>
+struct S1
+{
+	int i;
+	char c;
+	T extra;
+};
+
+struct S2
+{
+	char d[4];
+};
+
+
+XTL::UINT_32 Ones(int bitFrom, int bitTo)
+{
+	return (1 << (bitTo + 1)) - 1 - ((1 << bitFrom) - 1);
+}
+
 int main(int argc, const char * argv[])
 {
+	printf("%u\n", sizeof(S1<S2>));
+	return 0;
+
+	printf("%u\n", Ones(0, 1890));
+	return 0;
+
+	XTL::BitSet<XTL::UINT_64> bs(true);
+
+	// bs.Add(0);
+	bs.Remove(0);
+	// bs.Add(31);
+
+	for (XTL::BitSet<XTL::UINT_64>::ConstIterator itr(bs); !itr.AtEnd(); itr.Advance())
+	{
+		printf("%d\n", *itr);
+	}
+
+	return 0;
+
 	XTL::TextCharSource::ConstCharPtr charSource("\"aaa\\t\\\"\\\"\\\\bbbbb\"");
 
 	JsonStringLiteralParser parser;
