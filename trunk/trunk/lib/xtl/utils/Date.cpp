@@ -47,7 +47,7 @@ namespace XTL
 			}
 		}
 
-		return true;
+		return false;
 	}
 
 	Date & Date::AddDays(int count)
