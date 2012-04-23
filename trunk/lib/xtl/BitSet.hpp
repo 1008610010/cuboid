@@ -104,31 +104,52 @@ namespace XTL
 				public:
 
 					ConstIterator(const BitSet & set)
-						: set_(set), current_(-1) { ;; }
-
-					bool Next()
+						: set_(set),
+						  current_(0)
 					{
-						while (current_ < static_cast<INT_32>(BitSet::BITS_COUNT) - 1)
-						{
-							++current_;
-							INT_32 bit = current_ & 0x07;
-							INT_32 next = GetFirstBit1(set_.GetByte(current_) & ~((1 << bit) - 1));
-							if (next >= 0)
-							{
-								current_ = (current_ & 0xf8) + next;
-								return true;
-							}
-							current_ |= 0x07;
-						}
-						return false;
+						FindNextBit();
 					}
 
-					INT_32 operator* () const { return current_; }
+					bool AtEnd() const
+					{
+						return current_ == -1;
+					}
+
+					void Advance()
+					{
+						if (AtEnd())
+						{
+							return;
+						}
+
+						++current_;
+
+						FindNextBit();
+					}
+
+					int operator* () const
+					{
+						return current_;
+					}
 
 				private:
 
+					void FindNextBit()
+					{
+						while (current_ < static_cast<int>(CAPACITY))
+						{
+							if (set_.Includes(current_))
+							{
+								return;
+							}
+							++current_;
+						}
+
+						current_ = -1;
+					}
+
 					const BitSet & set_;
-					INT_32 current_;
+					int current_;
 			};
 
 

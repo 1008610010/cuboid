@@ -44,6 +44,11 @@ namespace PLAIN
 				return &item_;
 			}
 
+			const ItemType_ & operator* () const
+			{
+				return item_;
+			}
+
 			void SkipAll() const
 			{
 				// TODO: optimize it
