@@ -282,7 +282,7 @@ namespace PLAIN
 						stream.Read(Data(), Prototype()->Size());
 					}
 
-					virtual void Write(XTL::OutputStream & stream)
+					virtual void Write(XTL::OutputStream & stream) const
 					{
 						stream.Write(Data(), Prototype()->Size());
 					}

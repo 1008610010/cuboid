@@ -14,7 +14,7 @@ namespace XTL
 
 			virtual void Read(InputStream & stream) = 0;
 
-			virtual void Write(OutputStream & stream) = 0;
+			virtual void Write(OutputStream & stream) const = 0;
 	};
 }
 
