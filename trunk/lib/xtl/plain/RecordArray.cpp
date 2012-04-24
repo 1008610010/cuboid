@@ -43,7 +43,7 @@ namespace PLAIN
 				stream.Read(data_, itemsCount * itemSize_);
 			}
 
-			void Write(XTL::OutputStream & stream, unsigned int itemsCount)
+			void Write(XTL::OutputStream & stream, unsigned int itemsCount) const
 			{
 				stream.Write(data_, itemsCount * itemSize_);
 			}
@@ -180,7 +180,7 @@ namespace PLAIN
 		}
 	}
 
-	void RecordArray::Write(XTL::OutputStream & stream)
+	void RecordArray::Write(XTL::OutputStream & stream) const
 	{
 		unsigned int leftItems = size_;
 		std::deque<MemoryBlock *>::iterator end = chunks_.end();

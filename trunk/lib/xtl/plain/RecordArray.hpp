@@ -48,7 +48,7 @@ namespace PLAIN
 
 			virtual void Read(XTL::InputStream & stream);
 
-			virtual void Write(XTL::OutputStream & stream);
+			virtual void Write(XTL::OutputStream & stream) const;
 
 		private:
 
