@@ -48,6 +48,7 @@ SET (
 		xtl/linux/net/TcpSocketSelector.cpp
 		xtl/linux/net/TcpSocketSet.cpp
 
+		xtl/plain/Algorithm.cpp
 		xtl/plain/RecordPrototype.cpp
 		xtl/plain/RecordPrototypeBuilder.cpp
 		xtl/plain/RecordArray.cpp
