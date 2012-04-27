@@ -1,0 +1,40 @@
+%define _prefix  /usr
+%define revision_number %(svnversion -n @CMAKE_SOURCE_DIR@)
+
+Summary:        XTL C++ library
+Name:           sup-xtl
+Version:        @XTL_FULL_VERSION@
+Release:        %{revision_number}
+License:        GPL
+Source:         xtl-%{version}.tar.gz
+Group:          Development/Libraries
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+# BuildRequires:
+Prefix:         %{_prefix}
+
+%files
+# %{_prefix}/lib/libxc3common.so
+
+
+%package devel
+Summary:        XTL C++ Library development files
+Group:          Development/Libraries
+
+%files devel
+%defattr(-,root,root,-)
+
+%prep
+%setup -q -n xtl-%{version}
+
+%build
+%cmake . -DCMAKE_INSTALL_PREFIX=/usr -DCFLAGS="${CFLAGS}" -DCXXFLAGS="${CXXFLAGS}"
+make VERBOSE=1 %{?_smp_mflags}
+
+%install
+rm -rf %{buildroot}
+make DESTDIR=%{buildroot} install
+
+%clean
+rm -rf %{buildroot}
+
+
