@@ -1,30 +1,178 @@
 %define _prefix  /usr
 %define revision_number %(svnversion -n @CMAKE_SOURCE_DIR@)
 
-Summary:        XTL C++ library
-Name:           sup-xtl
+Summary:        XTL C++ Library
+Name:           @XTL_PACKAGE_NAME@
 Version:        @XTL_FULL_VERSION@
 Release:        %{revision_number}
 License:        GPL
-Source:         xtl-%{version}.tar.gz
+Source:         %{name}-%{version}.tar.gz
 Group:          Development/Libraries
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 # BuildRequires:
 Prefix:         %{_prefix}
 
+%description
+XTL C++ Library
+
 %files
-# %{_prefix}/lib/libxc3common.so
+%{_prefix}/lib/libxtl.so
+
+
+
+%package mysql
+Summary:        XTL C++ Library - MySQL
+Group:          Development/Libraries
+Requires:       %{name} = %{version}
+Requires:       mysql
+BuildRequires:  mysql-devel
+
+%description mysql
+XTL C++ Library - MySQL
+
+%files mysql
+%defattr(-,root,root,-)
+%{_prefix}/lib/libxtl-mysql.so
+
+
+
+%package pgsql
+Summary:        XTL C++ Library - PostgreSQL
+Group:          Development/Libraries
+Requires:       %{name} = %{version}
+Requires:       postgresql-libs
+BuildRequires:  postgresql-devel
+
+%description pgsql
+XTL C++ Library - PostgreSQL
+
+%files pgsql
+%defattr(-,root,root,-)
+%{_prefix}/lib/libxtl-pgsql.so
+
 
 
 %package devel
 Summary:        XTL C++ Library development files
 Group:          Development/Libraries
+Requires:       %{name} = %{version}
+
+%description devel
+XTL C++ Library development files
 
 %files devel
 %defattr(-,root,root,-)
+%{_prefix}/include/xtl/BTree.hpp
+%{_prefix}/include/xtl/BitSet.hpp
+%{_prefix}/include/xtl/Exception.hpp
+%{_prefix}/include/xtl/FormatString.hpp
+%{_prefix}/include/xtl/FormatString.inc
+%{_prefix}/include/xtl/Logger.hpp
+%{_prefix}/include/xtl/SharedPtr.hpp
+%{_prefix}/include/xtl/StringUtils.hpp
+%{_prefix}/include/xtl/TypeTraits.hpp
+%{_prefix}/include/xtl/Types.hpp
+%{_prefix}/include/xtl/Variant2.hpp
+%{_prefix}/include/xtl/io/FileInputStream.hpp
+%{_prefix}/include/xtl/io/FileInputStreamBuffered.hpp
+%{_prefix}/include/xtl/io/FileOutputStream.hpp
+%{_prefix}/include/xtl/io/FileOutputStreamBuffered.hpp
+%{_prefix}/include/xtl/io/InputStream.hpp
+%{_prefix}/include/xtl/io/OutputStream.hpp
+%{_prefix}/include/xtl/io/Serializable.hpp
+%{_prefix}/include/xtl/io/StringOutputStream.hpp
+%{_prefix}/include/xtl/linux/AccessMode.hpp
+%{_prefix}/include/xtl/linux/UnixError.hpp
+%{_prefix}/include/xtl/linux/fs/File.hpp
+%{_prefix}/include/xtl/linux/fs/FilePath.hpp
+%{_prefix}/include/xtl/linux/fs/FilePathTokenizer.hpp
+%{_prefix}/include/xtl/linux/fs/FileStats.hpp
+%{_prefix}/include/xtl/linux/fs/FileUtils.hpp
+%{_prefix}/include/xtl/linux/net/SocketAddressError.hpp
+%{_prefix}/include/xtl/linux/net/SocketAddressInet.hpp
+%{_prefix}/include/xtl/linux/net/TcpClientSocket.hpp
+%{_prefix}/include/xtl/linux/net/TcpServerSocket.hpp
+%{_prefix}/include/xtl/linux/net/TcpSocket.hpp
+%{_prefix}/include/xtl/linux/net/TcpSocketSelector.hpp
+%{_prefix}/include/xtl/linux/net/TcpSocketSet.hpp
+%{_prefix}/include/xtl/plain/Algorithm.hpp
+%{_prefix}/include/xtl/plain/Field.hpp
+%{_prefix}/include/xtl/plain/FieldType.hpp
+%{_prefix}/include/xtl/plain/Record.hpp
+%{_prefix}/include/xtl/plain/RecordArray.hpp
+%{_prefix}/include/xtl/plain/RecordArrayReader.hpp
+%{_prefix}/include/xtl/plain/RecordPrototype.hpp
+%{_prefix}/include/xtl/plain/RecordPrototypeBuilder.hpp
+%{_prefix}/include/xtl/plain/Struct.hpp
+%{_prefix}/include/xtl/plain/StructPrototype.hpp
+%{_prefix}/include/xtl/plain/StructPrototypeBuilder.hpp
+%{_prefix}/include/xtl/simple_template/SimpleTemplate.hpp
+%{_prefix}/include/xtl/simple_template/SimpleTemplateItem.hpp
+%{_prefix}/include/xtl/simple_template/SimpleTemplateItemVisitor.hpp
+%{_prefix}/include/xtl/simple_template/SimpleTemplateParameter.hpp
+%{_prefix}/include/xtl/simple_template/SimpleTemplateParser.hpp
+%{_prefix}/include/xtl/simple_template/SimpleTemplateValue.hpp
+%{_prefix}/include/xtl/simple_template/SimpleTemplateValueArray.hpp
+%{_prefix}/include/xtl/simple_template/SimpleTemplateValueChar.hpp
+%{_prefix}/include/xtl/simple_template/SimpleTemplateValueInteger.hpp
+%{_prefix}/include/xtl/simple_template/SimpleTemplateValueString.hpp
+%{_prefix}/include/xtl/tp/TextCharSource.hpp
+%{_prefix}/include/xtl/tp/TextCursor.hpp
+%{_prefix}/include/xtl/utils/Algorithm.hpp
+%{_prefix}/include/xtl/utils/AutoPtrMap.hpp
+%{_prefix}/include/xtl/utils/AutoPtrVector.hpp
+%{_prefix}/include/xtl/utils/BitUtils.hpp
+%{_prefix}/include/xtl/utils/Chronometer.hpp
+%{_prefix}/include/xtl/utils/Date.hpp
+%{_prefix}/include/xtl/simple_template/SimpleTemplateWriter.hpp
+
+
+
+%package mysql-devel
+Summary:        XTL C++ Library development files - MySQL
+Group:          Development/Libraries
+Requires:       %{name} = %{version}
+Requires:       %{name}-devel = %{version}
+Requires:       %{name}-mysql = %{version}
+
+%description mysql-devel
+XTL C++ Library development files - MySQL
+
+%files mysql-devel
+%defattr(-,root,root,-)
+%{_prefix}/include/xtl/mysql/Connection.hpp
+%{_prefix}/include/xtl/mysql/ConnectionConfig.hpp
+%{_prefix}/include/xtl/mysql/Exception.hpp
+%{_prefix}/include/xtl/mysql/QueryResult.hpp
+%{_prefix}/include/xtl/mysql/QueryResultRow.hpp
+
+
+
+%package pgsql-devel
+Summary:        XTL C++ Library development files - PostgreSQL
+Group:          Development/Libraries
+Requires:       %{name} = %{version}
+Requires:       %{name}-devel = %{version}
+Requires:       %{name}-pgsql = %{version}
+
+%description pgsql-devel
+XTL C++ Library development files - PostgreSQL
+
+%files pgsql-devel
+%defattr(-,root,root,-)
+%{_prefix}/include/xtl/pgsql/Connection.hpp
+%{_prefix}/include/xtl/pgsql/ConnectionConfig.hpp
+%{_prefix}/include/xtl/pgsql/Cursor.hpp
+%{_prefix}/include/xtl/pgsql/Exception.hpp
+%{_prefix}/include/xtl/pgsql/QueryResult.hpp
+%{_prefix}/include/xtl/pgsql/QueryResultIterator.hpp
+%{_prefix}/include/xtl/pgsql/QueryResultRow.hpp
+%{_prefix}/include/xtl/pgsql/QueryState.hpp
+
+
 
 %prep
-%setup -q -n xtl-%{version}
+%setup -q -n %{name}-%{version}
 
 %build
 %cmake . -DCMAKE_INSTALL_PREFIX=/usr -DCFLAGS="${CFLAGS}" -DCXXFLAGS="${CXXFLAGS}"

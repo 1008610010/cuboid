@@ -26,7 +26,7 @@ SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O2 -Wall -Wundef -Wsign-compare -Wp
 #############################################################################################################
 
 SET (
-	XTL_COMMON_SOURCES
+	XTL_SOURCES
 		xtl/Exception.cpp
 		xtl/FormatString.cpp
 		xtl/StringUtils.cpp
@@ -72,13 +72,8 @@ SET (
 )
 
 ADD_LIBRARY (
-	xtl-common-st
-		${XTL_COMMON_SOURCES}
-)
-
-ADD_LIBRARY (
-	xtl-common SHARED
-		${XTL_COMMON_SOURCES}
+	xtl SHARED
+		${XTL_SOURCES}
 )
 
 
@@ -137,10 +132,6 @@ TARGET_LINK_LIBRARIES (
 		${POSTGRESQL_CLIENT_LIBRARY}
 )
 
-ADD_LIBRARY (
-	xtl-pgsql-st
-		${XTL_PGSQL_SOURCES}
-)
 
 
 FIND_LIBRARY (
@@ -165,27 +156,30 @@ ADD_LIBRARY (
 
 TARGET_LINK_LIBRARIES (
 	xtl-mysql
-		xtl-common
+		xtl
 		${MYSQL_CLIENT_LIBRARY}
-)
-
-ADD_LIBRARY (
-	xtl-mysql-st
-		${XTL_MYSQL_SOURCES}
 )
 
 
 
 INSTALL (
 	TARGETS
-		xtl-common
-		xtl-common-st
+		xtl
 		xtl-mysql
-		xtl-mysql-st
 		xtl-pgsql
-		xtl-pgsql-st
 	DESTINATION
 		lib
 )
+
+INSTALL (
+	DIRECTORY   xtl
+	DESTINATION include
+	PATTERN "*.hpp"
+	PATTERN "*.cpp" EXCLUDE
+	PATTERN ".svn" EXCLUDE
+	PATTERN "todo" EXCLUDE
+	PATTERN "TODO" EXCLUDE
+)
+
 
 
