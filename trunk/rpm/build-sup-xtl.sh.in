@@ -1,12 +1,14 @@
 #!/bin/bash
 
+FULL_NAME=@XTL_PACKAGE_NAME@-@XTL_FULL_VERSION@
+
 cd @CMAKE_SOURCE_DIR@
 cd ../
-rm -rf ./@XTL_FULL_VERSION@/
-cp -r @CMAKE_SOURCE_DIR@ ./@XTL_FULL_VERSION@
-rm -rf ./@XTL_FULL_VERSION@/build
-tar -czf ./sup-xtl-@XTL_FULL_VERSION@.tar.gz ./@XTL_FULL_VERSION@
-rm -rf ./@XTL_FULL_VERSION@
-mv ./sup-xtl-@XTL_FULL_VERSION@.tar.gz ~/rpm/SOURCES
+rm -rf ./$FULL_NAME
+cp -r @CMAKE_SOURCE_DIR@ ./$FULL_NAME
+rm -rf ./$FULL_NAME/build
+tar -czf ./$FULL_NAME.tar.gz ./$FULL_NAME
+rm -rf ./$FULL_NAME
+mv ./$FULL_NAME.tar.gz ~/rpm/SOURCES
 rpmbuild -bb --sign @CMAKE_CURRENT_BINARY_DIR@/xtl.spec
 

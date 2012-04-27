@@ -44,7 +44,7 @@ ADD_EXECUTABLE (
 TARGET_LINK_LIBRARIES (
 	forge
 		xtl-pgsql
-		xtl-common
+		xtl
 )
 
 
@@ -65,7 +65,7 @@ ADD_EXECUTABLE (
 
 TARGET_LINK_LIBRARIES (
 	program_options
-		xtl-common
+		xtl
 )
 
 
@@ -76,37 +76,13 @@ ADD_EXECUTABLE (
 
 TARGET_LINK_LIBRARIES (
 	mysql_test
-		xtl-common
+		xtl
 		xtl-mysql
 )
 
 
 ADD_SUBDIRECTORY (unittests)
-
-
-#INSTALL (
-#	TARGETS
-#		xc3_calc_ratings
-#		xc3_ratings_fetch_journals
-#		xc3_ratings_fetch_posts
-#		xc3_ratings_read_journal
-#		xc3_ratings_read_post
-#		xc3_ratings_read_header
-#	DESTINATION
-#		bin
-#)
-
-INSTALL (
-	DIRECTORY   lib/xtl
-	DESTINATION include
-	PATTERN "*.hpp"
-	PATTERN "*.cpp" EXCLUDE
-	PATTERN ".svn" EXCLUDE
-)
-
-
-ADD_SUBDIRECTORY(rpm)
-
+ADD_SUBDIRECTORY (rpm)
 
 
 
