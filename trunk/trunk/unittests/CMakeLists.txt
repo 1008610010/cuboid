@@ -89,6 +89,6 @@ TARGET_LINK_LIBRARIES (
 	xtl_unittests
 		${CPPUNIT_LIBRARIES}
 		dl
-		xtl-common
+		xtl
 )
 
