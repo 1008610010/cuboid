@@ -27,6 +27,7 @@ namespace PLAIN
 	{
 		if (size_ % fieldType->Alignment() != 0)
 		{
+			/*
 			fprintf(
 				stderr,
 				"[WARN] Adding field '%s' with alignment %u to record prototype '%s' with lesser alignment %u\n",
@@ -35,6 +36,7 @@ namespace PLAIN
 				name_.c_str(),
 				alignment_
 			);
+			*/
 		}
 		else if (alignment_ < fieldType->Alignment())
 		{
