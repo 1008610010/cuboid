@@ -52,7 +52,7 @@ namespace PGSQL
 
 			int ColumnsCount() const;
 
-//			long long int Affected() const;
+			long long int Affected() const;
 
 			bool Empty() const
 			{
