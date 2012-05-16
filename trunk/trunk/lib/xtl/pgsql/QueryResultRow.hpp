@@ -32,12 +32,22 @@ namespace PGSQL
 			{
 				return result_.GetChar(row_, column, defaultValue);
 			}
-/*
-			long long int GetInteger(unsigned int column, int64_t defaultValue = 0) const
+
+			long long int GetInteger(unsigned int column, long long int defaultValue = 0) const
 			{
 				return result_.GetInteger(row_, column, defaultValue);
 			}
-*/
+
+			float GetFloat(unsigned int column, float defaultValue = 0.0) const
+			{
+				return result_.GetFloat(row_, column, defaultValue);
+			}
+
+			double GetDouble(unsigned int column, double defaultValue = 0.0) const
+			{
+				return result_.GetDouble(row_, column, defaultValue);
+			}
+
 		protected:
 
 			const QueryResult  & result_;

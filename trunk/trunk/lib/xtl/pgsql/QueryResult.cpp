@@ -117,13 +117,12 @@ namespace PGSQL
 		return Success() ? PQnfields(CONST_HANDLE_) : 0;
 	}
 
-/*
 	long long int QueryResult::Affected() const
 	{
 		const char * s = PQcmdTuples(HANDLE_);
-		return s != 0 ? XTL::StringToInteger(s) : 0;
+
+		return s != 0 ? XTL::StringToInteger<long long int>(s) : 0;
 	}
-*/
 
 	const std::string QueryResult::ColumnName(unsigned int column) const
 	{
