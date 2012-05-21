@@ -53,7 +53,7 @@ namespace PLAIN
 			void * data_;
 	};
 
-	class RecordRef : public RecordConstRef
+	class RecordRef : public RecordConstRef, XTL::Serializable
 	{
 		public:
 
@@ -76,6 +76,11 @@ namespace PLAIN
 				return data_;
 			}
 
+			void * Data() const
+			{
+				return data_;
+			}
+
 			void Assign(const RecordConstRef & other)
 			{
 				if (Prototype() != other.Prototype())
@@ -85,6 +90,17 @@ namespace PLAIN
 
 				::memcpy(Data(), other.Data(), Prototype()->Size());
 			}
+
+			virtual void Read(XTL::InputStream & stream)
+			{
+				stream.Read(Data(), Prototype()->Size());
+			}
+
+			virtual void Write(XTL::OutputStream & stream) const
+			{
+				stream.Write(Data(), Prototype()->Size());
+			}
+
 	};
 
 	class Record
