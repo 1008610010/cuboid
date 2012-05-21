@@ -79,6 +79,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/io/FileOutputStreamBuffered.hpp
 %{_prefix}/include/xtl/io/InputStream.hpp
 %{_prefix}/include/xtl/io/OutputStream.hpp
+%{_prefix}/include/xtl/io/SeekableInputStream.hpp
 %{_prefix}/include/xtl/io/Serializable.hpp
 %{_prefix}/include/xtl/io/StringOutputStream.hpp
 %{_prefix}/include/xtl/linux/AccessMode.hpp
