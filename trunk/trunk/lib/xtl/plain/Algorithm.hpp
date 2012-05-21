@@ -5,12 +5,47 @@
 
 #include "Record.hpp"
 #include "RecordArray.hpp"
+#include "../io/SeekableInputStream.hpp"
 
 namespace XTL
 {
 namespace PLAIN
 {
 	void Swap(RecordRef & left, RecordRef & right, RecordRef & temp);
+
+	template <typename Comparator_>
+	bool BinarySearch(XTL::SeekableInputStream & inputStream, RecordRef & rec, Comparator_ comparator)
+	{
+		unsigned int recordSize = rec.Prototype()->Size();
+
+		unsigned int left = 0;
+		unsigned int right = inputStream.Size() / recordSize;
+
+		while (left < right)
+		{
+			unsigned int middle = (left + right) / 2;
+
+			inputStream.Seek(middle * recordSize);
+			rec.Read(inputStream);
+
+			int result = comparator(rec);
+
+			if (result < 0)
+			{
+				right = middle;
+			}
+			else if (result > 0)
+			{
+				left = middle + 1;
+			}
+			else
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 /*
 	QuickSort(RecordArray & array, int low, int high)

@@ -3,13 +3,13 @@
 
 #include <string>
 
-#include "InputStream.hpp"
+#include "SeekableInputStream.hpp"
 #include "../Types.hpp"
 #include "../linux/fs/File.hpp"
 
 namespace XTL
 {
-	class FileInputStream : public InputStream
+	class FileInputStream : public SeekableInputStream
 	{
 		public:
 
@@ -23,13 +23,11 @@ namespace XTL
 
 			void Close();
 
-			void Seek(FileSize offset);
+			virtual void Seek(FileSize offset);
 
-			FileSize Size() const;
+			virtual FileSize Size() const;
 
-			FileSize Position() const;
-
-			FileSize AvailableSize() const;
+			virtual FileSize Position() const;
 
 		private:
 
