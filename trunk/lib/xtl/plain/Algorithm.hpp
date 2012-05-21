@@ -13,10 +13,10 @@ namespace PLAIN
 {
 	void Swap(RecordRef & left, RecordRef & right, RecordRef & temp);
 
-	template <typename Comparator_>
-	bool BinarySearch(XTL::SeekableInputStream & inputStream, RecordRef & rec, Comparator_ comparator)
+	template <typename RecordComparator_>
+	bool BinarySearch(XTL::SeekableInputStream & inputStream, RecordRef ref, const RecordComparator_ & comp)
 	{
-		unsigned int recordSize = rec.Prototype()->Size();
+		unsigned int recordSize = ref.Size();
 
 		unsigned int left = 0;
 		unsigned int right = inputStream.Size() / recordSize;
@@ -26,9 +26,9 @@ namespace PLAIN
 			unsigned int middle = (left + right) / 2;
 
 			inputStream.Seek(middle * recordSize);
-			rec.Read(inputStream);
+			ref.Read(inputStream);
 
-			int result = comparator(rec);
+			int result = comp(ref);
 
 			if (result < 0)
 			{
@@ -46,28 +46,6 @@ namespace PLAIN
 
 		return false;
 	}
-
-/*
-	QuickSort(RecordArray & array, int low, int high)
-	{
-		int i = low;
-		int j = high;
-		int x = array[(low + high) / 2];
-      do {
-          while(A[i]<x) ++i;
-          while(A[j]>x) --j;
-          if(i<=j){
-              int temp=A[i];
-              A[i]=A[j];
-              A[j]=temp;
-              i++; j--;
-          }
-      } while(i<=j);
- 
-      if(low<j) qSort(A,low,j);
-      if(i<high) qSort(A,i,high);
-  }
-*/
 
 	template <typename RecordComparator>
 	void QuickSort(RecordArray & array, std::vector<int> & index, int low, int high, const RecordComparator & comp)

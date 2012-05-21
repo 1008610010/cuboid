@@ -37,6 +37,11 @@ namespace PLAIN
 				return prototype_;
 			}
 
+			unsigned int Size() const
+			{
+				return prototype_->Size();
+			}
+
 			const void * Data() const
 			{
 				return data_;
@@ -88,19 +93,18 @@ namespace PLAIN
 					throw std::runtime_error("RecordRef assignment of different prototype");
 				}
 
-				::memcpy(Data(), other.Data(), Prototype()->Size());
+				::memcpy(Data(), other.Data(), this->Size());
 			}
 
 			virtual void Read(XTL::InputStream & stream)
 			{
-				stream.Read(Data(), Prototype()->Size());
+				stream.Read(Data(), this->Size());
 			}
 
 			virtual void Write(XTL::OutputStream & stream) const
 			{
-				stream.Write(Data(), Prototype()->Size());
+				stream.Write(Data(), this->Size());
 			}
-
 	};
 
 	class Record
@@ -191,6 +195,11 @@ namespace PLAIN
 						return this;
 					}
 
+					unsigned int Size() const
+					{
+						return Prototype()->Size();
+					}
+
 				protected:
 
 					static const RecordPrototype * Prototype()
@@ -207,7 +216,7 @@ namespace PLAIN
 					}
 			};
 
-			class Ref : public ConstRef
+			class Ref : public ConstRef, XTL::Serializable
 			{
 				public:
 
@@ -227,9 +236,29 @@ namespace PLAIN
 					{
 						return this;
 					}
+
+					virtual void Read(XTL::InputStream & stream)
+					{
+						stream.Read(Data(), this->Size());
+					}
+
+					virtual void Write(XTL::OutputStream & stream) const
+					{
+						stream.Write(Data(), this->Size());
+					}
+
+					operator RecordConstRef() const
+					{
+						return RecordConstRef(this->Prototype(), this->data_);
+					}
+
+					operator RecordRef()
+					{
+						return RecordRef(this->Prototype(), this->data_);
+					}
 			};
 
-			class Rec : public RecordType, XTL::Serializable
+			class Rec : public Ref
 			{
 				public:
 
@@ -266,11 +295,11 @@ namespace PLAIN
 					};
 
 					Rec()
-						: RecordType(),
+						: Ref(),
 						  prototypeHolder_(RecordType::Prototype())
 					{
-						this->data_ = new char[Prototype()->Size()];
-						::memset(this->data_, '\0', Prototype()->Size());
+						this->data_ = new char[this->Size()];
+						::memset(this->data_, '\0', this->Size());
 					}
 
 					~Rec() throw()
@@ -283,24 +312,14 @@ namespace PLAIN
 						return prototypeHolder_.Prototype();
 					}
 
-					operator ConstRef () const
+					operator RecordConstRef() const
 					{
 						return RecordConstRef(Prototype(), this->data_);
 					}
 
-					operator Ref ()
+					operator RecordRef()
 					{
 						return RecordRef(Prototype(), this->data_);
-					}
-
-					virtual void Read(XTL::InputStream & stream)
-					{
-						stream.Read(Data(), Prototype()->Size());
-					}
-
-					virtual void Write(XTL::OutputStream & stream) const
-					{
-						stream.Write(Data(), Prototype()->Size());
 					}
 
 				private:
