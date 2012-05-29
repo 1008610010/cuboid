@@ -66,6 +66,10 @@ SET (
 		xtl/io/FileOutputStreamBuffered.cpp
 		xtl/io/StringOutputStream.cpp
 
+		xtl/tp/CharClassifier.cpp
+		xtl/tp/TextCharSource.cpp
+		xtl/tp/TextParser.cpp
+
 		xtl/simple_template/SimpleTemplate.cpp
 		xtl/simple_template/SimpleTemplateItem.cpp
 		xtl/simple_template/SimpleTemplateWriter.cpp

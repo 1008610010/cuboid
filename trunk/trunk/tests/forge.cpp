@@ -1361,23 +1361,13 @@ class JsonStringLiteralParser : public StringLiteralParser
 		}
 };
 
-/*
-    NUL SOH STX ETX EOT ENQ ACK BEL BS  TAB LF  VT  FF  CR  SO  SI
-    DLE DC1 DC2 DC3 DC4 NAK SYN ETB CAN EM  SUB ESC FS  GS  RS  US
-        !   "   #   $   %   &   '   (   )   *   +   ,   —   .   /
-    0   1   2   3   4   5   6   7   8   9   :   ;   <   =   >   ?
-    @   A   B   C   D   E   F   G   H   I   J   K   L   M   N   O
-    P   Q   R   S   T   U   V   W   X   Y   Z   [   \   ]   ^   _
-    `   a   b   c   d   e   f   g   h   i   j   k   l   m   n   o
-    p   q   r   s   t   u   v   w   x   y   z   {   |   }   ~   DEL
-*/
 
+/*
 namespace XTL
 {
 class TextParser
 {
 	public:
-
 
 		class Error : public Exception
 		{
@@ -1504,185 +1494,181 @@ class TextParser
 		}
 
 	private:
-/*
+
 		static bool HasClass(char c, XTL::UINT_64 charClass)
 		{
 			return BaseCharClassifier::Instance().HasClass(c, charClass);
 		}
-*/
 };
 }
+*/
 
 #include <xtl/BitSet.hpp>
 
-XTL::UINT_32 Ones(int bitFrom, int bitTo)
+#include <xtl/tp/TextCharSource.hpp>
+#include <xtl/tp/TextParser.hpp>
+
+namespace XTL
 {
-	return (1 << (bitTo + 1)) - 1 - ((1 << bitFrom) - 1);
+	class NumberParser : private TextParser
+	{
+		public:
+
+			class Result
+			{
+				private:
+
+					enum Type
+					{
+						INTEGER = 0,
+						FLOAT   = 0
+					};
+
+					union Value
+					{
+						long long int i;
+						double d;
+
+						Value(long long int value)
+							: i(value)
+						{
+							;;
+						}
+
+						Value(double value)
+							: d(value)
+						{
+							;;
+						}
+					};
+
+				public:
+
+					explicit Result(long long int value)
+						: type_(INTEGER),
+						  value_(value)
+					{
+						;;
+					}
+
+				private:
+
+
+					Type type_;
+					Value value_;
+			};
+
+			template <typename T>
+			static const T ParseInteger(TextCharSource & charSource)
+			{
+				return NumberParser(charSource).ParseInteger<T>();
+			}
+
+			explicit NumberParser(TextCharSource & charSource)
+				: TextParser(charSource)
+			{
+				;;
+			}
+
+			template <typename T>
+			const T ParseInteger()
+			{
+				bool negative = false;
+
+				if (GetChar() == '-')
+				{
+					negative = true;
+					Advance();
+				}
+
+				if (!IsDigit(GetChar()))
+				{
+					throw std::runtime_error("");
+				}
+
+				T result = CharToInt(GetChar());
+				Advance();
+
+				for (char c = GetChar(); IsDigit(c); Advance(), c = GetChar())
+				{
+					result *= 10;
+					result += CharToInt(c);
+				}
+
+				return negative ? -result : result;
+			}
+
+			double ParseDouble()
+			{
+				long long int i = ParseInteger<long long int>();
+
+				if (GetChar() == '.')
+				{
+					Advance();
+
+					double up = 0.0;
+					double down = 1.0;
+
+					for (char c = GetChar(); IsDigit(c); Advance(), c = GetChar())
+					{
+						up *= 10.0;
+						up += CharToInt(c);
+						down *= 10.0;
+					}
+
+					// up / down;
+				}
+
+				if (GetChar() == 'E' || GetChar() == 'e')
+				{
+					Advance();
+					if (GetChar() == '+')
+					{
+						Advance();
+					}
+
+					long long int exponent = ParseInteger<long long int>();
+				}
+			}
+
+		protected:
+
+			static bool IsDigit(char c)
+			{
+				return CLASS_DIGIT.Contains(c);
+			}
+
+			static int CharToInt(char c)
+			{
+				return c - '0';
+			}
+
+			static const CharClass CLASS_DIGIT;
+	};
+
+	const CharClass NumberParser::CLASS_DIGIT(TextParser::CommonCharClassifier::Instance(), TextParser::CHAR_DIGIT);
 }
-
-class CharClassifier
-{
-	public:
-
-		static const unsigned int CHARS_COUNT = sizeof(char);
-
-		CharClassifier()
-		{
-			::memset(charBits_, '\0', CHARS_COUNT * sizeof(charBits_[0]));
-		}
-
-		XTL::UINT_32 operator[] (char c) const
-		{
-			return charBits_[static_cast<unsigned char>(c)];
-		}
-
-	protected:
-
-		CharClassifier & Add(XTL::UINT_32 bits, char c)
-		{
-			(*this)[c] |= bits;
-
-			return *this;
-		}
-
-		CharClassifier & Add(XTL::UINT_32 bits, char from, char to)
-		{
-			unsigned int indexFrom = static_cast<unsigned char>(from);
-			unsigned int indexTo = static_cast<unsigned char>(to);
-
-			if (indexFrom > indexTo)
-			{
-				std::swap(indexFrom, indexTo);
-			}
-
-			for (unsigned int i = indexFrom; i <= indexTo; ++i)
-			{
-				charBits_[i] |= bits;
-			}
-
-			return *this;
-		}
-
-	private:
-
-		XTL::UINT_32 & operator[] (char c)
-		{
-			return charBits_[static_cast<unsigned char>(c)];
-		}
-
-		XTL::UINT_32 charBits_[CHARS_COUNT];
-};
-
-class CharClass
-{
-	public:
-
-		CharClass(const CharClassifier & classifier, XTL::UINT_32 bits)
-			: classifier_(classifier),
-			  bits_(bits)
-		{
-			;;
-		}
-
-		bool Contains(char c) const
-		{
-			return (classifier_[c] & bits_) != 0;
-		}
-
-	private:
-
-		const CharClassifier & classifier_;
-		XTL::UINT_32 bits_;
-};
-
-class TextParser
-{
-	public:
-
-		static const XTL::UINT_32 CHAR_DIGIT            = 0x00000001; // '0' .. '9'
-		static const XTL::UINT_32 CHAR_LETTER_UPPERCASE = 0x00000002; // 'A' .. 'Z'
-		static const XTL::UINT_32 CHAR_LETTER_LOWERCASE = 0x00000004; // 'a' .. 'z'
-		static const XTL::UINT_32 CHAR_HEX_UPPERCASE    = 0x00000008; // 'A' .. 'F'
-		static const XTL::UINT_32 CHAR_HEX_LOWERCASE    = 0x00000010; // 'a' .. 'f'
-		static const XTL::UINT_32 CHAR_SPACE            = 0x00000020; // ' '
-		static const XTL::UINT_32 CHAR_TAB              = 0x00000040; // '\t'
-		static const XTL::UINT_32 CHAR_CARRIAGE_RETURN  = 0x00000080; // '\r'
-		static const XTL::UINT_32 CHAR_LINE_FEED        = 0x00000100; // '\n'
-		static const XTL::UINT_32 CHAR_PLUS             = 0x00000200; // '+'
-		static const XTL::UINT_32 CHAR_MINUS            = 0x00000400; // '-'
-		static const XTL::UINT_32 CHAR_UNDERSCORE       = 0x00000800; // '_'
-
-		TextParser(XTL::TextCharSource & charSource)
-			: charSource_(charSource)
-		{
-			;;
-		}
-
-		bool IsInClass(const CharClass & charClass) const
-		{
-			return charClass.Contains(charSource_.GetChar());
-
-		const std::string ReadIdentifier(const CharClass & headClass, const CharClass & tailClass)
-		{
-			if (IsInClass(headClass))
-			{
-				charSource_.Mark();
-				charSource_.Advance();
-				while (IsInClass(tailClass))
-				{
-					...
-				}
-			}
-		}
-
-	private:
-
-		class BasicCharClassifier : public CharClassifier
-		{
-			public:
-
-				static const BaseCharClassifier & Instance()
-				{
-					static BaseCharClassifier instance;
-
-					return instance;
-				}
-
-			protected:
-
-				BasicCharClassifier()
-					: CharClassifier()
-				{
-					Add(CHAR_DIGIT,            '0', '9');
-					Add(CHAR_LETTER_UPPERCASE, 'A', 'Z');
-					Add(CHAR_LETTER_LOWERCASE, 'a', 'z');
-					Add(CHAR_HEX_UPPERCASE,    'A', 'F');
-					Add(CHAR_HEX_LOWERCASE,    'a', 'f');
-					Add(CHAR_SPACE,            ' ');
-					Add(CHAR_TAB,              '\t');
-					Add(CHAR_CARRIAGE_RETURN,  '\r');
-					Add(CHAR_LINE_FEED,        '\n');
-					Add(CHAR_PLUS,             '+');
-					Add(CHAR_MINUS,            '-');
-					Add(CHAR_UNDERSCORE,       '_');
-				}
-		};
-
-		static bool IsLetter(char c)
-		{
-			return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
-		}
-
-		XTL::TextCharSource & charSource_;
-};
 
 int main(int argc, const char * argv[])
 {
-	printf("%u\n", sizeof(S1<S2>));
+	std::string s1 = "aaazZAbCdEfGh123GGGyui";
+	XTL::ToLowerCase(s1);
+	printf("%s\n", s1.c_str());
+	XTL::ToUpperCase(s1);
+	printf("%s\n", s1.c_str());
 	return 0;
 
-	printf("%u\n", Ones(0, 1890));
+	XTL::TextCharSource::ConstCharPtr charSource("-123456789__abvd_12 + 1");
+
+	XTL::TextParser prs(charSource);
+
+	long long int llu = XTL::NumberParser::ParseInteger<long long int>(charSource);
+
+	printf("%lld\n", llu);
+	printf("[%s]\n", prs.ReadIdentifier().c_str());
+
 	return 0;
+
 
 	XTL::BitSet<XTL::UINT_64> bs(true);
 
@@ -1697,7 +1683,7 @@ int main(int argc, const char * argv[])
 
 	return 0;
 
-	XTL::TextCharSource::ConstCharPtr charSource("\"aaa\\t\\\"\\\"\\\\bbbbb\"");
+	// XTL::TextCharSource::ConstCharPtr charSource("\"aaa\\t\\\"\\\"\\\\bbbbb\"");
 
 	JsonStringLiteralParser parser;
 
