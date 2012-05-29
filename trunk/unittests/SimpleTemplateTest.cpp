@@ -3,9 +3,9 @@
 #include <string>
 
 #include <xtl/FormatString.hpp>
-#include <xtl/tp/SimpleTemplate.hpp>
-#include <xtl/tp/SimpleTemplateItemVisitor.hpp>
-#include <xtl/tp/SimpleTemplateParameter.hpp>
+#include <xtl/simple_template/SimpleTemplate.hpp>
+#include <xtl/simple_template/SimpleTemplateItemVisitor.hpp>
+#include <xtl/simple_template/SimpleTemplateParameter.hpp>
 
 CPPUNIT_TEST_SUITE_REGISTRATION (SimpleTemplateTest);
 
