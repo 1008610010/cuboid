@@ -24,12 +24,12 @@ namespace XTL
 				return column_;
 			}
 
-			void NextChar()
+			void NextColumn()
 			{
 				++column_;
 			}
 
-			void NextLine()
+			void NextRow()
 			{
 				++row_;
 				column_ = 0;
