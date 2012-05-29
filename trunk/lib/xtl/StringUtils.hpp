@@ -8,6 +8,10 @@
 
 namespace XTL
 {
+	void ToLowerCase(std::string & s);
+
+	void ToUpperCase(std::string & s);
+
 	template <typename T>
 	const char * StringToInteger(const char * src, T & result)
 	{

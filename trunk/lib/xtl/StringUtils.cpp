@@ -17,6 +17,30 @@ namespace XTL
 		}
 	}
 
+	void ToLowerCase(std::string & s)
+	{
+		const std::string::iterator end = s.end();
+		for (std::string::iterator itr = s.begin(); itr != end; ++itr)
+		{
+			if (*itr >= 'A' && *itr <= 'Z')
+			{
+				*itr += 'a' - 'A';
+			}
+		}
+	}
+
+	void ToUpperCase(std::string & s)
+	{
+		const std::string::iterator end = s.end();
+		for (std::string::iterator itr = s.begin(); itr != end; ++itr)
+		{
+			if (*itr >= 'a' && *itr <= 'z')
+			{
+				*itr += 'A' - 'a';
+			}
+		}
+	}
+
 /*
 	TODO: read 9 digits to UINT_32
 	double FloatToInteger(const char * value)

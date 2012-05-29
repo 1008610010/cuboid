@@ -4,39 +4,11 @@
 #include <list>
 #include <string>
 
-#include "TextCursor.hpp"
+#include "CharClass.hpp"
+#include "CharSource.hpp"
 
 namespace XTL
 {
-	class CharSource
-	{
-		public:
-
-			virtual ~CharSource() throw()
-			{
-				;;
-			}
-
-			virtual bool NotAtEnd() const = 0;
-
-			virtual bool AtEnd() const
-			{
-				return !NotAtEnd();
-			}
-
-			virtual char GetChar() const = 0;
-
-			virtual void Advance() = 0;
-
-			virtual TextCursor GetCursor() const = 0;
-
-			virtual void Mark() = 0;
-
-			virtual void Unmark() = 0;
-
-			virtual const std::string ReleaseString() = 0;
-	};
-
 	class TextCharSource : public CharSource
 	{
 		public:
@@ -92,53 +64,13 @@ namespace XTL
 				++ptr_;
 			}
 
-			virtual TextCursor GetCursor() const
-			{
-				TextCursor result;
+			virtual const TextCursor GetCursor() const;
 
-				for (const char * p = begin_; p != ptr_; ++p)
-				{
-					if (*p == '\n')
-					{
-						result.NextRow();
-					}
-					else
-					{
-						result.NextColumn();
-					}
-				}
+			virtual void Mark();
 
-				// TODO: May be cache result for cur_ position?
-				return result;
-			}
+			virtual void Unmark();
 
-			virtual void Mark()
-			{
-				markedList_.push_back(ptr_);
-			}
-
-			virtual void Unmark()
-			{
-				if (markedList_.empty())
-				{
-					throw std::runtime_error("Attempt to Unmark() not marked CharSource");
-				}
-
-				markedList_.pop_back();
-			}
-
-			virtual const std::string ReleaseString()
-			{
-				if (markedList_.empty())
-				{
-					throw std::runtime_error("Attempt to ReleaseString() from not marked CharSource");
-				}
-
-				const char * from = markedList_.back();
-				markedList_.pop_back();
-
-				return std::string(from, ptr_ - from);
-			}
+			virtual const std::string ReleaseString();
 
 		private:
 
