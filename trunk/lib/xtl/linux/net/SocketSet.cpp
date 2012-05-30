@@ -1,20 +1,20 @@
-#include "TcpSocketSet.hpp"
+#include "SocketSet.hpp"
 
 #include <string.h>
 
 namespace XTL
 {
-	TcpSocketSet::TcpSocketSet()
+	SocketSet::SocketSet()
 	{
 		FD_ZERO(&set_);
 	}
 
-	TcpSocketSet::TcpSocketSet(const TcpSocketSet & other)
+	SocketSet::SocketSet(const SocketSet & other)
 	{
 		::memcpy(&set_, &other.set_, sizeof(set_));
 	}
 
-	TcpSocketSet & TcpSocketSet::operator= (const TcpSocketSet & other)
+	SocketSet & SocketSet::operator= (const SocketSet & other)
 	{
 		if (this == &other)
 		{
@@ -25,12 +25,12 @@ namespace XTL
 		return *this;
 	}
 
-	void TcpSocketSet::Clear()
+	void SocketSet::Clear()
 	{
 		FD_ZERO(&set_);
 	}
 
-	bool TcpSocketSet::Insert(TcpSocket socket)
+	bool SocketSet::Insert(Socket socket)
 	{
 		if (IsDescInvalid(socket.Desc()))
 		{
@@ -41,7 +41,7 @@ namespace XTL
 		return true;
 	}
 
-	bool TcpSocketSet::Delete(TcpSocket socket)
+	bool SocketSet::Delete(Socket socket)
 	{
 		if (IsDescInvalid(socket.Desc()))
 		{
@@ -52,7 +52,7 @@ namespace XTL
 		return true;
 	}
 
-	bool TcpSocketSet::Contains(int fd) const
+	bool SocketSet::Contains(int fd) const
 	{
 		if (IsDescInvalid(fd))
 		{
@@ -62,7 +62,7 @@ namespace XTL
 		return FD_ISSET(fd, &set_);
 	}
 
-	bool TcpSocketSet::Contains(TcpSocket socket) const
+	bool SocketSet::Contains(Socket socket) const
 	{
 		return Contains(socket.Desc());
 	}
