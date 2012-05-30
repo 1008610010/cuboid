@@ -35,12 +35,9 @@ namespace XTL
 		}
 	}
 
-	void SocketAddressUnix::Unlink()
+	SocketAddressUnix::~SocketAddressUnix() throw()
 	{
-		if (address_.sun_path[0] != '\0')
-		{
-			::unlink(address_.sun_path);
-		}
+		;;
 	}
 
 	const ::sockaddr * SocketAddressUnix::SockAddr() const
@@ -51,6 +48,14 @@ namespace XTL
 	int SocketAddressUnix::Size() const
 	{
 		return ::strlen(address_.sun_path) + sizeof(address_.sun_family);
+	}
+
+	void SocketAddressUnix::Unlink()
+	{
+		if (address_.sun_path[0] != '\0')
+		{
+			::unlink(address_.sun_path);
+		}
 	}
 }
 

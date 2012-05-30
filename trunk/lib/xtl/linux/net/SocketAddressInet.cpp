@@ -6,6 +6,8 @@
 #include <string.h>
 
 #include "../../FormatString.hpp"
+#include "../UnixError.hpp"
+#include "SocketAddressError.hpp"
 
 namespace XTL
 {
@@ -139,6 +141,7 @@ namespace XTL
 	}
 
 	SocketAddressInet::SocketAddressInet()
+		: SocketAddress()
 	{
 		Init(address_);
 		address_.sin_addr.s_addr = htonl(INADDR_NONE);
@@ -146,6 +149,7 @@ namespace XTL
 	}
 
 	SocketAddressInet::SocketAddressInet(int port)
+		: SocketAddress()
 	{
 		Init(address_);
 		address_.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -153,13 +157,30 @@ namespace XTL
 	}
 
 	SocketAddressInet::SocketAddressInet(const char * host, int port)
+		: SocketAddress()
 	{
 		Set(host, port);
 	}
 
 	SocketAddressInet::SocketAddressInet(const std::string & host, int port)
+		: SocketAddress()
 	{
 		Set(host.c_str(), port);
+	}
+
+	SocketAddressInet::~SocketAddressInet() throw()
+	{
+		;;
+	}
+
+	const ::sockaddr * SocketAddressInet::SockAddr() const
+	{
+		return reinterpret_cast<const sockaddr *>(&address_);
+	}
+
+	int SocketAddressInet::Size() const
+	{
+		return sizeof(address_);
 	}
 
 	void SocketAddressInet::Set(const char * host, int port)
@@ -185,16 +206,6 @@ namespace XTL
 	int SocketAddressInet::Port() const
 	{
 		return ntohs(address_.sin_port);
-	}
-
-	const ::sockaddr * SocketAddressInet::SockAddr() const
-	{
-		return reinterpret_cast<const sockaddr *>(&address_);
-	}
-
-	int SocketAddressInet::Size() const
-	{
-		return sizeof(address_);
 	}
 }
 

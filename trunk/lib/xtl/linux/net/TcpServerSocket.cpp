@@ -15,6 +15,11 @@ namespace XTL
 			return *this;
 		}
 
+		if (errno == EEXIST)
+		{
+			throw UnixError::AlreadyExists();
+		}
+
 		throw UnixError();
 	}
 
@@ -50,6 +55,5 @@ namespace XTL
 			throw UnixError();
 		}
 	}
-
 }
 

@@ -41,11 +41,11 @@ SET (
 		xtl/linux/fs/FileUtils.cpp
 
 		xtl/linux/net/Socket.cpp
-		xtl/linux/net/SocketSelector.cpp
-		xtl/linux/net/SocketSet.cpp
 		xtl/linux/net/SocketAddressError.cpp
 		xtl/linux/net/SocketAddressInet.cpp
 		xtl/linux/net/SocketAddressUnix.cpp
+		xtl/linux/net/SocketSelector.cpp
+		xtl/linux/net/SocketSet.cpp
 		xtl/linux/net/TcpClientSocket.cpp
 		xtl/linux/net/TcpServerSocket.cpp
 		xtl/linux/net/TcpSocket.cpp
