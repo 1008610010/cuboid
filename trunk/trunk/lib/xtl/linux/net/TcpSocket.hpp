@@ -9,19 +9,6 @@ namespace XTL
 	{
 		public:
 
-			TcpSocket()
-				: Socket()
-			{
-				;;
-			}
-
-			static TcpSocket Null()
-			{
-				static TcpSocket instance;
-
-				return instance;
-			}
-
 			static const TcpSocket Create();
 
 			static const TcpSocket Create(bool blocking);

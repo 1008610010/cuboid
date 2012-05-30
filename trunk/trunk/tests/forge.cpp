@@ -1002,7 +1002,7 @@ class StructComparator
 #include <xtl/linux/net/SocketAddressInet.hpp>
 #include <xtl/linux/net/TcpClientSocket.hpp>
 #include <xtl/linux/net/TcpServerSocket.hpp>
-#include <xtl/linux/net/TcpSocketSelector.hpp>
+#include <xtl/linux/net/SocketSelector.hpp>
 #include <math.h>
 
 /*
@@ -1961,7 +1961,7 @@ int main(int argc, const char * argv[])
 		clientSocket.SetBlocking(false);
 		printf("IsBlocking: %d\n", clientSocket.IsBlocking() ? 1 : 0);
 
-		XTL::TcpSocketSelector socketSelector;
+		XTL::SocketSelector socketSelector;
 		socketSelector.Insert(clientSocket, true, true);
 
 		if (clientSocket.Connect(address))
@@ -1973,11 +1973,11 @@ int main(int argc, const char * argv[])
 			printf("Connect failed\n");
 		}
 
-		XTL::TcpSocketSelector::SelectResult selectResult;
+		XTL::SocketSelector::SelectResult selectResult;
 
 		while (1)
 		{
-			socketSelector.Select(selectResult, XTL::TcpSocketSelector::Timeout(0, 100));
+			socketSelector.Select(selectResult, XTL::SocketSelector::Timeout(0, 100));
 			printf("selected: %d\n", selectResult.SelectedCount());
 			printf("readable=%d, writable=%d\n", selectResult.ReadableSet().Contains(clientSocket), selectResult.WritableSet().Contains(clientSocket));
 			if (selectResult.SelectedCount() > 0)
@@ -1988,7 +1988,7 @@ int main(int argc, const char * argv[])
 
 		while (1)
 		{
-			socketSelector.Select(selectResult, XTL::TcpSocketSelector::Timeout(0, 100));
+			socketSelector.Select(selectResult, XTL::SocketSelector::Timeout(0, 100));
 			printf("selected: %d\n", selectResult.SelectedCount());
 			printf("readable=%d, writable=%d\n", selectResult.IsReadable(clientSocket), selectResult.IsWritable(clientSocket));
 			if (selectResult.SelectedCount() > 0)

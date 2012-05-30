@@ -9,28 +9,11 @@ namespace XTL
 	{
 		public:
 
-			UnixSocket()
-				: Socket()
-			{
-				;;
-			}
-
-			/*
-			static UnixSocket Null()
-			{
-				static TcpSocket instance;
-
-				return instance;
-			}
-			*/
-
 			static const UnixSocket Create();
 
 			static const UnixSocket Create(bool blocking);
 
 		protected:
-
-			// friend class TcpServerSocket;
 
 			explicit UnixSocket(int desc)
 				: Socket(desc)
