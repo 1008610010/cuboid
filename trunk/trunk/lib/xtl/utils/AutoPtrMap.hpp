@@ -52,6 +52,18 @@ namespace XTL
 				return itr == map_.end() ? 0 : itr->second;
 			}
 
+			typedef typename std::map<KeyType, ValueType *>::const_iterator const_iterator;
+
+			const_iterator begin() const
+			{
+				return map_.begin();
+			}
+
+			const_iterator end() const
+			{
+				return map_.end();
+			}
+
 		private:
 
 			AutoPtrMap(const AutoPtrMap &);
