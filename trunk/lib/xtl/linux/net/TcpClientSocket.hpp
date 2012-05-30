@@ -1,20 +1,15 @@
 #ifndef XTL__TCP_CLIENT_SOCKET_HPP__
 #define XTL__TCP_CLIENT_SOCKET_HPP__ 1
 
+#include "ClientSocket.hpp"
+#include "SocketAddressInet.hpp"
 #include "TcpSocket.hpp"
 
 namespace XTL
 {
-	class SocketAddressInet;
-
-	class TcpClientSocket : public TcpSocket
+	class TcpClientSocket : public ClientSocket
 	{
 		public:
-
-			static TcpClientSocket Create()
-			{
-				return TcpSocket::Create();
-			}
 
 			static TcpClientSocket Create(bool blocking)
 			{
@@ -22,22 +17,31 @@ namespace XTL
 			}
 
 			TcpClientSocket()
-				: TcpSocket()
+				: ClientSocket()
 			{
 				;;
 			}
+
+			bool Connect(const SocketAddressInet & address)
+			{
+				return ClientSocket::Connect(address);
+			}
+
+		protected:
+
+			friend class TcpServerSocket;
 
 			TcpClientSocket(TcpSocket other)
-				: TcpSocket(other)
+				: ClientSocket(other)
 			{
 				;;
 			}
 
-			bool Connect(const SocketAddressInet & address);
-
-			int Receive(void * buffer, int size);
-
-			int Send(const void * buffer, int size);
+			TcpClientSocket(ClientSocket other)
+				: ClientSocket(other)
+			{
+				;;
+			}
 	};
 }
 

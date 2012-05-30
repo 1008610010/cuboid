@@ -1,21 +1,16 @@
 #ifndef XTL__TCP_SERVER_SOCKET_HPP__
 #define XTL__TCP_SERVER_SOCKET_HPP__ 1
 
-#include "TcpSocket.hpp"
+#include "ServerSocket.hpp"
 #include "TcpClientSocket.hpp"
 
 namespace XTL
 {
 	class SocketAddressInet;
 
-	class TcpServerSocket : public TcpSocket
+	class TcpServerSocket : public ServerSocket
 	{
 		public:
-
-			static TcpServerSocket Create()
-			{
-				return TcpSocket::Create();
-			}
 
 			static TcpServerSocket Create(bool blocking)
 			{
@@ -23,25 +18,35 @@ namespace XTL
 			}
 
 			TcpServerSocket()
-				: TcpSocket()
+				: ServerSocket()
 			{
 				;;
 			}
 
-			TcpServerSocket(TcpSocket other)
-				: TcpSocket(other)
+			TcpServerSocket(TcpSocket socket)
+				: ServerSocket(socket)
 			{
 				;;
 			}
 
-			/*
-				TODO: move it to parent class (TcpSocket)
-			 */
-			TcpServerSocket & Bind(const SocketAddressInet & address);
+			TcpServerSocket & Bind(const SocketAddressInet & address)
+			{
+				ServerSocket::Bind(address);
 
-			TcpServerSocket & Listen(int backlog);
+				return *this;
+			}
 
-			TcpClientSocket Accept();
+			TcpServerSocket & Listen(int backlog)
+			{
+				ServerSocket::Listen(backlog);
+
+				return *this;
+			}
+
+			TcpClientSocket Accept()
+			{
+				return ServerSocket::Accept();
+			}
 	};
 }
 
