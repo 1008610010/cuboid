@@ -18,7 +18,7 @@ namespace XTL
 		{
 			Mark();
 			Advance();
-			SkipClass(tailClass);
+			SkipCharClass(tailClass);
 
 			return ReleaseString();
 		}
