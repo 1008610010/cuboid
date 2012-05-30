@@ -1,29 +1,29 @@
-#ifndef XTL__TCP_SOCKET_SET_HPP__
-#define XTL__TCP_SOCKET_SET_HPP__ 1
+#ifndef XTL__SOCKET_SET_HPP__
+#define XTL__SOCKET_SET_HPP__ 1
 
-#include "TcpSocket.hpp"
+#include "Socket.hpp"
 
 #include <sys/select.h>
 
 namespace XTL
 {
-	class TcpSocketSet
+	class SocketSet
 	{
 		public:
 
-			TcpSocketSet();
+			SocketSet();
 
-			TcpSocketSet(const TcpSocketSet & other);
+			SocketSet(const SocketSet & other);
 
-			TcpSocketSet & operator= (const TcpSocketSet & other);
+			SocketSet & operator= (const SocketSet & other);
 
 			void Clear();
 
-			bool Insert(TcpSocket socket);
+			bool Insert(Socket socket);
 
-			bool Delete(TcpSocket socket);
+			bool Delete(Socket socket);
 
-			bool Contains(TcpSocket socket) const;
+			bool Contains(Socket socket) const;
 
 			static bool IsDescInvalid(int fd)
 			{
@@ -32,7 +32,7 @@ namespace XTL
 
 		private:
 
-			friend class TcpSocketSelector;
+			friend class SocketSelector;
 
 			bool Contains(int fd) const;
 
