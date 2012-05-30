@@ -40,6 +40,7 @@ SET (
 		xtl/linux/fs/FileStats.cpp
 		xtl/linux/fs/FileUtils.cpp
 
+		xtl/linux/net/Socket.cpp
 		xtl/linux/net/SocketAddressError.cpp
 		xtl/linux/net/SocketAddressInet.cpp
 		xtl/linux/net/TcpClientSocket.cpp

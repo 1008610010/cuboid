@@ -81,6 +81,17 @@ TARGET_LINK_LIBRARIES (
 )
 
 
+ADD_EXECUTABLE (
+	unix_socket
+		tests/unix_socket.cpp
+)
+
+TARGET_LINK_LIBRARIES (
+	unix_socket
+		xtl
+)
+
+
 ADD_SUBDIRECTORY (unittests)
 ADD_SUBDIRECTORY (rpm)
 

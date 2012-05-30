@@ -1874,7 +1874,7 @@ namespace XTL
 
 int main(int argc, const char * argv[])
 {
-	printf("sof = %d\n", sizeof(XTL::NumberParser::Result));
+	printf("sof = %lu\n", sizeof(XTL::NumberParser::Result));
 
 	XTL::TextCharSource::ConstCharPtr charSource("-12345678.9__abvd_12 + 1");
 

@@ -10,7 +10,7 @@ namespace XTL
 {
 	TcpServerSocket & TcpServerSocket::Bind(const SocketAddressInet & address)
 	{
-		if (::bind(fd_, address.SockAddr(), address.Size()) == 0)
+		if (::bind(Desc(), address.SockAddr(), address.Size()) == 0)
 		{
 			return *this;
 		}
@@ -20,7 +20,7 @@ namespace XTL
 
 	TcpServerSocket & TcpServerSocket::Listen(int backlog)
 	{
-		if (::listen(fd_, backlog) == 0)
+		if (::listen(Desc(), backlog) == 0)
 		{
 			return *this;
 		}
@@ -30,11 +30,11 @@ namespace XTL
 
 	TcpClientSocket TcpServerSocket::Accept()
 	{
-		int fd = ::accept(fd_, NULL, 0);
+		int clientDesc = ::accept(Desc(), NULL, 0);
 
-		if (fd != -1)
+		if (clientDesc != -1)
 		{
-			return TcpSocket(fd);
+			return TcpSocket(clientDesc);
 		}
 
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
