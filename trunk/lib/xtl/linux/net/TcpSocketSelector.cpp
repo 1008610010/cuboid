@@ -32,9 +32,9 @@ namespace XTL
 			return false;
 		}
 
-		if (socket.FileDesc() > maxfd_)
+		if (socket.Desc() > maxfd_)
 		{
-			maxfd_ = socket.FileDesc();
+			maxfd_ = socket.Desc();
 		}
 
 		return true;
@@ -50,7 +50,7 @@ namespace XTL
 			return false;
 		}
 
-		if (socket.FileDesc() == maxfd_)
+		if (socket.Desc() == maxfd_)
 		{
 			for (--maxfd_; maxfd_ >= 0; --maxfd_)
 			{

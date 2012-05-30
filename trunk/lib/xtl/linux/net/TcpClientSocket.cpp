@@ -10,7 +10,7 @@ namespace XTL
 {
 	bool TcpClientSocket::Connect(const SocketAddressInet & address)
 	{
-		if (::connect(fd_, address.SockAddr(), address.Size()) == 0)
+		if (::connect(Desc(), address.SockAddr(), address.Size()) == 0)
 		{
 			return true;
 		}
@@ -31,7 +31,7 @@ namespace XTL
 
 	int TcpClientSocket::Receive(void * buffer, int size)
 	{
-		int result = ::recv(fd_, buffer, size, 0);
+		int result = ::recv(Desc(), buffer, size, 0);
 
 		if (result > 0)
 		{
@@ -58,7 +58,7 @@ namespace XTL
 
 	int TcpClientSocket::Send(const void * buffer, int size)
 	{
-		int result = ::send(fd_, buffer, size, MSG_NOSIGNAL);
+		int result = ::send(Desc(), buffer, size, MSG_NOSIGNAL);
 
 		if (result != -1)
 		{

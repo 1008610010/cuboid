@@ -1,57 +1,40 @@
 #ifndef XTL__TCP_SOCKET_HPP__
 #define XTL__TCP_SOCKET_HPP__ 1
 
+#include "Socket.hpp"
+
 namespace XTL
 {
-	class TcpSocket
+	class TcpSocket : public Socket
 	{
 		public:
 
 			TcpSocket()
-				: fd_(-1)
+				: Socket()
 			{
 				;;
 			}
 
 			static TcpSocket Null()
 			{
-				static TcpSocket instance(-1);
-				return instance;
-			}
+				static TcpSocket instance;
 
-			bool IsNull() const
-			{
-				return fd_ == -1;
+				return instance;
 			}
 
 			static const TcpSocket Create();
 
 			static const TcpSocket Create(bool blocking);
 
-			void Close();
-
-			bool IsBlocking() const;
-
-			void SetBlocking(bool blocking);
-
 		protected:
 
-			friend class TcpSocketSelector;
-			friend class TcpSocketSet;
 			friend class TcpServerSocket;
 
-			explicit TcpSocket(int fd)
-				: fd_(fd)
+			explicit TcpSocket(int desc)
+				: Socket(desc)
 			{
 				;;
 			}
-
-			int FileDesc() const
-			{
-				return fd_;
-			}
-
-			int fd_;
 	};
 }
 

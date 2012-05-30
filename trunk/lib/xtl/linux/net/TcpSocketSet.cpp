@@ -32,23 +32,23 @@ namespace XTL
 
 	bool TcpSocketSet::Insert(TcpSocket socket)
 	{
-		if (IsDescInvalid(socket.FileDesc()))
+		if (IsDescInvalid(socket.Desc()))
 		{
 			return false;
 		}
 
-		FD_SET(socket.FileDesc(), &set_);
+		FD_SET(socket.Desc(), &set_);
 		return true;
 	}
 
 	bool TcpSocketSet::Delete(TcpSocket socket)
 	{
-		if (IsDescInvalid(socket.FileDesc()))
+		if (IsDescInvalid(socket.Desc()))
 		{
 			return false;
 		}
 
-		FD_CLR(socket.FileDesc(), &set_);
+		FD_CLR(socket.Desc(), &set_);
 		return true;
 	}
 
@@ -64,7 +64,7 @@ namespace XTL
 
 	bool TcpSocketSet::Contains(TcpSocket socket) const
 	{
-		return Contains(socket.FileDesc());
+		return Contains(socket.Desc());
 	}
 }
 
