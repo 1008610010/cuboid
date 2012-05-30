@@ -5,9 +5,11 @@
 
 #include <string>
 
+#include "SocketAddress.hpp"
+
 namespace XTL
 {
-	class SocketAddressUnix
+	class SocketAddressUnix : public SocketAddress
 	{
 		public:
 
@@ -15,13 +17,15 @@ namespace XTL
 
 			explicit SocketAddressUnix(const std::string & path);
 
+			virtual ~SocketAddressUnix() throw();
+
+			virtual const ::sockaddr * SockAddr() const;
+
+			virtual int Size() const;
+
 			void Unlink();
 
 		private:
-
-			const ::sockaddr * SockAddr() const;
-
-			int Size() const;
 
 			sockaddr_un address_;
 	};

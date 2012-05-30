@@ -1,12 +1,11 @@
 #ifndef XTL__SOCKET_ADDRESS_INET_HPP__
 #define XTL__SOCKET_ADDRESS_INET_HPP__ 1
 
-#include "SocketAddressError.hpp"
-#include "../UnixError.hpp"
+#include <arpa/inet.h>
 
 #include <string>
 
-#include <arpa/inet.h>
+#include "SocketAddress.hpp"
 
 namespace XTL
 {
@@ -14,7 +13,7 @@ namespace XTL
 	 * @class SocketAddressInet
 	 * @brief Implementation of IPv4 internet address.
 	 */
-	class SocketAddressInet
+	class SocketAddressInet : public SocketAddress
 	{
 		public:
 
@@ -36,6 +35,12 @@ namespace XTL
 			 */
 			SocketAddressInet(const std::string & host, int port);
 
+			virtual ~SocketAddressInet() throw();
+
+			virtual const ::sockaddr * SockAddr() const;
+
+			virtual int Size() const;
+
 			/**
 			 * @throw UnixError
 			 */
@@ -52,10 +57,6 @@ namespace XTL
 
 			friend class TcpClientSocket;
 			friend class TcpServerSocket;
-
-			const ::sockaddr * SockAddr() const;
-
-			int Size() const;
 
 			sockaddr_in address_;
 	};
