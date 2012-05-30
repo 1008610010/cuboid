@@ -1,11 +1,11 @@
-#ifndef XTL__TCP_SOCKET_SELECTOR_HPP__
-#define XTL__TCP_SOCKET_SELECTOR_HPP__ 1
+#ifndef XTL__SOCKET_SELECTOR_HPP__
+#define XTL__SOCKET_SELECTOR_HPP__ 1
 
-#include "TcpSocketSet.hpp"
+#include "SocketSet.hpp"
 
 namespace XTL
 {
-	class TcpSocketSelector
+	class SocketSelector
 	{
 		public:
 
@@ -44,7 +44,7 @@ namespace XTL
 
 				private:
 
-					friend class TcpSocketSelector;
+					friend class SocketSelector;
 
 					void Init(int secs, int microsecs);
 
@@ -65,53 +65,53 @@ namespace XTL
 						return selectedCount_;
 					}
 
-					bool IsReadable(TcpSocket socket) const
+					bool IsReadable(Socket socket) const
 					{
 						return readSet_.Contains(socket);
 					}
 
-					bool IsWritable(TcpSocket socket) const
+					bool IsWritable(Socket socket) const
 					{
 						return writeSet_.Contains(socket);
 					}
 
-					const TcpSocketSet & ReadableSet()
+					const SocketSet & ReadableSet()
 					{
 						return readSet_;
 					}
 
-					const TcpSocketSet & WritableSet()
+					const SocketSet & WritableSet()
 					{
 						return writeSet_;
 					}
 
 				private:
 
-					friend class TcpSocketSelector;
+					friend class SocketSelector;
 
-					void Select(int maxfd, const TcpSocketSet & readSet, const TcpSocketSet & writeSet, const Timeout & timeout);
+					void Select(int maxfd, const SocketSet & readSet, const SocketSet & writeSet, const Timeout & timeout);
 
-					TcpSocketSet readSet_;
-					TcpSocketSet writeSet_;
-					Timeout      timeout_;
-					int          selectedCount_;
+					SocketSet readSet_;
+					SocketSet writeSet_;
+					Timeout   timeout_;
+					int       selectedCount_;
 			};
 
-			TcpSocketSelector();
+			SocketSelector();
 
 			void Clear();
 
-			bool Insert(TcpSocket socket, bool checkRead, bool checkWrite);
+			bool Insert(Socket socket, bool checkRead, bool checkWrite);
 
-			bool Delete(TcpSocket socket);
+			bool Delete(Socket socket);
 
 			void Select(SelectResult & result, const Timeout & timeout = Timeout());
 
 		private:
 
-			int          maxfd_;
-			TcpSocketSet readSet_;
-			TcpSocketSet writeSet_;
+			int       maxfd_;
+			SocketSet readSet_;
+			SocketSet writeSet_;
 	};
 }
 

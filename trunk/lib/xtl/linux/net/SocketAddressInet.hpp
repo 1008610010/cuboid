@@ -53,8 +53,6 @@ namespace XTL
 			friend class TcpClientSocket;
 			friend class TcpServerSocket;
 
-			void Init();
-
 			const ::sockaddr * SockAddr() const;
 
 			int Size() const;

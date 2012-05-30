@@ -52,14 +52,14 @@ namespace XTL
 		return true;
 	}
 
-	bool SocketSet::Contains(int fd) const
+	bool SocketSet::Contains(int desc) const
 	{
-		if (IsDescInvalid(fd))
+		if (IsDescInvalid(desc))
 		{
 			return false;
 		}
 
-		return FD_ISSET(fd, &set_);
+		return FD_ISSET(desc, &set_);
 	}
 
 	bool SocketSet::Contains(Socket socket) const

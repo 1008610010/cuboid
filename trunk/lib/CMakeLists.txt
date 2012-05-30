@@ -41,13 +41,15 @@ SET (
 		xtl/linux/fs/FileUtils.cpp
 
 		xtl/linux/net/Socket.cpp
+		xtl/linux/net/SocketSelector.cpp
+		xtl/linux/net/SocketSet.cpp
 		xtl/linux/net/SocketAddressError.cpp
 		xtl/linux/net/SocketAddressInet.cpp
+		xtl/linux/net/SocketAddressUnix.cpp
 		xtl/linux/net/TcpClientSocket.cpp
 		xtl/linux/net/TcpServerSocket.cpp
 		xtl/linux/net/TcpSocket.cpp
-		xtl/linux/net/TcpSocketSelector.cpp
-		xtl/linux/net/TcpSocketSet.cpp
+		xtl/linux/net/UnixSocket.cpp
 
 		xtl/plain/Algorithm.cpp
 		xtl/plain/RecordPrototype.cpp
