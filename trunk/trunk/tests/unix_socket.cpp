@@ -1,13 +1,18 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <xtl/linux/UnixError.hpp>
+#include <xtl/linux/net/UnixSocket.hpp>
+#include <xtl/linux/net/SocketAddressUnix.hpp>
+
+/*
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
+
+*/
 
 int main(int argc, const char * argv[])
 {
@@ -21,6 +26,20 @@ int main(int argc, const char * argv[])
 	{
 		// Child process
 
+		try
+		{
+			XTL::UnixSocket serverSocket = XTL::UnixSocket::Create(false);
+
+			XTL::SocketAddressUnix serverAddress("LJ_STATS_WRITER");
+			
+		}
+		catch (const XTL::UnixError & e)
+		{
+			fprintf(stderr, "%s\n", e.What().c_str());
+			return 1;
+		}
+
+/*
 		int serverSocket = -1;
 		if ((serverSocket = ::socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
 		{
@@ -53,6 +72,7 @@ int main(int argc, const char * argv[])
 		{
 			
 		}
+*/
 	}
 }
 

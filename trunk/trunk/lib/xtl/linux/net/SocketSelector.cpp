@@ -1,4 +1,4 @@
-#include "TcpSocketSelector.hpp"
+#include "SocketSelector.hpp"
 
 #include "../UnixError.hpp"
 
@@ -7,7 +7,7 @@
 
 namespace XTL
 {
-	TcpSocketSelector::TcpSocketSelector()
+	SocketSelector::SocketSelector()
 		: maxfd_(-1),
 		  readSet_(),
 		  writeSet_()
@@ -15,14 +15,14 @@ namespace XTL
 		;;
 	}
 
-	void TcpSocketSelector::Clear()
+	void SocketSelector::Clear()
 	{
 		maxfd_ = -1;
 		readSet_.Clear();
 		writeSet_.Clear();
 	}
 
-	bool TcpSocketSelector::Insert(TcpSocket socket, bool checkRead, bool checkWrite)
+	bool SocketSelector::Insert(Socket socket, bool checkRead, bool checkWrite)
 	{
 		bool insertedRead  = checkRead  && readSet_.Insert(socket);
 		bool insertedWrite = checkWrite && writeSet_.Insert(socket);
@@ -40,7 +40,7 @@ namespace XTL
 		return true;
 	}
 
-	bool TcpSocketSelector::Delete(TcpSocket socket)
+	bool SocketSelector::Delete(Socket socket)
 	{
 		bool deletedRead  = readSet_.Delete(socket);
 		bool deletedWrite = writeSet_.Delete(socket);
@@ -64,38 +64,38 @@ namespace XTL
 		return true;
 	}
 
-	void TcpSocketSelector::Select(SelectResult & result, const Timeout & timeout)
+	void SocketSelector::Select(SelectResult & result, const Timeout & timeout)
 	{
 		result.Select(maxfd_, readSet_, writeSet_, timeout);
 	}
 
 
 
-	TcpSocketSelector::Timeout::Timeout()
+	SocketSelector::Timeout::Timeout()
 		: t_(0)
 	{
 		;;
 	}
 
-	TcpSocketSelector::Timeout::Timeout(int secs, int microsecs)
+	SocketSelector::Timeout::Timeout(int secs, int microsecs)
 		: t_(0)
 	{
 		Init(secs, microsecs);
 	}
 
-	TcpSocketSelector::Timeout::Timeout(int secs)
+	SocketSelector::Timeout::Timeout(int secs)
 		: t_(0)
 	{
 		Init(secs, 0);
 	}
 
-	TcpSocketSelector::Timeout::Timeout(double secs)
+	SocketSelector::Timeout::Timeout(double secs)
 		: t_(0)
 	{
 		Init(floor(secs), static_cast<int>(1000000.0 * (secs - floor(secs))));
 	}
 
-	TcpSocketSelector::Timeout::Timeout(const Timeout & other)
+	SocketSelector::Timeout::Timeout(const Timeout & other)
 		: t_(0)
 	{
 		if (!other.IsNull())
@@ -104,12 +104,12 @@ namespace XTL
 		}
 	}
 
-	TcpSocketSelector::Timeout::~Timeout() throw()
+	SocketSelector::Timeout::~Timeout() throw()
 	{
 		delete t_;
 	}
 
-	TcpSocketSelector::Timeout & TcpSocketSelector::Timeout::operator= (const Timeout & other)
+	SocketSelector::Timeout & SocketSelector::Timeout::operator= (const Timeout & other)
 	{
 		if (this == &other)
 		{
@@ -132,7 +132,7 @@ namespace XTL
 		return *this;
 	}
 
-	void TcpSocketSelector::Timeout::Init(int secs, int microsecs)
+	void SocketSelector::Timeout::Init(int secs, int microsecs)
 	{
 		if (t_ == 0)
 		{
@@ -145,7 +145,7 @@ namespace XTL
 
 
 
-	void TcpSocketSelector::SelectResult::Select(int maxfd, const TcpSocketSet & readSet, const TcpSocketSet & writeSet, const Timeout & timeout)
+	void SocketSelector::SelectResult::Select(int maxfd, const SocketSet & readSet, const SocketSet & writeSet, const Timeout & timeout)
 	{
 		readSet_  = readSet;
 		writeSet_ = writeSet;

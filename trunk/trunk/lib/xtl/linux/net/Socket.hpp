@@ -42,8 +42,8 @@ namespace XTL
 
 		protected:
 
-			friend class TcpSocketSelector;
-			friend class TcpSocketSet;
+			friend class SocketSelector;
+			friend class SocketSet;
 
 			int Desc() const
 			{

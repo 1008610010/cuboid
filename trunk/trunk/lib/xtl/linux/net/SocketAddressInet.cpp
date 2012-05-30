@@ -11,6 +11,12 @@ namespace XTL
 {
 	namespace
 	{
+		void Init(sockaddr_in & address)
+		{
+			::memset(&address, 0, sizeof(address));
+			address.sin_family = AF_INET;
+		}
+
 		class AddrInfoList
 		{
 			public:
@@ -134,14 +140,14 @@ namespace XTL
 
 	SocketAddressInet::SocketAddressInet()
 	{
-		Init();
+		Init(address_);
 		address_.sin_addr.s_addr = htonl(INADDR_NONE);
 		address_.sin_port = 0;
 	}
 
 	SocketAddressInet::SocketAddressInet(int port)
 	{
-		Init();
+		Init(address_);
 		address_.sin_addr.s_addr = htonl(INADDR_ANY);
 		address_.sin_port = htons(port);
 	}
@@ -156,15 +162,9 @@ namespace XTL
 		Set(host.c_str(), port);
 	}
 
-	void SocketAddressInet::Init()
-	{
-		::memset(&address_, 0, sizeof(address_));
-		address_.sin_family = AF_INET;
-	}
-
 	void SocketAddressInet::Set(const char * host, int port)
 	{
-		Init();
+		Init(address_);
 		// BuildAddress_GetAddrInfo(host, port, address_);
 		// BuildAddress_GetHostByName(host, port, address_);
 		BuildAddress_GetHostByNameReentrant(host, port, address_);
