@@ -48,8 +48,6 @@ SET (
 		xtl/linux/net/SocketAddressUnix.cpp
 		xtl/linux/net/SocketSelector.cpp
 		xtl/linux/net/SocketSet.cpp
-		xtl/linux/net/TcpClientSocket.cpp
-		xtl/linux/net/TcpServerSocket.cpp
 		xtl/linux/net/TcpSocket.cpp
 		xtl/linux/net/UnixSocket.cpp
 

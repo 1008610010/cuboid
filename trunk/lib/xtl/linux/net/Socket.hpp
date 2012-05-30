@@ -24,6 +24,11 @@ namespace XTL
 				return desc_ == -1;
 			}
 
+			bool operator< (const Socket & socket) const
+			{
+				return desc_ < socket.desc_;
+			}
+
 			/**
 			 * @throw XTL::UnixError::Interrupted;
 			 * @throw XTL::UnixError;

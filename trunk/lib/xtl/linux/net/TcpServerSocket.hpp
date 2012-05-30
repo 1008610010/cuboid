@@ -3,6 +3,7 @@
 
 #include "ServerSocket.hpp"
 #include "TcpClientSocket.hpp"
+#include "SocketAddressInet.hpp"
 
 namespace XTL
 {
