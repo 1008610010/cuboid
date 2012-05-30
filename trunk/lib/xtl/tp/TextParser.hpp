@@ -76,7 +76,20 @@ namespace XTL
 				return false;
 			}
 
-			void SkipChar(char c)
+			bool ReadChar(char c)
+			{
+				if (GetChar() == c)
+				{
+					Advance();
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			void SkipChars(char c)
 			{
 				while (NotAtEnd() && GetChar() == c)
 				{
@@ -84,7 +97,7 @@ namespace XTL
 				}
 			}
 
-			void SkipClass(const CharClass & charClass)
+			void SkipCharClass(const CharClass & charClass)
 			{
 				while (NotAtEnd() && IsInClass(charClass))
 				{

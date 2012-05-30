@@ -1521,13 +1521,13 @@ namespace XTL
 					enum Type
 					{
 						INTEGER = 0,
-						FLOAT   = 0
+						FLOAT   = 1
 					};
 
 					union Value
 					{
 						long long int i;
-						double d;
+						double f;
 
 						Value(long long int value)
 							: i(value)
@@ -1536,7 +1536,7 @@ namespace XTL
 						}
 
 						Value(double value)
-							: d(value)
+							: f(value)
 						{
 							;;
 						}
@@ -1551,8 +1551,56 @@ namespace XTL
 						;;
 					}
 
-				private:
+					explicit Result(double value)
+						: type_(FLOAT),
+						  value_(value)
+					{
+						;;
+					}
 
+					bool IsInteger() const
+					{
+						return type_ == INTEGER;
+					}
+
+					bool IsFloat() const
+					{
+						return type_ == FLOAT;
+					}
+
+					void CastToFloat()
+					{
+						if (type_ != FLOAT)
+						{
+							type_ = FLOAT;
+							double f = value_.i;
+							value_.f = f;
+						}
+					}
+
+					long long int AsInteger() const
+					{
+						return value_.i;
+					}
+
+					double AsFloat() const
+					{
+						return value_.f;
+					}
+
+					double & AsFloat()
+					{
+						return value_.f;
+					}
+
+					const std::string ToString() const
+					{
+						return IsInteger() ?
+							FormatString("I: %lld", AsInteger()) :
+							FormatString("F: %g", AsFloat());
+					}
+
+				private:
 
 					Type type_;
 					Value value_;
@@ -1598,9 +1646,9 @@ namespace XTL
 				return negative ? -result : result;
 			}
 
-			double ParseDouble()
+			const Result Parse()
 			{
-				long long int i = ParseInteger<long long int>();
+				Result result(ParseInteger<long long int>());
 
 				if (GetChar() == '.')
 				{
@@ -1616,19 +1664,31 @@ namespace XTL
 						down *= 10.0;
 					}
 
-					// up / down;
+					printf("%g %g\n", up, down);
+
+					result.CastToFloat();
+					result.AsFloat() += up / down;
+
+					printf("%d\n", result.IsInteger());
+					printf("%d\n", result.IsFloat());
 				}
 
 				if (GetChar() == 'E' || GetChar() == 'e')
 				{
 					Advance();
+
 					if (GetChar() == '+')
 					{
 						Advance();
 					}
 
 					long long int exponent = ParseInteger<long long int>();
+
+					result.CastToFloat();
+					result.AsFloat() *= ::pow(10.0, exponent);
 				}
+
+				return result;
 			}
 
 		protected:
@@ -1649,24 +1709,184 @@ namespace XTL
 	const CharClass NumberParser::CLASS_DIGIT(TextParser::CommonCharClassifier::Instance(), TextParser::CHAR_DIGIT);
 }
 
+namespace XTL
+{
+	class ConfigParser : private TextParser
+	{
+		public:
+
+			void Parse()
+			{
+				SkipSpaces();
+
+				while (NotAtEnd())
+				{
+					char c = GetChar();
+					if (c == ';' || c == '#')
+					{
+						ParseComments();
+					}
+					else if (c == '[')
+					{
+						ParseSectionName();
+					}
+					else if (IsIdentifierHead(c))
+					{
+						ParseKeyValue();
+					}
+					else
+					{
+					}
+
+					SkipSpaces();
+				}
+			}
+
+			void SkipLinearSpaces()
+			{
+				SkipCharClass(CLASS_LINEAR_SPACE);
+			}
+
+			void SkipSpaces()
+			{
+				SkipCharClass(CLASS_SPACE);
+			}
+
+		private:
+
+			void ParseComments()
+			{
+				Advance();
+				if (WaitChar('\n'))
+				{
+					Advance();
+				}
+			}
+
+			void ParseSectionName()
+			{
+				Advance();
+				SkipLinearSpaces();
+
+				const std::string section = ReadIdentifier();
+				if (section.empty())
+				{
+					throw 1;
+				}
+
+				SkipLinearSpaces();
+				if (ReadChar(']'))
+				{
+					ParseLineTail();
+				}
+				else
+				{
+					throw 2;
+				}
+			}
+
+			void ParseLineTail()
+			{
+				SkipLinearSpaces();
+				char c = GetChar();
+				if (c == '#')
+				{
+					ParseComments();
+				}
+				else if (c == '\n')
+				{
+					Advance();
+				}
+				else
+				{
+					throw 3;
+				}
+			}
+
+			void ParseKeyValue()
+			{
+				const std::string key = ReadIdentifier();
+				SkipLinearSpaces();
+
+				if (GetChar() == '=')
+				{
+					Advance();
+					SkipLinearSpaces();
+				}
+
+				char c = GetChar();
+				if (c == '"')
+				{
+				}
+				else if (c == '\'')
+				{
+				}
+				else if (IsNumberHead(c))
+				{
+				}
+				else if (IsBarewordHead(c))
+				{
+				}
+				else
+				{
+					throw 4;
+				}
+			}
+
+			static bool IsIdentifierHead(char c)
+			{
+				return DEFAULT_IDENTIFIER_HEAD.Contains(c);
+			}
+
+			static bool IsNumberHead(char c)
+			{
+				return CLASS_NUMBER_HEAD.Contains(c);
+			}
+
+			static bool IsBarewordHead(char c)
+			{
+				return false;
+			}
+
+			static const CharClass CLASS_LINEAR_SPACE;
+			static const CharClass CLASS_SPACE;
+			static const CharClass CLASS_NUMBER_HEAD;
+	};
+
+	const CharClass ConfigParser::CLASS_LINEAR_SPACE(TextParser::CommonCharClassifier::Instance(),
+		TextParser::CHAR_SPACE           |
+		TextParser::CHAR_TAB             |
+		TextParser::CHAR_CARRIAGE_RETURN
+	);
+
+	const CharClass ConfigParser::CLASS_SPACE(TextParser::CommonCharClassifier::Instance(),
+		TextParser::CHAR_SPACE           |
+		TextParser::CHAR_TAB             |
+		TextParser::CHAR_CARRIAGE_RETURN |
+		TextParser::CHAR_LINE_FEED
+	);
+
+	const CharClass ConfigParser::CLASS_NUMBER_HEAD(TextParser::CommonCharClassifier::Instance(),
+		TextParser::CHAR_DIGIT |
+		TextParser::CHAR_MINUS
+	);
+}
+
 int main(int argc, const char * argv[])
 {
-	std::string s1 = "aaazZAbCdEfGh123GGGyui";
-	XTL::ToLowerCase(s1);
-	printf("%s\n", s1.c_str());
-	XTL::ToUpperCase(s1);
-	printf("%s\n", s1.c_str());
-	return 0;
+	printf("sof = %d\n", sizeof(XTL::NumberParser::Result));
 
-	XTL::TextCharSource::ConstCharPtr charSource("-123456789__abvd_12 + 1");
+	XTL::TextCharSource::ConstCharPtr charSource("-12345678.9__abvd_12 + 1");
 
+	XTL::NumberParser::Result r = XTL::NumberParser(charSource).Parse();
+	printf("%s\n", r.ToString().c_str());
+
+/*
 	XTL::TextParser prs(charSource);
-
-	long long int llu = XTL::NumberParser::ParseInteger<long long int>(charSource);
 
 	printf("%lld\n", llu);
 	printf("[%s]\n", prs.ReadIdentifier().c_str());
-
+*/
 	return 0;
 
 
