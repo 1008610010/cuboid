@@ -52,6 +52,21 @@ namespace XTL
 				return itr == map_.end() ? 0 : itr->second;
 			}
 
+			bool Erase(const KeyType & key)
+			{
+				typename std::map<KeyType, ValueType *>::iterator itr = map_.find(key);
+
+				if (itr == map_.end())
+				{
+					return false;
+				}
+
+				delete itr->second;
+				map_.erase(itr);
+
+				return true;
+			}
+
 			typedef typename std::map<KeyType, ValueType *>::const_iterator const_iterator;
 
 			const_iterator begin() const

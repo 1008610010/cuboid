@@ -1872,6 +1872,69 @@ namespace XTL
 	);
 }
 
+#include <set>
+
+class CharStateMachine
+{
+	public:
+
+		CharStateMachine()
+			: chars_(),
+			  links_()
+		{
+			;;
+		}
+
+		XTL::UINT_16 GetState(XTL::UINT_16 oldState, char c) const
+		{
+			std::map<XTL::UINT_32, XTL::UINT_32>::const_iterator itr = links_.find(Pack(oldState, c));
+
+			return itr == links_.end() ? 0 : itr->second;
+		}
+
+	protected:
+
+		void Link(XTL::UINT_16 oldState, char c, XTL::UINT_16 newState)
+		{
+			chars_.insert(c);
+			links_[Pack(oldState, c)] = newState;
+		}
+
+	private:
+
+		static XTL::UINT_32 Pack(XTL::UINT_16 state, char c)
+		{
+			return (static_cast<XTL::UINT_32>(state) << 8) | c;
+		}
+
+		std::set<char> chars_;
+		std::map<XTL::UINT_32, XTL::UINT_32> links_;
+};
+
+class Matcher : protected CharStateMachine
+{
+	public:
+
+		explicit Matcher(const std::string & sample)
+			: CharStateMachine()
+		{
+			for (unsigned int i = 0; i < sample.length(); ++i)
+			{
+				Link(i, sample[i], i + 1);
+			}
+		}
+};
+
+class Searcher
+{
+	public:
+
+		Searcher(const Matcher & matcher)
+		{
+			
+		}
+};
+
 int main(int argc, const char * argv[])
 {
 	printf("sof = %lu\n", sizeof(XTL::NumberParser::Result));
