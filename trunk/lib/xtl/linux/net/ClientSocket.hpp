@@ -23,9 +23,9 @@ namespace XTL
 				;;
 			}
 
-			int Receive(void * buffer, int size);
+			int Receive(void * buffer, int size) const;
 
-			int Send(const void * buffer, int size);
+			int Send(const void * buffer, int size) const;
 
 		protected:
 

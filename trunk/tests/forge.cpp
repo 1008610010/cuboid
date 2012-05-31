@@ -1880,38 +1880,66 @@ class CharStateMachine
 
 		CharStateMachine()
 			: chars_(),
-			  links_()
+			  links_(),
+			  maxState_(0)
 		{
 			;;
 		}
 
-		XTL::UINT_16 GetState(XTL::UINT_16 oldState, char c) const
+		unsigned int GetState(unsigned int oldState, char c) const
 		{
-			std::map<XTL::UINT_32, XTL::UINT_32>::const_iterator itr = links_.find(Pack(oldState, c));
+			if (oldState >= links_.size())
+			{
+				return 0;
+			}
 
-			return itr == links_.end() ? 0 : itr->second;
+			std::map<char, unsigned int>::const_iterator itr = links_[oldState].find(c);
+
+			return itr == links_[oldState].end() ? 0 : itr->second;
+		}
+
+		unsigned int MaxState() const
+		{
+			return maxState_;
 		}
 
 	protected:
 
-		void Link(XTL::UINT_16 oldState, char c, XTL::UINT_16 newState)
+		void Link(unsigned int oldState, char c, unsigned int newState)
 		{
+			if (newState == 0)
+			{
+				throw std::runtime_error("Attempt to link to zero state");
+			}
+
 			chars_.insert(c);
-			links_[Pack(oldState, c)] = newState;
+
+			if (oldState > maxState_)
+			{
+				maxState_ = oldState;
+			}
+
+			if (newState > maxState_)
+			{
+				maxState_ = newState;
+			}
+
+			if (links_.size() <= oldState)
+			{
+				links_.resize(oldState + 1);
+			}
+
+			links_[oldState][c] = newState;
 		}
 
 	private:
 
-		static XTL::UINT_32 Pack(XTL::UINT_16 state, char c)
-		{
-			return (static_cast<XTL::UINT_32>(state) << 8) | c;
-		}
-
 		std::set<char> chars_;
-		std::map<XTL::UINT_32, XTL::UINT_32> links_;
+		std::vector<std::map<char, unsigned int> > links_;
+		unsigned int maxState_;
 };
 
-class Matcher : protected CharStateMachine
+class Matcher : public CharStateMachine
 {
 	public:
 
@@ -1929,14 +1957,216 @@ class Searcher
 {
 	public:
 
+		class StateSet
+		{
+			public:
+
+				
+
+			private:
+
+				std::set<unsigned int, std::greater<unsigned int> > states_;
+		};
+
 		Searcher(const Matcher & matcher)
 		{
-			
+			if (matcher.MaxState() >= sizeof(unsigned int))
+			{
+				throw std::runtime_error("Too many states in Matcher");
+			}
+
+			std::set<unsigned int> states;
+			std::deque<unsigned int> newStates;
+
+			newStates.push_back(0);
+
+			while (!newStates.empty())
+			{
+				unsigned int stateSet = newStates.front();
+				newStates.pop_front();
+
+				std::map<char, StateSet> stateSetLinks;
+/*
+				foreach (unsigned int state : stateSet)
+				{
+					const std::map<char, unsigned int> * const stateLinks = matcher.StateLinks(state);
+
+					if (stateLinks == 0)
+					{
+						continue;
+					}
+
+					for (std::map<char, unsigned int>::const_iterator itr = stateLinks->begin(); itr != stateLinks->end(); ++itr)
+					{
+						stateSetLinks[itr->first].AddState(itr->second);
+					}
+				}
+*/
+			}
 		}
 };
 
+class StateSet
+{
+	public:
+
+		StateSet()
+			: states_(),
+			  digest_(0)
+		{
+			;;
+		}
+
+		bool operator< (const StateSet & other) const
+		{
+			if (digest_ != 1)
+			{
+				if (other.digest_ != 1)
+				{
+					return digest_ < other.digest_;
+				}
+				else
+				{
+					return true;
+				}
+			}
+			else
+			{
+				if (other.digest_ != 1)
+				{
+					return false;
+				}
+				else
+				{
+					return DeepCompare(other);
+				}
+			}
+		}
+
+		bool DeepCompare(const StateSet & other) const
+		{
+			const std::vector<unsigned int>::const_iterator end1 = states_.end();
+			const std::vector<unsigned int>::const_iterator end2 = other.states_.end();
+			std::vector<unsigned int>::const_iterator itr1 = states_.begin();
+			std::vector<unsigned int>::const_iterator itr2 = other.states_.begin();
+
+			while (itr1 != end1 && itr2 != end2)
+			{
+				if (*itr1 < *itr2)
+				{
+					return true;
+				}
+				else if (*itr1 > *itr2)
+				{
+					return false;
+				}
+
+				++itr1;
+				++itr2;
+			}
+
+			if (itr1 != end1)
+			{
+				return false;
+			}
+
+			if (itr2 != end2)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		void AddState(unsigned int state)
+		{
+			if (state == 0)
+			{
+				throw std::runtime_error("Attempt to add zero state to StateSet");
+			}
+
+			std::vector<unsigned int>::iterator itr = std::lower_bound(states_.begin(), states_.end(), state, std::greater<unsigned int>());
+
+			if (itr != states_.end() && *itr == state)
+			{
+				return;
+			}
+
+			states_.insert(itr, state);
+
+			if (digest_ != 1)
+			{
+				if (state < sizeof(digest_) * 8)
+				{
+					digest_ |= (1 << state);
+				}
+				else
+				{
+					digest_ = 1;
+				}
+			}
+		}
+
+		void DebugPrint() const
+		{
+			for (std::vector<unsigned int>::const_iterator itr = states_.begin(); itr != states_.end(); ++itr)
+			{
+				printf("%u ", *itr);
+			}
+
+			printf("\n");
+		}
+
+		const std::string ToString() const
+		{
+			std::string result;
+
+			for (std::vector<unsigned int>::const_iterator itr = states_.begin(); itr != states_.end(); ++itr)
+			{
+				if (*itr == 0)
+				{
+					continue;
+				}
+
+				if (!result.empty())
+				{
+					result.append("-");
+				}
+
+				result.append(XTL::IntegerToString(*itr));
+			}
+
+			return result;
+		}
+
+	private:
+
+		std::vector<unsigned int> states_;
+		XTL::UINT_8 digest_;
+};
+
+void PushSorted(std::vector<unsigned int> & v, unsigned int i)
+{
+	std::vector<unsigned int>::iterator itr = std::lower_bound(v.begin(), v.end(), i, std::greater<unsigned int>());
+	v.insert(itr, i);
+}
+
+
 int main(int argc, const char * argv[])
 {
+	StateSet stateSet;
+
+	srand(time(0));
+	for (unsigned int i = 0; i < 20; ++i)
+	{
+		stateSet.AddState(rand() % 50 + 1);
+		stateSet.DebugPrint();
+	}
+
+	printf("%s\n", stateSet.ToString().c_str());
+
+	return 0;
+
 	printf("sof = %lu\n", sizeof(XTL::NumberParser::Result));
 
 	XTL::TextCharSource::ConstCharPtr charSource("-12345678.9__abvd_12 + 1");

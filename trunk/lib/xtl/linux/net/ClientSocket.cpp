@@ -29,7 +29,7 @@ namespace XTL
 		}
 	}
 
-	int ClientSocket::Receive(void * buffer, int size)
+	int ClientSocket::Receive(void * buffer, int size) const
 	{
 		int result = ::recv(Desc(), buffer, size, 0);
 
@@ -56,7 +56,7 @@ namespace XTL
 		}
 	}
 
-	int ClientSocket::Send(const void * buffer, int size)
+	int ClientSocket::Send(const void * buffer, int size) const
 	{
 		int result = ::send(Desc(), buffer, size, MSG_NOSIGNAL);
 
