@@ -143,6 +143,200 @@ void PackMessage(const std::string & messageBody, std::vector<char> & buffer)
 	PackMessage(messageBody.data(), messageBody.size(), buffer);
 }
 
+
+class UnixSocketServer
+{
+	public:
+
+		static const int DEFAULT_LISTEN_BACKLOG = 5;
+		static const int DEFAULT_SELECT_TIMEOUT = 1;
+
+		float Frac(float f)
+		{
+			return f - static_cast<int>(f);
+		}
+
+		explicit UnixSocketServer(const std::string & unixSocketPath, int listenBacklog = DEFAULT_LISTEN_BACKLOG, float selectTimeout = DEFAULT_SELECT_TIMEOUT)
+			: unixSocketPath_(unixSocketPath),
+			  serverSocket_(XTL::UnixSocket::Create(false)),
+			  socketSelector_(),
+			  selectTimeout_(selectTimeout, 1000000 * Frac(selectTimeout)),
+			  clients_()
+		{
+			XTL::SocketAddressUnix serverAddress(UNIX_SOCKET_PATH);
+
+			try
+			{
+				serverSocket_.Bind(serverAddress);
+			}
+			catch (const XTL::UnixError & e)
+			{
+				if (e.Code() == EADDRINUSE)
+				{
+					serverAddress.Unlink();
+					serverSocket_.Bind(serverAddress);
+				}
+				else
+				{
+					throw;
+				}
+			}
+
+			serverSocket_.Listen(listenBacklog);
+
+			socketSelector_.Insert(serverSocket_, true, false);
+		}
+
+		void Run()
+		{
+			while (true)
+			{
+				Iterate();
+			}
+		}
+
+		class ClientDisconnected
+		{
+			public:
+
+				ClientDisconnected(XTL::UnixClientSocket socket)
+					: socket_(socket)
+				{
+					;;
+				}
+
+				XTL::UnixClientSocket Socket() const
+				{
+					return socket_;
+				}
+
+			private:
+
+				const XTL::UnixClientSocket socket_;
+		};
+
+		class ClientHandler
+		{
+			public:
+
+				virtual ~ClientHandler() throw()
+				{
+					;;
+				}
+
+				virtual void OnDataReceived(const void * buffer, unsigned int size)
+				{
+					
+				}
+
+			private:
+
+				
+		};
+
+		class Client
+		{
+			public:
+
+				static const unsigned int RECEIVE_BUFFER_SIZE = 1;
+
+				explicit Client(XTL::UnixClientSocket socket)
+					: socket_(socket),
+					  buffer_()
+				{
+					;;
+				}
+
+				void Receive()
+				{
+					int wasRead = socket_.Receive(buffer_, sizeof(buffer_));
+
+					if (wasRead < 0)
+					{
+						throw ClientDisconnected(socket_);
+					}
+
+					if (wasRead > 0)
+					{
+						// OnDataReceived(buffer_, wasRead);
+					}
+				}
+
+			protected:
+
+				void Disconnect()
+				{
+					throw ClientDisconnected(socket_);
+				}
+
+			private:
+
+				const XTL::UnixClientSocket socket_;
+				char buffer_[RECEIVE_BUFFER_SIZE];
+		};
+
+	private:
+
+		void Iterate()
+		{
+			XTL::SocketSelector::SelectResult selectResult;
+
+			socketSelector_.Select(selectResult, selectTimeout_);
+
+			if (selectResult.SelectedCount() == 0)
+			{
+				return;
+			}
+
+			if (selectResult.IsReadable(serverSocket_))
+			{
+				XTL::UnixClientSocket clientSocket = serverSocket_.Accept();
+
+				if (!clientSocket.IsNull())
+				{
+					std::auto_ptr<Client> client(new Client(clientSocket));
+
+					socketSelector_.Insert(clientSocket, true, true);
+
+					clients_.Set(clientSocket, client);
+				}
+			}
+
+
+			const XTL::SocketSet readable = selectResult.ReadableSet();
+
+			std::vector<XTL::UnixClientSocket> disconnected;
+
+			for (XTL::AutoPtrMap<XTL::UnixClientSocket, Client>::const_iterator itr = clients_.begin(); itr != clients_.end(); ++itr)
+			{
+				if (readable.Contains(itr->first))
+				{
+					try
+					{
+						itr->second->Receive();
+					}
+					catch (const ClientDisconnected & e)
+					{
+						disconnected.push_back(e.Socket());
+					}
+				}
+			}
+
+			for (std::vector<XTL::UnixClientSocket>::iterator itr = disconnected.begin(); itr != disconnected.end(); ++itr)
+			{
+				fprintf(stderr, "Client disconnected\n");
+				socketSelector_.Delete(*itr);
+				clients_.Erase(*itr);
+			}
+		}
+
+		const std::string     unixSocketPath_;
+		XTL::UnixServerSocket serverSocket_;
+		XTL::SocketSelector   socketSelector_;
+		XTL::SocketSelector::Timeout selectTimeout_;
+		XTL::AutoPtrMap<XTL::UnixClientSocket, Client> clients_;
+};
+
 int main(int argc, const char * argv[])
 {
 	pid_t pid = ::fork();
@@ -173,90 +367,9 @@ int main(int argc, const char * argv[])
 
 		try
 		{
-			static const int SERVER_LISTEN_BACKLOG = 5;
+			UnixSocketServer server(UNIX_SOCKET_PATH);
 
-			XTL::UnixServerSocket serverSocket = XTL::UnixSocket::Create(false);
-
-			XTL::SocketAddressUnix serverAddress(UNIX_SOCKET_PATH);
-
-			try
-			{
-				serverSocket.Bind(serverAddress);
-			}
-			catch (const XTL::UnixError & e)
-			{
-				if (e.Code() == EADDRINUSE)
-				{
-					serverAddress.Unlink();
-					serverSocket.Bind(serverAddress);
-				}
-				else
-				{
-					throw;
-				}
-			}
-
-			serverSocket.Listen(SERVER_LISTEN_BACKLOG);
-
-			XTL::SocketSelector socketSelector;
-			XTL::SocketSelector::SelectResult selectResult;
-
-			socketSelector.Insert(serverSocket, true, false);
-
-			XTL::AutoPtrMap<XTL::UnixClientSocket, WriterClient> clients;
-
-			volatile bool terminated = false;
-
-			while (!terminated)
-			{
-				socketSelector.Select(selectResult, XTL::SocketSelector::Timeout(1, 0));
-
-				if (selectResult.SelectedCount() > 0)
-				{
-					if (selectResult.IsReadable(serverSocket))
-					{
-						XTL::UnixClientSocket clientSocket = serverSocket.Accept();
-						if (!clientSocket.IsNull())
-						{
-							socketSelector.Insert(clientSocket, true, false);
-							clients.Set(clientSocket, std::auto_ptr<WriterClient>(new WriterClient(clientSocket)));
-							printf("Client accepted\n");
-						}
-					}
-
-					const XTL::SocketSet readable = selectResult.ReadableSet();
-
-					std::vector<XTL::UnixClientSocket> disconnected;
-
-					for (XTL::AutoPtrMap<XTL::UnixClientSocket, WriterClient>::const_iterator itr = clients.begin(); itr != clients.end(); ++itr)
-					{
-						if (readable.Contains(itr->first))
-						{
-							printf("Readable\n");
-							try
-							{
-								itr->second->Receive();
-							}
-							catch (const WriterClient::Disconnected & e)
-							{
-								disconnected.push_back(itr->first);
-							}
-						}
-					}
-
-					for (std::vector<XTL::UnixClientSocket>::iterator itr = disconnected.begin(); itr != disconnected.end(); ++itr)
-					{
-						printf("Client disconnected\n");
-						socketSelector.Delete(*itr);
-						clients.Erase(*itr);
-					}
-				}
-			}
-		}
-		catch (const XTL::UnixError::AlreadyExists & e)
-		{
-			fprintf(stderr, "Already exists\n");
-			return 1;
+			server.Run();
 		}
 		catch (const XTL::UnixError & e)
 		{
