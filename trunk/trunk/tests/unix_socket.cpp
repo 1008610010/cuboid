@@ -57,6 +57,10 @@ class WriterClient
 {
 	public:
 
+		class Disconnected
+		{
+		};
+
 		explicit WriterClient(XTL::UnixClientSocket clientSocket)
 			: clientSocket_(clientSocket)
 		{
@@ -70,10 +74,14 @@ class WriterClient
 
 		void Receive()
 		{
-			char buffer[1024];
+			char buffer[1];
 
 			int wasRead = clientSocket_.Receive(buffer, sizeof(buffer));
-			printf("Receive %d\n", wasRead);
+
+			if (wasRead < 0)
+			{
+				throw Disconnected();
+			}
 
 			OnBufferReceived(buffer, wasRead);
 		}
@@ -130,6 +138,11 @@ void PackMessage(const void * messageBody, unsigned int messageSize, std::vector
 	::memcpy(&(buffer[sizeof(MessageHeader)]), messageBody, messageSize);
 }
 
+void PackMessage(const std::string & messageBody, std::vector<char> & buffer)
+{
+	PackMessage(messageBody.data(), messageBody.size(), buffer);
+}
+
 int main(int argc, const char * argv[])
 {
 	pid_t pid = ::fork();
@@ -144,14 +157,15 @@ int main(int argc, const char * argv[])
 
 		clientSocket.Connect(serverAddress);
 
-		const std::string data = "This is test message...";
-
 		std::vector<char> buffer;
-		PackMessage(data.data(), data.size(), buffer);
 
+		PackMessage("This is test message...", buffer);
 		clientSocket.Send(&(buffer[0]), buffer.size());
 
 		sleep(1);
+
+		PackMessage("This is test message...", buffer);
+		clientSocket.Send(&(buffer[0]), buffer.size());
 	}
 	else
 	{
@@ -191,7 +205,9 @@ int main(int argc, const char * argv[])
 
 			XTL::AutoPtrMap<XTL::UnixClientSocket, WriterClient> clients;
 
-			while (1)
+			volatile bool terminated = false;
+
+			while (!terminated)
 			{
 				socketSelector.Select(selectResult, XTL::SocketSelector::Timeout(1, 0));
 
@@ -210,13 +226,29 @@ int main(int argc, const char * argv[])
 
 					const XTL::SocketSet readable = selectResult.ReadableSet();
 
+					std::vector<XTL::UnixClientSocket> disconnected;
+
 					for (XTL::AutoPtrMap<XTL::UnixClientSocket, WriterClient>::const_iterator itr = clients.begin(); itr != clients.end(); ++itr)
 					{
 						if (readable.Contains(itr->first))
 						{
 							printf("Readable\n");
-							itr->second->Receive();
+							try
+							{
+								itr->second->Receive();
+							}
+							catch (const WriterClient::Disconnected & e)
+							{
+								disconnected.push_back(itr->first);
+							}
 						}
+					}
+
+					for (std::vector<XTL::UnixClientSocket>::iterator itr = disconnected.begin(); itr != disconnected.end(); ++itr)
+					{
+						printf("Client disconnected\n");
+						socketSelector.Delete(*itr);
+						clients.Erase(*itr);
 					}
 				}
 			}
