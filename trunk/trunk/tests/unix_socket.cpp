@@ -15,43 +15,9 @@
 #include <xtl/linux/net/SocketSelector.hpp>
 #include <xtl/linux/net/SocketSet.hpp>
 
-/*
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-*/
-
 const char * const UNIX_SOCKET_PATH = "LJ_STATS_WRITER";
 
-class MessageHeader
-{
-	public:
-
-		static const XTL::UINT_32 MAGIC = 0x2a2a2a2a;
-
-		MessageHeader(XTL::UINT_32 size)
-			: magic_(MAGIC),
-			  size_(size)
-		{
-			;;
-		}
-
-		bool IsMagicValid() const
-		{
-			return magic_ == MAGIC;
-		}
-
-		XTL::UINT_32 Size() const
-		{
-			return size_;
-		}
-
-	private:
-
-		XTL::UINT_32 magic_;
-		XTL::UINT_32 size_;
-};
+/*
 
 class WriterClient
 {
@@ -74,7 +40,7 @@ class WriterClient
 
 		void Receive()
 		{
-			char buffer[1];
+			char buffer[3];
 
 			int wasRead = clientSocket_.Receive(buffer, sizeof(buffer));
 
@@ -142,7 +108,39 @@ void PackMessage(const std::string & messageBody, std::vector<char> & buffer)
 {
 	PackMessage(messageBody.data(), messageBody.size(), buffer);
 }
+*/
 
+class UnixSocketClient
+{
+	public:
+
+		explicit UnixSocketClient(const std::string & unixSocketPath)
+			: serverAddress_(unixSocketPath),
+			  socket_(XTL::UnixSocket::Create(true))
+		{
+			;;
+		}
+
+		void Connect()
+		{
+			socket_.Connect(serverAddress_);
+		}
+
+		void Send(const void * buffer, unsigned int size)
+		{
+			if (size == 0)
+			{
+				return;
+			}
+
+			socket_.Send(buffer, size);
+		}
+
+	private:
+
+		XTL::SocketAddressUnix serverAddress_;
+		XTL::UnixClientSocket socket_;
+};
 
 class UnixSocketServer
 {
@@ -187,6 +185,8 @@ class UnixSocketServer
 			socketSelector_.Insert(serverSocket_, true, false);
 		}
 
+		class Client;
+
 		void Run()
 		{
 			while (true)
@@ -219,32 +219,62 @@ class UnixSocketServer
 		{
 			public:
 
+				explicit ClientHandler(Client & client)
+					: client_(client)
+				{
+					;;
+				}
+
 				virtual ~ClientHandler() throw()
 				{
 					;;
 				}
 
-				virtual void OnDataReceived(const void * buffer, unsigned int size)
+				virtual void OnDataReceived(const void * buffer, unsigned int size) = 0;
+
+			protected:
+
+				void Disconnect()
 				{
-					
+					client_.Disconnect();
 				}
 
 			private:
 
-				
+				ClientHandler(const ClientHandler &);
+				ClientHandler & operator= (const ClientHandler &);
+
+				Client & client_;
 		};
+
+		virtual std::auto_ptr<ClientHandler> CreateClientHandler(Client & client) const = 0;
 
 		class Client
 		{
 			public:
 
-				static const unsigned int RECEIVE_BUFFER_SIZE = 1;
+				static const unsigned int RECEIVE_BUFFER_SIZE = 3;
 
 				explicit Client(XTL::UnixClientSocket socket)
 					: socket_(socket),
-					  buffer_()
+					  buffer_(),
+					  handler_()
 				{
 					;;
+				}
+
+				void Disconnect()
+				{
+					throw ClientDisconnected(socket_);
+				}
+
+			protected:
+
+				friend class UnixSocketServer;
+
+				void SetHandler(std::auto_ptr<ClientHandler> handler)
+				{
+					handler_ = handler;
 				}
 
 				void Receive()
@@ -253,26 +283,20 @@ class UnixSocketServer
 
 					if (wasRead < 0)
 					{
-						throw ClientDisconnected(socket_);
+						Disconnect();
 					}
 
-					if (wasRead > 0)
+					if (wasRead > 0 && handler_.get() != 0)
 					{
-						// OnDataReceived(buffer_, wasRead);
+						handler_->OnDataReceived(buffer_, wasRead);
 					}
-				}
-
-			protected:
-
-				void Disconnect()
-				{
-					throw ClientDisconnected(socket_);
 				}
 
 			private:
 
 				const XTL::UnixClientSocket socket_;
 				char buffer_[RECEIVE_BUFFER_SIZE];
+				std::auto_ptr<ClientHandler> handler_;
 		};
 
 	private:
@@ -295,6 +319,8 @@ class UnixSocketServer
 				if (!clientSocket.IsNull())
 				{
 					std::auto_ptr<Client> client(new Client(clientSocket));
+					std::auto_ptr<ClientHandler> clientHandler(CreateClientHandler(*client));
+					client->SetHandler(clientHandler);
 
 					socketSelector_.Insert(clientSocket, true, true);
 
@@ -337,6 +363,138 @@ class UnixSocketServer
 		XTL::AutoPtrMap<XTL::UnixClientSocket, Client> clients_;
 };
 
+class StatsMessageHeader
+{
+	public:
+
+		static const XTL::UINT_32 MAGIC = 0x2a2a2a2a;
+
+		explicit StatsMessageHeader(XTL::UINT_32 size)
+			: magic_(MAGIC),
+			  size_(size)
+		{
+			;;
+		}
+
+		bool IsMagicValid() const
+		{
+			return magic_ == MAGIC;
+		}
+
+		XTL::UINT_32 Size() const
+		{
+			return size_;
+		}
+
+	private:
+
+		XTL::UINT_32 magic_;
+		XTL::UINT_32 size_;
+};
+
+class StatsWriterClient
+{
+	public:
+
+		explicit StatsWriterClient(const std::string & unixSocketPath)
+			: client_(unixSocketPath)
+		{
+			client_.Connect();
+		}
+
+		void Send(const std::string & message)
+		{
+			StatsMessageHeader header(message.size());
+
+			client_.Send(&header, sizeof(header));
+			client_.Send(message.data(), message.size());
+		}
+
+	private:
+
+		UnixSocketClient client_;
+};
+
+class StatsWriterServer : public UnixSocketServer
+{
+	public:
+
+		class WriterHandler : public UnixSocketServer::ClientHandler
+		{
+			public:
+
+				explicit WriterHandler(UnixSocketServer::Client & client)
+					: UnixSocketServer::ClientHandler(client),
+					  buffer_()
+				{
+					;;
+				}
+
+				virtual ~WriterHandler() throw()
+				{
+					;;
+				}
+
+				virtual void OnDataReceived(const void * buffer, unsigned int size)
+				{
+					fprintf(stderr, "OnDataReceived(%u)\n", size);
+
+					unsigned int oldSize = buffer_.size();
+					buffer_.resize(oldSize + size);
+					::memcpy(&(buffer_[oldSize]), buffer, size);
+
+					if (IsMessageReceived())
+					{
+						fprintf(stderr, "Message received!\n");
+						Clear();
+					}
+				}
+
+			private:
+
+				void Clear()
+				{
+					buffer_.resize(0);
+				}
+
+				bool IsMessageReceived()
+				{
+					if (buffer_.size() < sizeof(StatsMessageHeader))
+					{
+						return false;
+					}
+
+					const StatsMessageHeader * header = reinterpret_cast<const StatsMessageHeader *>(&(buffer_[0]));
+
+					if (!header->IsMagicValid())
+					{
+						fprintf(stderr, "Message magic is invalid");
+						Disconnect();
+					}
+
+					return buffer_.size() >= sizeof(StatsMessageHeader) + header->Size();
+				}
+
+				std::vector<char> buffer_;
+		};
+
+		explicit StatsWriterServer(const std::string & unixSocketPath)
+			: UnixSocketServer(unixSocketPath)
+		{
+			;;
+		}
+
+		virtual ~StatsWriterServer() throw()
+		{
+			;;
+		}
+
+		virtual std::auto_ptr<UnixSocketServer::ClientHandler> CreateClientHandler(Client & client) const
+		{
+			return std::auto_ptr<UnixSocketServer::ClientHandler>(new WriterHandler(client));
+		}
+};
+
 int main(int argc, const char * argv[])
 {
 	pid_t pid = ::fork();
@@ -344,22 +502,23 @@ int main(int argc, const char * argv[])
 	if (pid == 0)
 	{
 		// Child process
-		sleep(1);
+		try
+		{
+			sleep(1);
 
-		XTL::UnixClientSocket clientSocket = XTL::UnixSocket::Create(true);
-		XTL::SocketAddressUnix serverAddress(UNIX_SOCKET_PATH);
+			StatsWriterClient client(UNIX_SOCKET_PATH);
 
-		clientSocket.Connect(serverAddress);
+			client.Send("This is test message...");
 
-		std::vector<char> buffer;
+			sleep(1);
 
-		PackMessage("This is test message...", buffer);
-		clientSocket.Send(&(buffer[0]), buffer.size());
-
-		sleep(1);
-
-		PackMessage("This is test message...", buffer);
-		clientSocket.Send(&(buffer[0]), buffer.size());
+			client.Send("This is test message 2...");
+		}
+		catch (const XTL::UnixError & e)
+		{
+			fprintf(stderr, "Client Error: %s\n", e.What().c_str());
+			return 1;
+		}
 	}
 	else
 	{
@@ -367,50 +526,17 @@ int main(int argc, const char * argv[])
 
 		try
 		{
-			UnixSocketServer server(UNIX_SOCKET_PATH);
+			StatsWriterServer server(UNIX_SOCKET_PATH);
 
 			server.Run();
+
+			fprintf(stderr, "Server is shutting down.\n");
 		}
 		catch (const XTL::UnixError & e)
 		{
 			fprintf(stderr, "%d %s\n", e.Code(), e.What().c_str());
 			return 1;
 		}
-
-/*
-		int serverSocket = -1;
-		if ((serverSocket = ::socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
-		{
-			perror("socket");
-			return 1;
-		}
-
-		struct sockaddr_un serverAddress;
-
-		::memset(&serverAddress, '\0', sizeof(serverAddress));
-		serverAddress.sun_family = AF_UNIX;
-		::strcpy(serverAddress.sun_path, "LJ_STATS_WRITER");
-		::unlink(serverAddress.sun_path);
-
-		int serverAddressLength = ::strlen(serverAddress.sun_path) + sizeof(serverAddress.sun_family);
-		if (::bind(serverSocket, (struct sockaddr *) &serverAddress, serverAddressLength) == -1)
-		{
-			perror("bind");
-			return 1;
-		}
-
-		const int SERVER_BACKLOG = 5;
-		if (::listen(serverSocket, SERVER_BACKLOG) == -1)
-		{
-			perror("listen");
-			return 1;
-		}
-
-		while (1)
-		{
-			
-		}
-*/
 	}
 }
 
