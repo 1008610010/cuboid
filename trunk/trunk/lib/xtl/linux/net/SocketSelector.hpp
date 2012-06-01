@@ -75,12 +75,12 @@ namespace XTL
 						return writeSet_.Contains(socket);
 					}
 
-					const SocketSet & ReadableSet()
+					const SocketSet & ReadableSet() const
 					{
 						return readSet_;
 					}
 
-					const SocketSet & WritableSet()
+					const SocketSet & WritableSet() const
 					{
 						return writeSet_;
 					}

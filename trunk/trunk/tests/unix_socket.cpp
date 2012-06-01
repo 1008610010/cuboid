@@ -17,99 +17,6 @@
 
 const char * const UNIX_SOCKET_PATH = "LJ_STATS_WRITER";
 
-/*
-
-class WriterClient
-{
-	public:
-
-		class Disconnected
-		{
-		};
-
-		explicit WriterClient(XTL::UnixClientSocket clientSocket)
-			: clientSocket_(clientSocket)
-		{
-			;;
-		}
-
-		void Clear()
-		{
-			buffer_.resize(0);
-		}
-
-		void Receive()
-		{
-			char buffer[3];
-
-			int wasRead = clientSocket_.Receive(buffer, sizeof(buffer));
-
-			if (wasRead < 0)
-			{
-				throw Disconnected();
-			}
-
-			OnBufferReceived(buffer, wasRead);
-		}
-
-		void OnBufferReceived(const void * buffer, int size)
-		{
-			if (size <= 0)
-			{
-				return;
-			}
-
-			printf("OnBufferReceived(%d)\n", size);
-
-			unsigned int oldSize = buffer_.size();
-			buffer_.resize(oldSize + size);
-			::memcpy(&(buffer_[oldSize]), buffer, size);
-
-			if (IsComplete())
-			{
-				printf("Message received!\n");
-				Clear();
-			}
-		}
-
-		bool IsComplete() const
-		{
-			if (buffer_.size() < sizeof(MessageHeader))
-			{
-				return false;
-			}
-
-			const MessageHeader * header = reinterpret_cast<const MessageHeader *>(&(buffer_[0]));
-
-			if (!header->IsMagicValid())
-			{
-				throw std::runtime_error("Message magic is invalid");
-			}
-
-			return buffer_.size() >= sizeof(MessageHeader) + header->Size();
-		}
-
-	private:
-
-		XTL::UnixClientSocket clientSocket_;
-		std::vector<char> buffer_;
-};
-
-void PackMessage(const void * messageBody, unsigned int messageSize, std::vector<char> & buffer)
-{
-	buffer.resize(sizeof(MessageHeader) + messageSize);
-
-	MessageHeader header(messageSize);
-	::memcpy(&(buffer[0]), &header, sizeof(MessageHeader));
-	::memcpy(&(buffer[sizeof(MessageHeader)]), messageBody, messageSize);
-}
-
-void PackMessage(const std::string & messageBody, std::vector<char> & buffer)
-{
-	PackMessage(messageBody.data(), messageBody.size(), buffer);
-}
-*/
-
 class UnixSocketClient
 {
 	public:
@@ -149,30 +56,29 @@ class UnixSocketServer
 		static const int DEFAULT_LISTEN_BACKLOG = 5;
 		static const int DEFAULT_SELECT_TIMEOUT = 1;
 
-		float Frac(float f)
+		static float Frac(float f)
 		{
 			return f - static_cast<int>(f);
 		}
 
 		explicit UnixSocketServer(const std::string & unixSocketPath, int listenBacklog = DEFAULT_LISTEN_BACKLOG, float selectTimeout = DEFAULT_SELECT_TIMEOUT)
 			: unixSocketPath_(unixSocketPath),
+			  serverAddress_(unixSocketPath),
 			  serverSocket_(XTL::UnixSocket::Create(false)),
 			  socketSelector_(),
 			  selectTimeout_(selectTimeout, 1000000 * Frac(selectTimeout)),
 			  clients_()
 		{
-			XTL::SocketAddressUnix serverAddress(UNIX_SOCKET_PATH);
-
 			try
 			{
-				serverSocket_.Bind(serverAddress);
+				serverSocket_.Bind(serverAddress_);
 			}
 			catch (const XTL::UnixError & e)
 			{
 				if (e.Code() == EADDRINUSE)
 				{
-					serverAddress.Unlink();
-					serverSocket_.Bind(serverAddress);
+					serverAddress_.Unlink();
+					serverSocket_.Bind(serverAddress_);
 				}
 				else
 				{
@@ -183,6 +89,18 @@ class UnixSocketServer
 			serverSocket_.Listen(listenBacklog);
 
 			socketSelector_.Insert(serverSocket_, true, false);
+		}
+
+		~UnixSocketServer() throw()
+		{
+			try
+			{
+				serverAddress_.Unlink();
+			}
+			catch (const XTL::UnixError & e)
+			{
+				fprintf(stderr, "Could not unlink unix socket '%s': %s\n", unixSocketPath_.c_str(), e.What().c_str());
+			}
 		}
 
 		class Client;
@@ -247,7 +165,7 @@ class UnixSocketServer
 				Client & client_;
 		};
 
-		virtual std::auto_ptr<ClientHandler> CreateClientHandler(Client & client) const = 0;
+		virtual std::auto_ptr<ClientHandler> CreateClientHandler(Client & client) = 0;
 
 		class Client
 		{
@@ -356,9 +274,10 @@ class UnixSocketServer
 			}
 		}
 
-		const std::string     unixSocketPath_;
-		XTL::UnixServerSocket serverSocket_;
-		XTL::SocketSelector   socketSelector_;
+		const std::string      unixSocketPath_;
+		XTL::SocketAddressUnix serverAddress_;
+		XTL::UnixServerSocket  serverSocket_;
+		XTL::SocketSelector    socketSelector_;
 		XTL::SocketSelector::Timeout selectTimeout_;
 		XTL::AutoPtrMap<XTL::UnixClientSocket, Client> clients_;
 };
@@ -415,17 +334,124 @@ class StatsWriterClient
 		UnixSocketClient client_;
 };
 
+#include <xtl/io/FileOutputStreamBuffered.hpp>
+#include <xtl/linux/fs/FileUtils.hpp>
+#include <xtl/FormatString.hpp>
+
+namespace XTL
+{
+	class FileTransaction : public OutputStream
+	{
+		public:
+
+			static const unsigned int DEFAULT_BUFFER_CAPACITY = (1 << 20);
+
+			FileTransaction(const std::string & filePath, unsigned int bufferCapacity= DEFAULT_BUFFER_CAPACITY)
+				: filePath_(filePath),
+				  outputStream_(TempFilePath(filePath), bufferCapacity)
+			{
+				;;
+			}
+
+			virtual ~FileTransaction() throw()
+			{
+				;;
+			}
+
+			virtual void Write(const void * buffer, unsigned int size)
+			{
+				outputStream_.Write(buffer, size);
+			}
+
+			FileSize Position() const
+			{
+				return outputStream_.Position();
+			}
+
+			void Commit()
+			{
+				outputStream_.Flush();
+				outputStream_.Close();
+
+				FileUtils::Rename(TempFilePath(filePath_), filePath_);
+			}
+
+		private:
+
+			static const std::string TempFilePath(const std::string & filePath)
+			{
+				return filePath + ".tmp";
+			}
+
+			const std::string filePath_;
+			FileOutputStreamBuffered outputStream_;
+	};
+}
+
 class StatsWriterServer : public UnixSocketServer
 {
 	public:
+
+		class MessageBuffer
+		{
+			public:
+
+				MessageBuffer()
+					: buffer_()
+				{
+					;;
+				}
+
+				void Write(const void * ptr, unsigned int size)
+				{
+					unsigned int oldSize = buffer_.size();
+					buffer_.resize(oldSize + size);
+					::memcpy(&(buffer_[oldSize]), ptr, size);
+				}
+
+				bool HasHeader() const
+				{
+					return buffer_.size() >= sizeof(StatsMessageHeader);
+				}
+
+				const StatsMessageHeader * Header() const
+				{
+					return reinterpret_cast<const StatsMessageHeader *>(&(buffer_[0]));
+				}
+
+				unsigned int TotalSize() const
+				{
+					return sizeof(StatsMessageHeader) + Header()->Size();
+				}
+
+				bool IsMagicValid() const
+				{
+					return Header()->IsMagicValid();
+				}
+
+				bool IsComplete() const
+				{
+					return HasHeader() && buffer_.size() >= TotalSize();
+				}
+
+				void Remove()
+				{
+					buffer_.erase(buffer_.begin(), buffer_.begin() + TotalSize());
+				}
+
+			private:
+
+				std::vector<char> buffer_;
+		};
 
 		class WriterHandler : public UnixSocketServer::ClientHandler
 		{
 			public:
 
-				explicit WriterHandler(UnixSocketServer::Client & client)
+				explicit WriterHandler(StatsWriterServer & server, UnixSocketServer::Client & client)
 					: UnixSocketServer::ClientHandler(client),
-					  buffer_()
+					  server_(server),
+					  messageBuffer_()
 				{
 					;;
 				}
@@ -439,47 +465,31 @@ class StatsWriterServer : public UnixSocketServer
 				{
 					fprintf(stderr, "OnDataReceived(%u)\n", size);
 
-					unsigned int oldSize = buffer_.size();
-					buffer_.resize(oldSize + size);
-					::memcpy(&(buffer_[oldSize]), buffer, size);
+					messageBuffer_.Write(buffer, size);
 
-					if (IsMessageReceived())
+					while (messageBuffer_.IsComplete())
 					{
-						fprintf(stderr, "Message received!\n");
-						Clear();
+						if (!messageBuffer_.Header()->IsMagicValid())
+						{
+							fprintf(stderr, "Message magic is invalid");
+							Disconnect();
+						}
+
+						server_.WriteMessage(messageBuffer_);
+						messageBuffer_.Remove();
 					}
 				}
 
 			private:
 
-				void Clear()
-				{
-					buffer_.resize(0);
-				}
-
-				bool IsMessageReceived()
-				{
-					if (buffer_.size() < sizeof(StatsMessageHeader))
-					{
-						return false;
-					}
-
-					const StatsMessageHeader * header = reinterpret_cast<const StatsMessageHeader *>(&(buffer_[0]));
-
-					if (!header->IsMagicValid())
-					{
-						fprintf(stderr, "Message magic is invalid");
-						Disconnect();
-					}
-
-					return buffer_.size() >= sizeof(StatsMessageHeader) + header->Size();
-				}
-
-				std::vector<char> buffer_;
+				StatsWriterServer & server_;
+				MessageBuffer messageBuffer_;
 		};
 
-		explicit StatsWriterServer(const std::string & unixSocketPath)
-			: UnixSocketServer(unixSocketPath)
+		explicit StatsWriterServer(const std::string & unixSocketPath, const std::string & outputDir)
+			: UnixSocketServer(unixSocketPath),
+			  outputDir_(outputDir),
+			  outputStream_()
 		{
 			;;
 		}
@@ -489,14 +499,49 @@ class StatsWriterServer : public UnixSocketServer
 			;;
 		}
 
-		virtual std::auto_ptr<UnixSocketServer::ClientHandler> CreateClientHandler(Client & client) const
+		virtual std::auto_ptr<UnixSocketServer::ClientHandler> CreateClientHandler(Client & client)
 		{
-			return std::auto_ptr<UnixSocketServer::ClientHandler>(new WriterHandler(client));
+			return std::auto_ptr<UnixSocketServer::ClientHandler>(new WriterHandler(*this, client));
 		}
+
+		void WriteMessage(const MessageBuffer & messageBuffer)
+		{
+			if (outputStream_.get() == 0)
+			{
+				const std::string filePath = XTL::FormatString("%s/binlog.%s", outputDir_, NowString());
+				fprintf(stderr, "Creating %s\n", filePath.c_str());
+				outputStream_.reset(new XTL::FileTransaction(filePath));
+			}
+
+			outputStream_->Write(messageBuffer.Header(), messageBuffer.TotalSize());
+
+			if (outputStream_->Position() >= 12 /*100 * (1 << 20)*/)
+			{
+				outputStream_->Commit();
+				outputStream_.reset();
+			}
+		}
+
+	private:
+
+		static const std::string NowString()
+		{
+			time_t now = ::time(0);
+
+			struct tm * t = ::gmtime(&now);
+
+			return XTL::FormatString("%04d-%02d-%02d-%02d-%02d-%02d", t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec);
+		}
+
+		const std::string outputDir_;
+		std::auto_ptr<XTL::FileTransaction> outputStream_;
 };
 
 int main(int argc, const char * argv[])
 {
+	int i;
+	printf("%s\n", i);
+
 	pid_t pid = ::fork();
 
 	if (pid == 0)
@@ -526,7 +571,7 @@ int main(int argc, const char * argv[])
 
 		try
 		{
-			StatsWriterServer server(UNIX_SOCKET_PATH);
+			StatsWriterServer server(UNIX_SOCKET_PATH, "/home/dnikolaev/prj/cuboid/trunk/build");
 
 			server.Run();
 
