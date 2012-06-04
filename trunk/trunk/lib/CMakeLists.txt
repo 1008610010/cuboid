@@ -67,6 +67,7 @@ SET (
 		xtl/io/FileInputStreamBuffered.cpp
 		xtl/io/FileOutputStream.cpp
 		xtl/io/FileOutputStreamBuffered.cpp
+		xtl/io/FileTransaction.cpp
 		xtl/io/StringOutputStream.cpp
 
 		xtl/tp/CharClassifier.cpp
