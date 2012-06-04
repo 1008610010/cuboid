@@ -7,12 +7,10 @@
 #include <signal.h>
 
 #include <xtl/linux/UnixError.hpp>
+#include <xtl/linux/utils/Daemonize.hpp>
 
 #include "lj-stats-writer/StatsMessage.hpp"
-#include "lj-stats-writer/StatsWriterClient.hpp"
 #include "lj-stats-writer/StatsWriterServer.hpp"
-#include "lj-stats-writer/UnixSocketClient.hpp"
-#include "lj-stats-writer/UnixSocketServer.hpp"
 
 const char * const UNIX_SOCKET_PATH = "/home/dnikolaev/prj/cuboid/trunk/build/LJ_STATS_WRITER";
 
@@ -27,61 +25,9 @@ void TerminateStatsServer(int i)
 	}
 }
 
-static void Daemonize()
-{
-	if (::getppid() == 1)
-	{
-		// Already a daemon
-		printf("1\n");
-		return;
-	}
-
-	// Fork off the parent process
-	pid_t pid = ::fork();
-	if (pid < 0)
-	{
-		printf("2\n");
-		exit(EXIT_FAILURE);
-	}
-
-	// If we got a good PID, then we can exit the parent process
-	if (pid > 0)
-	{
-		printf("3\n");
-		exit(EXIT_SUCCESS);
-	}
-
-	/* At this point we are executing as the child process */
-
-	/* Change the file mode mask */
-	umask(0);
-
-	/* Create a new SID for the child process */
-	pid_t sid = ::setsid();
-	if (sid < 0)
-	{
-		printf("4\n");
-		exit(EXIT_FAILURE);
-	}
-
-	/* Change the current working directory. This prevents the current
-	   directory from being locked; hence not being able to remove it. */
-	if (::chdir("/") < 0)
-	{
-		printf("5\n");
-		exit(EXIT_FAILURE);
-	}
-
-	/* Redirect standard files to /dev/null */
-	FILE * dummy;
-	//dummy = ::freopen( "/dev/null", "r", stdin);
-	//dummy = ::freopen( "/dev/null", "w", stdout);
-	//dummy = ::freopen( "/dev/null", "w", stderr);
-}
-
 int main(int argc, const char * argv[])
 {
-	Daemonize();
+	XTL::Daemonize();
 
 	sigset_t newset;
 	sigemptyset(&newset);

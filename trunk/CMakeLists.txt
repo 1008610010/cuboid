@@ -82,16 +82,25 @@ TARGET_LINK_LIBRARIES (
 
 
 ADD_EXECUTABLE (
-	unix_socket
-		tests/unix_socket.cpp
-		tests/lj-stats-writer/StatsWriterClient.cpp
+	ljstatsd
+		tests/ljstatsd.cpp
 		tests/lj-stats-writer/StatsWriterServer.cpp
-		tests/lj-stats-writer/UnixSocketClient.cpp
-		tests/lj-stats-writer/UnixSocketServer.cpp
 )
 
 TARGET_LINK_LIBRARIES (
-	unix_socket
+	ljstatsd
+		xtl
+)
+
+
+ADD_EXECUTABLE (
+	ljstats_client
+		tests/ljstats_client.cpp
+		tests/lj-stats-writer/StatsWriterClient.cpp
+)
+
+TARGET_LINK_LIBRARIES (
+	ljstats_client
 		xtl
 )
 

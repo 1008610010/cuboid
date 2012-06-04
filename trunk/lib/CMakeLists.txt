@@ -51,6 +51,10 @@ SET (
 		xtl/linux/net/TcpSocket.cpp
 		xtl/linux/net/UnixSocket.cpp
 
+		xtl/linux/utils/Daemonize.cpp
+		xtl/linux/utils/UnixSocketClient.cpp
+		xtl/linux/utils/UnixSocketServer.cpp
+
 		xtl/plain/Algorithm.cpp
 		xtl/plain/RecordPrototype.cpp
 		xtl/plain/RecordPrototypeBuilder.cpp
