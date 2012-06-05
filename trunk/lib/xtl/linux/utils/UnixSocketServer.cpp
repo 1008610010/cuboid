@@ -1,5 +1,8 @@
 #include "UnixSocketServer.hpp"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <vector>
 
 #include "../UnixError.hpp"
@@ -12,6 +15,26 @@ namespace XTL
 		{
 			return f - static_cast<int>(f);
 		}
+
+		class UmaskHolder
+		{
+			public:
+
+				UmaskHolder()
+					: oldMode_(::umask(0))
+				{
+					;;
+				}
+
+				~UmaskHolder() throw()
+				{
+					::umask(oldMode_);
+				}
+
+			private:
+
+				mode_t oldMode_;
+		};
 	}
 
 	UnixSocketServer::UnixSocketServer(const std::string & unixSocketPath, int listenBacklog, float selectTimeout)
@@ -23,8 +46,11 @@ namespace XTL
 		  selectTimeout_(selectTimeout, 1000000 * Frac(selectTimeout)),
 		  clients_()
 	{
+		UmaskHolder umaskHolder;
+
 		try
 		{
+
 			serverSocket_.Bind(serverAddress_);
 		}
 		catch (const UnixError & e)
@@ -89,7 +115,8 @@ namespace XTL
 				std::auto_ptr<ClientHandler> clientHandler(CreateClientHandler(*client));
 				client->SetHandler(clientHandler);
 
-				socketSelector_.Insert(clientSocket, true, true);
+				// TODO: select client for writing, if it has non-empty sendBuffer
+				socketSelector_.Insert(clientSocket, true, false);
 
 				clients_.Set(clientSocket, client);
 			}
