@@ -77,6 +77,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/io/FileInputStreamBuffered.hpp
 %{_prefix}/include/xtl/io/FileOutputStream.hpp
 %{_prefix}/include/xtl/io/FileOutputStreamBuffered.hpp
+%{_prefix}/include/xtl/io/FileTransaction.hpp
 %{_prefix}/include/xtl/io/InputStream.hpp
 %{_prefix}/include/xtl/io/OutputStream.hpp
 %{_prefix}/include/xtl/io/SeekableInputStream.hpp
@@ -89,13 +90,27 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/linux/fs/FilePathTokenizer.hpp
 %{_prefix}/include/xtl/linux/fs/FileStats.hpp
 %{_prefix}/include/xtl/linux/fs/FileUtils.hpp
+
+%{_prefix}/include/xtl/linux/net/ClientSocket.hpp
+%{_prefix}/include/xtl/linux/net/ServerSocket.hpp
+%{_prefix}/include/xtl/linux/net/Socket.hpp
+%{_prefix}/include/xtl/linux/net/SocketAddress.hpp
 %{_prefix}/include/xtl/linux/net/SocketAddressError.hpp
 %{_prefix}/include/xtl/linux/net/SocketAddressInet.hpp
+%{_prefix}/include/xtl/linux/net/SocketAddressUnix.hpp
+%{_prefix}/include/xtl/linux/net/SocketSelector.hpp
+%{_prefix}/include/xtl/linux/net/SocketSet.hpp
 %{_prefix}/include/xtl/linux/net/TcpClientSocket.hpp
 %{_prefix}/include/xtl/linux/net/TcpServerSocket.hpp
 %{_prefix}/include/xtl/linux/net/TcpSocket.hpp
-%{_prefix}/include/xtl/linux/net/TcpSocketSelector.hpp
-%{_prefix}/include/xtl/linux/net/TcpSocketSet.hpp
+%{_prefix}/include/xtl/linux/net/UnixClientSocket.hpp
+%{_prefix}/include/xtl/linux/net/UnixServerSocket.hpp
+%{_prefix}/include/xtl/linux/net/UnixSocket.hpp
+
+%{_prefix}/include/xtl/linux/utils/Daemonize.hpp
+%{_prefix}/include/xtl/linux/utils/UnixSocketClient.hpp
+%{_prefix}/include/xtl/linux/utils/UnixSocketServer.hpp
+
 %{_prefix}/include/xtl/plain/Algorithm.hpp
 %{_prefix}/include/xtl/plain/Field.hpp
 %{_prefix}/include/xtl/plain/FieldType.hpp
@@ -117,8 +132,14 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/simple_template/SimpleTemplateValueChar.hpp
 %{_prefix}/include/xtl/simple_template/SimpleTemplateValueInteger.hpp
 %{_prefix}/include/xtl/simple_template/SimpleTemplateValueString.hpp
+
+%{_prefix}/include/xtl/tp/CharClass.hpp
+%{_prefix}/include/xtl/tp/CharClassifier.hpp
+%{_prefix}/include/xtl/tp/CharSource.hpp
 %{_prefix}/include/xtl/tp/TextCharSource.hpp
 %{_prefix}/include/xtl/tp/TextCursor.hpp
+%{_prefix}/include/xtl/tp/TextParser.hpp
+
 %{_prefix}/include/xtl/utils/Algorithm.hpp
 %{_prefix}/include/xtl/utils/AutoPtrMap.hpp
 %{_prefix}/include/xtl/utils/AutoPtrVector.hpp
@@ -126,8 +147,6 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/utils/Chronometer.hpp
 %{_prefix}/include/xtl/utils/Date.hpp
 %{_prefix}/include/xtl/simple_template/SimpleTemplateWriter.hpp
-
-
 
 %package mysql-devel
 Summary:        XTL C++ Library development files - MySQL
