@@ -23,7 +23,7 @@ namespace XTL
 
 			explicit UnixSocketServer(const std::string & unixSocketPath, int listenBacklog = DEFAULT_LISTEN_BACKLOG, float selectTimeout = DEFAULT_SELECT_TIMEOUT);
 
-			~UnixSocketServer() throw();
+			virtual ~UnixSocketServer() throw();
 
 			void Run();
 
