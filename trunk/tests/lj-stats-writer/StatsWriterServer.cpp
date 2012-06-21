@@ -72,6 +72,16 @@ namespace XC3
 					;;
 				}
 
+				virtual void OnClientConnected()
+				{
+					fprintf(stderr, "OnClientConnected()\n");
+				}
+
+				virtual void OnClientDisconnected()
+				{
+					fprintf(stderr, "OnClientDisconnected()\n");
+				}
+
 				virtual void OnDataReceived(const void * buffer, unsigned int size)
 				{
 					fprintf(stderr, "OnDataReceived(%u)\n", size);
