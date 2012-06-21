@@ -68,6 +68,10 @@ namespace XTL
 						;;
 					}
 
+					virtual void OnClientConnected() = 0;
+
+					virtual void OnClientDisconnected() = 0;
+
 					virtual void OnDataReceived(const void * buffer, unsigned int size) = 0;
 
 				protected:
@@ -89,7 +93,7 @@ namespace XTL
 			{
 				public:
 
-					static const unsigned int RECEIVE_BUFFER_SIZE = 3;
+					static const unsigned int RECEIVE_BUFFER_SIZE = 4096;
 
 					explicit Client(UnixClientSocket socket)
 						: socket_(socket),
@@ -101,6 +105,11 @@ namespace XTL
 
 					void Disconnect()
 					{
+						if (handler_.get() != 0)
+						{
+							handler_->OnClientDisconnected();
+						}
+
 						throw ClientDisconnected(socket_);
 					}
 
@@ -111,6 +120,11 @@ namespace XTL
 					void SetHandler(std::auto_ptr<ClientHandler> handler)
 					{
 						handler_ = handler;
+
+						if (handler_.get() != 0)
+						{
+							handler_->OnClientConnected();
+						}
 					}
 
 					void Receive()

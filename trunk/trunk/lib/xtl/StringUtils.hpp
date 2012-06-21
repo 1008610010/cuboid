@@ -12,6 +12,10 @@ namespace XTL
 
 	void ToUpperCase(std::string & s);
 
+	const std::string LowerCased(const std::string & s);
+
+	const std::string UpperCased(const std::string & s);
+
 	template <typename T>
 	const char * StringToInteger(const char * src, T & result)
 	{

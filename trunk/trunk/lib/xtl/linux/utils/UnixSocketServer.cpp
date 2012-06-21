@@ -148,7 +148,6 @@ namespace XTL
 
 		for (std::vector<UnixClientSocket>::iterator itr = disconnected.begin(); itr != disconnected.end(); ++itr)
 		{
-			fprintf(stderr, "Client disconnected\n");
 			socketSelector_.Delete(*itr);
 			clients_.Erase(*itr);
 		}

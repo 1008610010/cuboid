@@ -41,6 +41,24 @@ namespace XTL
 		}
 	}
 
+	const std::string LowerCased(const std::string & s)
+	{
+		std::string result(s);
+
+		ToLowerCase(result);
+
+		return result;
+	}
+
+	const std::string UpperCased(const std::string & s)
+	{
+		std::string result(s);
+
+		ToUpperCase(result);
+
+		return result;
+	}
+
 /*
 	TODO: read 9 digits to UINT_32
 	double FloatToInteger(const char * value)
