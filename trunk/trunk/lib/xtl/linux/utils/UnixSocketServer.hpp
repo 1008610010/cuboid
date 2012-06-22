@@ -72,6 +72,8 @@ namespace XTL
 
 					virtual void OnClientDisconnected() = 0;
 
+					virtual void OnReceiveError() = 0;
+
 					virtual void OnDataReceived(const void * buffer, unsigned int size) = 0;
 
 				protected:
@@ -133,6 +135,11 @@ namespace XTL
 
 						if (wasRead < 0)
 						{
+							if (handler_.get() != 0)
+							{
+								handler_->OnReceiveError();
+							}
+
 							Disconnect();
 						}
 
