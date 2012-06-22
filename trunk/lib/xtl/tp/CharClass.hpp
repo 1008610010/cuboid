@@ -10,22 +10,22 @@ namespace XTL
 	{
 		public:
 
-			CharClass(const CharClassifier & classifier, XTL::UINT_32 bits)
+			CharClass(const CharClassifier & classifier, XTL::UINT_32 classBits)
 				: classifier_(classifier),
-				  bits_(bits)
+				  classBits_(classBits)
 			{
 				;;
 			}
 
 			bool Contains(char c) const
 			{
-				return (classifier_[c] & bits_) != 0;
+				return (classifier_[c] & classBits_) != 0;
 			}
 
 		private:
 
 			const CharClassifier & classifier_;
-			XTL::UINT_32 bits_;
+			XTL::UINT_32 classBits_;
 	};
 }
 
