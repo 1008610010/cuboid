@@ -38,7 +38,6 @@ namespace XTL
 
 			explicit TextParser(TextCharSource & charSource);
 
-
 			bool NotAtEnd() const              { return charSource_.NotAtEnd(); }
 
 			bool AtEnd() const                 { return charSource_.AtEnd(); }
