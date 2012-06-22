@@ -2152,6 +2152,92 @@ void PushSorted(std::vector<unsigned int> & v, unsigned int i)
 }
 
 
+#include <stack>
+#include <xtl/tp/TextCursor.hpp>
+
+namespace XTL
+{
+	class CharSourceStringRef : public CharSource
+	{
+		public:
+
+			explicit CharSourceStringRef(const std::string & source)
+				: source_(source),
+				  end_(source.size()),
+				  index_(0),
+				  marked_()
+			{
+				;;
+			}
+
+			virtual ~CharSourceStringRef() throw()
+			{
+				;;
+			}
+
+			virtual bool NotAtEnd() const
+			{
+				return index_ < end_;
+			}
+
+			virtual bool AtEnd() const
+			{
+				return index_ >= end_;
+			}
+
+			virtual char GetChar() const
+			{
+				return source_[index_];
+			}
+
+			virtual void Advance()
+			{
+				++index_;
+			}
+
+			virtual const TextCursor GetCursor() const
+			{
+				throw std::runtime_error("GetCursor() is not implemented");
+			}
+
+			virtual void Mark()
+			{
+				marked_.push(index_);
+			}
+
+			virtual void Unmark()
+			{
+				if (marked_.empty())
+				{
+					throw std::runtime_error("CharSource is not marked");
+				}
+
+				marked_.pop();
+			}
+
+			virtual const std::string ReleaseString()
+			{
+				if (marked_.empty())
+				{
+					throw std::runtime_error("CharSource is not marked");
+				}
+
+				unsigned int begin = marked_.top();
+				marked_.pop();
+
+				return begin < index_ ? source_.substr(index_, index_ - begin) : std::string();
+			}
+
+		private:
+
+			const std::string & source_;
+			const unsigned int end_;
+			unsigned int index_;
+			std::stack<unsigned int> marked_;
+	};
+
+}
+
 
 
 
