@@ -106,7 +106,6 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/linux/net/UnixClientSocket.hpp
 %{_prefix}/include/xtl/linux/net/UnixServerSocket.hpp
 %{_prefix}/include/xtl/linux/net/UnixSocket.hpp
-
 %{_prefix}/include/xtl/linux/utils/Daemonize.hpp
 %{_prefix}/include/xtl/linux/utils/UnixSocketClient.hpp
 %{_prefix}/include/xtl/linux/utils/UnixSocketServer.hpp
@@ -136,6 +135,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/tp/CharClass.hpp
 %{_prefix}/include/xtl/tp/CharClassifier.hpp
 %{_prefix}/include/xtl/tp/CharSource.hpp
+%{_prefix}/include/xtl/tp/Parser.hpp
 %{_prefix}/include/xtl/tp/TextCharSource.hpp
 %{_prefix}/include/xtl/tp/TextCursor.hpp
 %{_prefix}/include/xtl/tp/TextParser.hpp
