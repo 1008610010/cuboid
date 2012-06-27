@@ -41,12 +41,23 @@ namespace XTL
 				items_.clear();
 			}
 
+			bool Empty() const
+			{
+				return items_.empty();
+			}
+
 			unsigned int Size() const
 			{
 				return items_.size();
 			}
 
 			void PushBack(std::auto_ptr<T> ptr)
+			{
+				items_.push_back(ptr.release());
+			}
+
+			template <typename U>
+			void PushBack(std::auto_ptr<U> ptr)
 			{
 				items_.push_back(ptr.release());
 			}
@@ -75,6 +86,12 @@ namespace XTL
 			const T * operator[] (unsigned int index) const
 			{
 				return items_[index];
+			}
+
+			void Erase(unsigned int index)
+			{
+				delete items_[index];
+				items_.erase(items_.begin() + index);
 			}
 
 		private:
