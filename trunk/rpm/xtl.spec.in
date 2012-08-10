@@ -84,6 +84,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/io/Serializable.hpp
 %{_prefix}/include/xtl/io/StringOutputStream.hpp
 %{_prefix}/include/xtl/linux/AccessMode.hpp
+%{_prefix}/include/xtl/linux/PasswordFile.hpp
 %{_prefix}/include/xtl/linux/UnixError.hpp
 %{_prefix}/include/xtl/linux/fs/File.hpp
 %{_prefix}/include/xtl/linux/fs/FilePath.hpp
