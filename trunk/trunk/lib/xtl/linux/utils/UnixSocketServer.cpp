@@ -43,7 +43,7 @@ namespace XTL
 		  serverAddress_(unixSocketPath),
 		  serverSocket_(UnixSocket::Create(false)),
 		  socketSelector_(),
-		  selectTimeout_(selectTimeout, 1000000 * Frac(selectTimeout)),
+		  selectTimeout_(static_cast<int>(selectTimeout), static_cast<int>(1000000 * Frac(selectTimeout))),
 		  clients_()
 	{
 		UmaskHolder umaskHolder;
