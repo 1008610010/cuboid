@@ -11,7 +11,15 @@ namespace XTL
 	{
 		public:
 
-			class NoSuchUser
+			class NotFound
+			{
+			};
+
+			class NoSuchUser : public NotFound
+			{
+			};
+
+			class NoSuchGroup : public NotFound
 			{
 			};
 
@@ -22,9 +30,20 @@ namespace XTL
 			static uid_t GetUserId(const std::string & userName);
 
 			/**
+				@throws XTL::UnixUser::NoSuchGroup
+				@throws XTL::UnixError
+			 */
+			static gid_t GetGroupId(const std::string & groupName);
+
+			/**
 				@throws XTL::UnixError
 			 */
 			static void SetUserId(uid_t id);
+
+			/**
+				@throws XTL::UnixError
+			 */
+			static void SetGroupId(gid_t id);
 	};
 }
 
