@@ -11,15 +11,29 @@ namespace XTL
 	{
 		public:
 
-			class UserNotFound
+			class NotFound
+			{
+			};
+
+			class NoSuchUser : public NotFound
+			{
+			};
+
+			class NoSuchGroup : public NotFound
 			{
 			};
 
 			/**
-				@throws XTL::PasswordFile::UserNotFound
+				@throws XTL::PasswordFile::NoSuchUser
 				@throws XTL::UnixError
 			 */
 			static uid_t GetUserId(const std::string & userName);
+
+			/**
+				@throws XTL::PasswordFile::NoSuchGroup
+				@throws XTL::UnixError
+			 */
+			static gid_t GetGroupId(const std::string & groupName);
 	};
 }
 
