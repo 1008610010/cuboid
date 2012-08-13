@@ -37,7 +37,11 @@ namespace XTL
 			throw NoSuchUser();
 		}
 
-		return result->pw_uid;
+		uid_t uid = result->pw_uid;
+
+		::endpwent();
+
+		return uid;
 	}
 
 	gid_t UnixUser::GetGroupId(const std::string & groupName)
@@ -67,7 +71,11 @@ namespace XTL
 			throw NoSuchGroup();
 		}
 
-		return result->gr_gid;
+		gid_t gid = result->gr_gid;
+
+		::endgrent();
+
+		return gid;
 	}
 
 	void UnixUser::SetUserId(uid_t id)
