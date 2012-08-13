@@ -33,8 +33,10 @@ SET (
 		xtl/Variant2.cpp
 
 		xtl/linux/AccessMode.cpp
-		xtl/linux/PasswordFile.cpp
+		xtl/linux/SystemConfig.cpp
 		xtl/linux/UnixError.cpp
+		xtl/linux/UnixGroup.cpp
+		xtl/linux/Users.cpp
 		xtl/linux/fs/File.cpp
 		xtl/linux/fs/FilePath.cpp
 		xtl/linux/fs/FilePathTokenizer.cpp
