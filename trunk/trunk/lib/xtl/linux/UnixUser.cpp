@@ -1,5 +1,6 @@
 #include "UnixUser.hpp"
 
+#include <grp.h>
 #include <pwd.h>
 
 #include <vector>
@@ -39,6 +40,36 @@ namespace XTL
 		return result->pw_uid;
 	}
 
+	gid_t UnixUser::GetGroupId(const std::string & groupName)
+	{
+		struct group grp;
+		struct group * result;
+		std::vector<char> buffer(SystemConfig::GetGrNameMaxSize());
+
+		while (true)
+		{
+			if (::getgrnam_r(groupName.c_str(), &grp, &(buffer[0]), buffer.size(), &result) == 0)
+			{
+				break;
+			}
+
+			if (errno == ERANGE)
+			{
+				buffer.resize(buffer.size() * 2);
+				continue;
+			}
+
+			throw UnixError();
+		}
+
+		if (result == 0)
+		{
+			throw NoSuchGroup();
+		}
+
+		return result->gr_gid;
+	}
+
 	void UnixUser::SetUserId(uid_t id)
 	{
 		if (::setuid(id) != 0)
@@ -47,5 +78,12 @@ namespace XTL
 		}
 	}
 
+	void UnixUser::SetGroupId(gid_t id)
+	{
+		if (::setgid(id) != 0)
+		{
+			throw UnixError();
+		}
+	}
 }
 
