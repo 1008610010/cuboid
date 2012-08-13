@@ -86,7 +86,6 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/linux/AccessMode.hpp
 %{_prefix}/include/xtl/linux/SystemConfig.hpp
 %{_prefix}/include/xtl/linux/UnixError.hpp
-%{_prefix}/include/xtl/linux/UnixGroup.hpp
 %{_prefix}/include/xtl/linux/UnixUser.hpp
 %{_prefix}/include/xtl/linux/fs/File.hpp
 %{_prefix}/include/xtl/linux/fs/FilePath.hpp
