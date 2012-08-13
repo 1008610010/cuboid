@@ -20,6 +20,11 @@ namespace XTL
 				@throws XTL::UnixError
 			 */
 			static gid_t GetGroupId(const std::string & groupName);
+
+			/**
+				@throws XTL::UnixError
+			 */
+			static void SetGroupId(gid_t id);
 	};
 }
 

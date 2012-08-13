@@ -38,5 +38,13 @@ namespace XTL
 
 		return result->gr_gid;
 	}
+
+	void UnixGroup::SetGroupId(gid_t id)
+	{
+		if (::setgid(id) != 0)
+		{
+			throw UnixError();
+		}
+	}
 }
 

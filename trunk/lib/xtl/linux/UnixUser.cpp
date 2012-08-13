@@ -38,5 +38,14 @@ namespace XTL
 
 		return result->pw_uid;
 	}
+
+	void UnixUser::SetUserId(uid_t id)
+	{
+		if (::setuid(id) != 0)
+		{
+			throw UnixError();
+		}
+	}
+
 }
 

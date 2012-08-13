@@ -20,6 +20,11 @@ namespace XTL
 				@throws XTL::UnixError
 			 */
 			static uid_t GetUserId(const std::string & userName);
+
+			/**
+				@throws XTL::UnixError
+			 */
+			static void SetUserId(uid_t id);
 	};
 }
 
