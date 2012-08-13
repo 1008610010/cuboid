@@ -1,6 +1,6 @@
-#include "UnixUser.hpp"
+#include "UnixGroup.hpp"
 
-#include <pwd.h>
+#include <grp.h>
 
 #include <vector>
 
@@ -9,15 +9,15 @@
 
 namespace XTL
 {
-	uid_t UnixUser::GetUserId(const std::string & userName)
+	gid_t UnixGroup::GetGroupId(const std::string & groupName)
 	{
-		struct passwd pwd;
-		struct passwd * result;
+		struct group grp;
+		struct group * result;
 		std::vector<char> buffer(SystemConfig::GetPwNameMaxSize());
 
 		while (true)
 		{
-			if (::getpwnam_r(userName.c_str(), &pwd, &(buffer[0]), buffer.size(), &result) == 0)
+			if (::getgrnam_r(groupName.c_str(), &grp, &(buffer[0]), buffer.size(), &result) == 0)
 			{
 				break;
 			}
@@ -33,10 +33,10 @@ namespace XTL
 
 		if (result == 0)
 		{
-			throw NoSuchUser();
+			throw NoSuchGroup();
 		}
 
-		return result->pw_uid;
+		return result->gr_gid;
 	}
 }
 

@@ -36,7 +36,7 @@ SET (
 		xtl/linux/SystemConfig.cpp
 		xtl/linux/UnixError.cpp
 		xtl/linux/UnixGroup.cpp
-		xtl/linux/Users.cpp
+		xtl/linux/UnixUser.cpp
 		xtl/linux/fs/File.cpp
 		xtl/linux/fs/FilePath.cpp
 		xtl/linux/fs/FilePathTokenizer.cpp
