@@ -30,6 +30,8 @@ namespace XTL
 				return GetChar() == NULL_CHAR;
 			}
 
+			virtual const TextCursor GetCursor() const = 0;
+
 			class ConstCharPtr;
 
 		private:

@@ -135,10 +135,12 @@ namespace XTL
 
 						if (wasRead < 0)
 						{
+							/*
 							if (handler_.get() != 0)
 							{
 								handler_->OnReceiveError();
 							}
+							*/
 
 							Disconnect();
 						}

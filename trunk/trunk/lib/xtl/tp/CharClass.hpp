@@ -2,30 +2,25 @@
 #define XTL__CHAR_CLASS_HPP__ 1
 
 #include "../Types.hpp"
-#include "CharClassifier.hpp"
 
 namespace XTL
 {
+	typedef XTL::UINT_32 CharClassBits;
+
+	class CharClassifier;
+
 	class CharClass
 	{
 		public:
 
-			CharClass(const CharClassifier & classifier, XTL::UINT_32 classBits)
-				: classifier_(classifier),
-				  classBits_(classBits)
-			{
-				;;
-			}
+			CharClass(const CharClassifier & classifier, XTL::UINT_32 classBits);
 
-			bool Contains(char c) const
-			{
-				return (classifier_[c] & classBits_) != 0;
-			}
+			bool Contains(char c) const;
 
 		private:
 
 			const CharClassifier & classifier_;
-			XTL::UINT_32 classBits_;
+			CharClassBits classBits_;
 	};
 }
 
