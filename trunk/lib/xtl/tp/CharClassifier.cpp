@@ -11,14 +11,14 @@ namespace XTL
 		::memset(charBits_, '\0', CHARS_COUNT * sizeof(charBits_[0]));
 	}
 
-	CharClassifier & CharClassifier::Add(XTL::UINT_32 bits, char c)
+	CharClassifier & CharClassifier::Add(CharClassBits bits, char c)
 	{
 		(*this)[c] |= bits;
 
 		return *this;
 	}
 
-	CharClassifier & CharClassifier::Add(XTL::UINT_32 bits, char from, char to)
+	CharClassifier & CharClassifier::Add(CharClassBits bits, char from, char to)
 	{
 		unsigned int indexFrom = static_cast<unsigned char>(from);
 		unsigned int indexTo = static_cast<unsigned char>(to);

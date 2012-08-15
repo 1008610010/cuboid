@@ -1506,8 +1506,8 @@ class TextParser
 #include <xtl/BitSet.hpp>
 
 #include <xtl/tp/TextCharSource.hpp>
-#include <xtl/tp/TextParser.hpp>
 
+/*
 namespace XTL
 {
 	class NumberParser : private TextParser
@@ -1708,7 +1708,8 @@ namespace XTL
 
 	const CharClass NumberParser::CLASS_DIGIT(TextParser::CommonCharClassifier::Instance(), TextParser::CHAR_DIGIT);
 }
-
+*/
+/*
 namespace XTL
 {
 	class ConfigParser : private TextParser
@@ -1871,7 +1872,7 @@ namespace XTL
 		TextParser::CHAR_MINUS
 	);
 }
-
+*/
 #include <set>
 
 class CharStateMachine
@@ -2235,11 +2236,57 @@ namespace XTL
 			unsigned int index_;
 			std::stack<unsigned int> marked_;
 	};
-
 }
 
+class Token
+{
+};
+
+class Lexema
+{
+};
+
+class Operand : public Lexema
+{
+};
+
+class Operator : public Lexema
+{
+};
+
+class TokenHandler
+{
+	public:
+
+		virtual void Execute(std::stack<const Lexema *> lexemaStack, const Token & token) = 0;
+};
+
+class SyntaxError
+{
+};
 
 
+class ExpressionParser
+{
+	/*
+		id
+		+ E
+		E + E
+		( E )
+		id ( E )
+	*/
+	static const unsigned int TOKEN_IDENTIFIER    = 0;
+	static const unsigned int TOKEN_PLUS          = 1;
+	static const unsigned int TOKEN_OPEN_BRACKET  = 2;
+	static const unsigned int TOKEN_CLOSE_BRACKET = 3;
+
+	static const unsigned int OPERAND_IDENTIFIER = 0;
+	static const unsigned int OPERATOR_OPEN_BRACKET = 0;
+	static const unsigned int OPERATOR_ADDITION = 0;
+	static const unsigned int OPERATOR_POSITIVE = 0;
+
+	
+};
 
 
 int main(int argc, const char * argv[])
@@ -2257,13 +2304,14 @@ int main(int argc, const char * argv[])
 
 	return 0;
 
+/*
 	printf("sof = %lu\n", sizeof(XTL::NumberParser::Result));
 
 	XTL::TextCharSource::ConstCharPtr charSource("-12345678.9__abvd_12 + 1");
 
 	XTL::NumberParser::Result r = XTL::NumberParser(charSource).Parse();
 	printf("%s\n", r.ToString().c_str());
-
+*/
 /*
 	XTL::TextParser prs(charSource);
 
@@ -2287,11 +2335,11 @@ int main(int argc, const char * argv[])
 	return 0;
 
 	// XTL::TextCharSource::ConstCharPtr charSource("\"aaa\\t\\\"\\\"\\\\bbbbb\"");
-
+/*
 	JsonStringLiteralParser parser;
 
 	printf("%s\n", parser.Parse(charSource).c_str());
-
+*/
 //	printf("%lu\n", sizeof(Scalar));
 	return 0;
 

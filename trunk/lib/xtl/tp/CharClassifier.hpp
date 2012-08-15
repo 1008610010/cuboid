@@ -2,6 +2,7 @@
 #define XTL__CHAR_CLASSIFIER_HPP__ 1
 
 #include "../Types.hpp"
+#include "CharClass.hpp"
 
 namespace XTL
 {
@@ -13,25 +14,30 @@ namespace XTL
 
 			CharClassifier();
 
-			XTL::UINT_32 operator[] (char c) const
+			CharClassBits operator[] (char c) const
 			{
 				return charBits_[static_cast<unsigned char>(c)];
+			}
+
+			CharClass CreateClass(CharClassBits classBits) const
+			{
+				return CharClass(*this, classBits);
 			}
 
 		protected:
 
-			CharClassifier & Add(XTL::UINT_32 bits, char c);
+			CharClassifier & Add(CharClassBits bits, char c);
 
-			CharClassifier & Add(XTL::UINT_32 bits, char from, char to);
+			CharClassifier & Add(CharClassBits bits, char from, char to);
 
 		private:
 
-			XTL::UINT_32 & operator[] (char c)
+			CharClassBits & operator[] (char c)
 			{
 				return charBits_[static_cast<unsigned char>(c)];
 			}
 
-			XTL::UINT_32 charBits_[CHARS_COUNT];
+			CharClassBits charBits_[CHARS_COUNT];
 	};
 }
 
