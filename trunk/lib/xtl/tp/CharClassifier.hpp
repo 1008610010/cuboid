@@ -10,7 +10,7 @@ namespace XTL
 	{
 		public:
 
-			static const unsigned int CHARS_COUNT = sizeof(char);
+			static const unsigned int CHARS_COUNT = (1 << (sizeof(char) << 3));
 
 			CharClassifier();
 
