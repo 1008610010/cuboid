@@ -2284,10 +2284,160 @@ class ExpressionParser
 	static const unsigned int OPERATOR_OPEN_BRACKET = 0;
 	static const unsigned int OPERATOR_ADDITION = 0;
 	static const unsigned int OPERATOR_POSITIVE = 0;
-
-	
 };
 
+// RegularExpressionParser
+
+class RegularExprTree
+{
+	public:
+	private:
+
+		class Node
+		{
+			public:
+
+				virtual ~Node() throw() { ;; }
+		};
+		
+		class NodeChar : public Node
+		{
+			public:
+				
+				virtual ~NodeChar() throw() { ;; }
+				
+		};
+/*
+		class Concat : public Node
+		{
+		};
+
+		class Repeat0 : public Node
+		{
+		};
+		
+		class Alternation: public Node
+		{
+			private:
+			
+				std::vector<Node *> nodes_;
+		};
+*/
+};
+
+/*
+	E -> E +
+	E -> E *
+	E -> E | E
+	E -> ( E )
+	E -> { E }
+*/
+
+enum
+{
+	TOKEN_PLUS,
+	TOKEN_STAR,
+	TOKEN_LINE,
+	TOKEN_BRACKET_ROUND_OPEN,
+	TOKEN_BRACKET_ROUND_CLOSE,
+	TOKEN_BRACKET_CURLY_OPEN,
+	TOKEN_BRACKET_CURLY_CLOSE
+}
+
+enum
+{
+	LEXEMA_CHAR,
+	LEXEMA_CHAR_CLASS,
+	LEXEMA_CONCAT,
+	LEXEMA_REPETITION,
+	LEXEMA_ALTERNATION,
+	LEXEMA_GROUP,
+	LEXEMA_SUBMATCH
+};
+
+/*
+	   c C * | ( ) { }
+	@  P
+	c  
+*/
+
+
+void ParseRegularExpression(const char * re)
+{
+	while (*re != '\0')
+	{
+		switch (*re)
+		{
+		case '(':
+			break;
+
+		case ')':
+			break;
+
+		case '*':
+			break;
+
+		case '+':
+			break;
+
+		case '|':
+			break;
+
+		case '[':
+			++re;
+			{
+				bool inverted = false;
+				if (*re == '^')
+				{
+					inverted = true;
+					++re;
+				}
+				while (*re != '\0' && *re != ']')
+				{
+					++re;
+				}
+			}
+			if (*re == '\0')
+			{
+				throw std::runtime_error("");
+			}
+			break;
+
+		case '\\':
+			++re;
+			if (*re == '\0')
+			{
+				throw std::runtime_error("");
+			}
+			else if (*re == '\\')
+			{
+				// Char('\')
+			}
+			else if (*re == 'd')
+			{
+				// CharClass(DIGIT)
+			}
+			else if (*re == 'w')
+			{
+				// CharClass(ALPHA_NUMERIC)
+			}
+			else if (*re == 's')
+			{
+				// CharClass(SPACE)
+			}
+			else if (*re == 'S')
+			{
+				// CharClass(NON_SPACE)
+			}
+			break;
+
+		default:
+			// Char(*re)
+			break;
+		}
+		++re;
+	}
+}
 
 int main(int argc, const char * argv[])
 {
