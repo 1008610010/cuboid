@@ -2439,8 +2439,314 @@ void ParseRegularExpression(const char * re)
 	}
 }
 
+
+		template <typename T> class Stack
+		{
+			public:
+
+				bool IsEmpty() const
+				{
+					return nodes_.empty();
+				}
+
+				T & Top() const
+				{
+					return *(nodes_.back());
+				}
+
+				void Push(std::auto_ptr<T> node)
+				{
+					nodes_.push_back(node.release());
+				}
+
+				std::auto_ptr<T> Pop()
+				{
+					std::auto_ptr<T> result(nodes_.back());
+					nodes_.pop_back();
+					return result;
+				}
+
+			private:
+			
+				std::vector<T *> nodes_;
+		};
+
+class Expression
+{
+	public:
+	
+		class Node
+		{
+			public:
+
+				Node() { ;; }
+
+				virtual ~Node() throw() { ;; }
+
+				virtual bool IsOperand() const = 0;
+
+			private:
+
+				Node(const Node &);
+				Node & operator= (const Node &);
+		};
+
+		class Operand : public Node
+		{
+			public:
+			
+				virtual ~Operand() throw() { ;; }
+
+				virtual bool IsOperand() const
+				{
+					return true;
+				}
+		};
+
+		class Operation : public Node
+		{
+			public:
+
+				Operation()
+					: finished_(false),
+					  params_()
+				{
+					;;
+				}
+
+				virtual ~Operation() throw() { ;; }
+
+				virtual bool IsOperand() const
+				{
+					return IsFinished();
+				}
+
+				bool IsFinished() const
+				{
+					return finished_;
+				}
+
+				virtual unsigned int Id() const = 0;
+
+				virtual unsigned int NeedParamsCount() const = 0;
+
+				virtual bool IsMultiParams() const
+				{
+					return false;
+				}
+/*
+				void IncParamsCount()
+				{
+					if (IsFinished())
+					{
+						throw std::runtime_error("Internal Error");
+					}
+
+					++paramsCount_;
+				}
+*/
+				void Reduce(Stack<Expression::Node> & paramsStack)
+				{
+					if (IsFinished())
+					{
+						throw std::runtime_error("Internal Error");
+					}
+
+					Stack<Expression::Node> tempStack;
+					for (unsigned int i = 0; i < NeedParamsCount(); ++i)
+					{
+						if (paramsStack.IsEmpty())
+						{
+							throw std::runtime_error("Lexic Error");
+						}
+
+						tempStack.Push(paramsStack.Pop());
+					}
+
+					for (unsigned int i = 0; i < NeedParamsCount(); ++i)
+					{
+						// TODO: pop all paramsCount_ items from paramsStack
+						AddParam(tempStack.Pop());
+					}
+
+					finished_ = true;
+				}
+
+			private:
+
+				void AddParam(std::auto_ptr<Node> param)
+				{
+					if (!param->IsOperand())
+					{
+						throw std::runtime_error("Internal Error");
+					}
+
+					params_.push_back(param.release());
+				}
+
+				bool finished_;
+				std::vector<Node *> params_;
+		};
+};
+
+class LexicAnalyzer
+{
+	public:
+
+		LexicAnalyzer()
+			: operands_(),
+			  operators_()
+		{
+			;;
+		}
+
+		bool IsTopOperand() const
+		{
+			return !operators_.IsEmpty() && operators_.Top().IsOperand();
+		}
+
+		void Process(std::auto_ptr<Expression::Node> node)
+		{
+			if (node->IsOperand())
+			{
+				operators_.Push(node);
+			}
+			else
+			{
+			}
+		}
+
+	protected:
+
+		void Push(std::auto_ptr<Expression::Operation> node)
+		{
+		}
+
+		void Reduce(std::auto_ptr<Expression::Operation> node)
+		{
+		}
+
+//		std::auto_ptr<Expression::Node> Pop
+
+		class Action
+		{
+			public:
+
+				virtual void Execute() = 0;
+		};
+
+		struct ActionList
+		{
+			Action * on_operand;
+			Action * on_empty_stack;
+			Action * 
+		}
+
+	private:
+
+		Stack<Expression::Node> operands_;
+		Stack<Expression::Node> operators_;
+};
+
+class Char : public Expression::Operand
+{
+	public:
+
+		explicit Char(char c)
+			: c_(c) { ;; }
+
+		virtual ~Char() throw() { ;; }
+
+	private:
+
+		const char c_;
+};
+
+enum
+{
+	CONCAT,
+	ALTER,
+	REPEAT
+};
+
+class Concatenation : public Expression::Operation
+{
+	public:
+
+		virtual ~Concatenation() throw() { ;; }
+
+		virtual unsigned int Id() const { return CONCAT; }
+
+		virtual unsigned int NeedParamsCount() const { return 2; }
+};
+
+class Alternation : public Expression::Operation
+{
+	public:
+
+		virtual ~Alternation() throw() { ;; }
+
+		virtual unsigned int Id() const { return ALTER; }
+
+		virtual unsigned int NeedParamsCount() const { return 2; }
+};
+
+class Repetition : public Expression::Operation
+{
+	public:
+
+		virtual ~Repetition() throw() { ;; }
+
+		virtual unsigned int Id() const { return REPEAT; }
+
+		virtual unsigned int NeedParamsCount() const { return 1; }
+};
+
 int main(int argc, const char * argv[])
 {
+	LexicAnalyzer la;
+
+	const std::string re = "a+b+";
+	std::auto_ptr<Expression::Node> currentNode;
+	for (unsigned int i = 0; i < re.size(); ++i)
+	{
+		if (re[i] == '+')
+		{
+			if (!la.IsTopOperand())
+			{
+				throw std::runtime_error("");
+			}
+			currentNode.reset(new Repetition());
+		}
+		else if (re[i] == '|')
+		{
+			if (!la.IsTopOperand())
+			{
+				throw std::runtime_error("");
+			}
+			currentNode.reset(new Alternation());
+		}
+		else
+		{
+			currentNode.reset(new Char(re[i]));
+		}
+
+		if (currentNode->IsOperand())
+		{
+			if (la.IsTopOperand())
+			{
+				la.Process(std::auto_ptr<Expression::Node>(new Concatenation()));
+			}
+			la.Process(currentNode);
+		}
+		else
+		{
+			la.Process(currentNode);
+		}
+	}
+	
+	return 0;
+
 	StateSet stateSet;
 
 	srand(time(0));
