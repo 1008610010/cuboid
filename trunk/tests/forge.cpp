@@ -2485,6 +2485,8 @@ class Expression
 
 				virtual bool IsOperand() const = 0;
 
+				virtual void Reduce(Stack<Node> & paramsStack) = 0;
+
 			private:
 
 				Node(const Node &);
@@ -2501,20 +2503,25 @@ class Expression
 				{
 					return true;
 				}
+
+				virtual void Reduce(Stack<Node> & paramsStack)
+				{
+					// Do nothing.
+				}
 		};
 
-		class Operation : public Node
+		class Operator : public Node
 		{
 			public:
 
-				Operation()
+				Operator()
 					: finished_(false),
 					  params_()
 				{
 					;;
 				}
 
-				virtual ~Operation() throw() { ;; }
+				virtual ~Operator() throw() { ;; }
 
 				virtual bool IsOperand() const
 				{
@@ -2545,11 +2552,11 @@ class Expression
 					++paramsCount_;
 				}
 */
-				void Reduce(Stack<Expression::Node> & paramsStack)
+				virtual void Reduce(Stack<Node> & paramsStack)
 				{
 					if (IsFinished())
 					{
-						throw std::runtime_error("Internal Error");
+						return;
 					}
 
 					Stack<Expression::Node> tempStack;
@@ -2595,7 +2602,8 @@ class LexicAnalyzer
 
 		LexicAnalyzer()
 			: operands_(),
-			  operators_()
+			  operators_(),
+			  operatorActions_()
 		{
 			;;
 		}
@@ -2603,6 +2611,11 @@ class LexicAnalyzer
 		bool IsTopOperand() const
 		{
 			return !operators_.IsEmpty() && operators_.Top().IsOperand();
+		}
+
+		unsigned int GetTopId() const
+		{
+			return static_cast<const Expression::Operator &>(operators_.Top()).Id();
 		}
 
 		void Process(std::auto_ptr<Expression::Node> node)
@@ -2613,40 +2626,217 @@ class LexicAnalyzer
 			}
 			else
 			{
+				std::auto_ptr<Expression::Operator> operatorNode(static_cast<Expression::Operator *>(node.release()));
+
+				unsigned int operatorNodeId = operatorNode->Id();
+				const OperatorActions * operatorActions = GetActionsFor(operatorNodeId);
+				if (operatorActions == 0)
+				{
+					throw std::runtime_error("Internal Error");
+				}
+
+				while (ProcessNode(*operatorActions, operatorNode))
+				{
+					if (operatorNodeId != operatorNode->Id())
+					{
+						operatorNodeId = operatorNode->Id();
+						operatorActions = GetActionsFor(operatorNodeId);
+					}
+				}
 			}
 		}
 
-	protected:
+		class OperatorActions;
 
-		void Push(std::auto_ptr<Expression::Operation> node)
+		const OperatorActions * GetActionsFor(unsigned int operatorId) const
 		{
+			return operatorActions_[operatorId];
 		}
 
-		void Reduce(std::auto_ptr<Expression::Operation> node)
+		void SetActionsFor(unsigned int operatorId, std::auto_ptr<OperatorActions> operatorActions)
 		{
+			operatorActions_.Set(operatorId, operatorActions);
 		}
 
-//		std::auto_ptr<Expression::Node> Pop
+		bool ProcessNode(const OperatorActions & operatorActions, std::auto_ptr<Expression::Operator> & node);
+
+		void Pop()
+		{
+			std::auto_ptr<Expression::Node> node = operators_.Pop();
+			node->Reduce(operands_);
+			operands_.Push(node);
+		}
+
+		void Push(std::auto_ptr<Expression::Node> node)
+		{
+			operators_.Push(node);
+		}
+
+		void Push(std::auto_ptr<Expression::Operator> node)
+		{
+			operators_.Push(std::auto_ptr<Expression::Node>(node));
+		}
+
+		void Reduce()
+		{
+			operators_.Top().Reduce(operands_);
+		}
 
 		class Action
 		{
 			public:
 
-				virtual void Execute() = 0;
+				virtual ~Action() throw() { ;; }
+
+				virtual bool Execute(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const = 0;
 		};
 
-		struct ActionList
+		template <typename T>
+		class ActionSingleton : public Action
 		{
-			Action * on_operand;
-			Action * on_empty_stack;
-			Action * 
-		}
+			public:
+
+				static const Action & Instance()
+				{
+					static T instance;
+					return instance;
+				}
+
+				virtual ~ActionSingleton() throw()
+				{
+					;;
+				}
+
+			protected:
+
+				ActionSingleton() { ;; }
+		};
+
+		class ActionPush : public ActionSingleton<ActionPush>
+		{
+			public:
+
+				virtual ~ActionPush() throw() { ;; }
+
+				virtual bool Execute(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
+				{
+					lexic.Push(node);
+					return false;
+				}
+		};
+
+		class ActionPop : public ActionSingleton<ActionPop>
+		{
+			public:
+
+				virtual ~ActionPop() throw() { ;; }
+
+				virtual bool Execute(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
+				{
+					lexic.Pop();
+					return true;
+				}
+		};
+
+		class ActionReduce : public ActionSingleton<ActionReduce>
+		{
+			public:
+
+				virtual ~ActionReduce() throw() { ;; }
+
+				virtual bool Execute(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
+				{
+					lexic.Reduce();
+					return false;
+				}
+		};
+
+		class ActionPopPushReduce : public ActionSingleton<ActionPopPushReduce>
+		{
+			public:
+
+				virtual ~ActionPopPushReduce() throw() { ;; }
+
+				virtual bool Execute(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
+				{
+					// TODO: Optimize it.
+					lexic.Pop();
+					lexic.Push(node);
+					lexic.Reduce();
+					return false;
+				}
+		};
+
+		class OperatorActions
+		{
+			public:
+
+				OperatorActions(const Action & actionEmptyStack, const Action & actionOperand)
+					: actionEmptyStack_(actionEmptyStack),
+					  actionOperand_(actionOperand),
+					  actionOperator_()
+				{
+					;;
+				}
+
+				void Set(unsigned int stackOperatorId, const Action & action)
+				{
+					actionOperator_[stackOperatorId] = &action;
+				}
+
+				bool OnEmptyStack(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
+				{
+					return actionEmptyStack_.Execute(lexic, node);
+				}
+
+				bool OnOperand(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
+				{
+					return actionOperand_.Execute(lexic, node);
+				}
+
+				bool OnOperator(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
+				{
+					// Assert( !lexic.IsEmptyStack() && !lexic.Top().IsOperand() )
+					std::map<unsigned int, const Action *>::const_iterator itr = actionOperator_.find(lexic.GetTopId());
+					if (itr == actionOperator_.end())
+					{
+						throw std::runtime_error("Internal Error");
+					}
+
+					return itr->second->Execute(lexic, node);
+				}
+
+			private:
+
+				const Action & actionEmptyStack_;
+				const Action & actionOperand_;
+				std::map<unsigned int, const Action *> actionOperator_;
+		};
 
 	private:
 
 		Stack<Expression::Node> operands_;
 		Stack<Expression::Node> operators_;
+		XTL::AutoPtrMap<unsigned int, OperatorActions> operatorActions_;
 };
+
+bool LexicAnalyzer::ProcessNode(const OperatorActions & operatorActions, std::auto_ptr<Expression::Operator> & node)
+{
+	if (operators_.IsEmpty())
+	{
+		return operatorActions.OnEmptyStack(*this, node);
+	}
+	else if (operators_.Top().IsOperand())
+	{
+		return operatorActions.OnOperand(*this, node);
+	}
+	else
+	{
+		return operatorActions.OnOperator(*this, node);
+	}
+
+	return false;
+}
 
 class Char : public Expression::Operand
 {
@@ -2666,10 +2856,14 @@ enum
 {
 	CONCAT,
 	ALTER,
-	REPEAT
+	REPEAT,
+	OPEN_R,
+	CLOSE_R,
+	OPEN_C,
+	CLOSE_C
 };
 
-class Concatenation : public Expression::Operation
+class Concatenation : public Expression::Operator
 {
 	public:
 
@@ -2680,7 +2874,7 @@ class Concatenation : public Expression::Operation
 		virtual unsigned int NeedParamsCount() const { return 2; }
 };
 
-class Alternation : public Expression::Operation
+class Alternation : public Expression::Operator
 {
 	public:
 
@@ -2691,7 +2885,7 @@ class Alternation : public Expression::Operation
 		virtual unsigned int NeedParamsCount() const { return 2; }
 };
 
-class Repetition : public Expression::Operation
+class Repetition : public Expression::Operator
 {
 	public:
 
@@ -2702,9 +2896,42 @@ class Repetition : public Expression::Operation
 		virtual unsigned int NeedParamsCount() const { return 1; }
 };
 
+/*
++---------+---------+------------+---------+---------+---------+---------+---------+---------+
+|         | OPERAND | CONCAT     | REPEAT  |  ALTER  | OPEN_R  | CLOSE_R | OPEN_C  | CLOSE_C |
++---------+---------+------------+---------+---------+---------+---------+---------+---------+
+| empty   | push;   | push;      | xxx     | push;   | push;   | error;  | push;   | error;  |
++---------+---------+------------+---------+---------+---------+---------+---------+---------+
+| OPERAND | ---     | pop;       | pop;    | pop;    | xxx     | pop;    | xxx     | pop;    |
+|         |         |            | push;   |         |         |         |         |         |
+|         |         |            | reduce; |         |         |         |         |         |
++---------+---------+------------+---------+---------+---------+---------+---------+---------+
+| CONCAT  | push;   | pop;       | xxx     | pop;    | push;   | pop;    | push;   | pop;    |
+|         |         | add_param; |         |         |         |         |         |         |
++---------+---------+------------+---------+---------+---------+---------+---------+---------+
+| ALTER   | push;   | push;      | xxx     | pop;    | push;   | pop;    | push;   | pop;    |
++---------+---------+------------+---------+---------+---------+---------+---------+---------+
+| OPEN_R  | push;   | push;      | xxx     | push;   | push;   | reduce; | push;   | error;  |
++---------+---------+------------+---------+---------+---------+---------+---------+---------+
+| OPEN_C  | push;   | push;      | xxx     | push;   | push;   | error;  | push;   | reduce; |
++---------+---------+------------+---------+---------+---------+---------+---------+---------+
+*/
+
+const LexicAnalyzer::Action & PUSH = LexicAnalyzer::ActionPush::Instance();
+const LexicAnalyzer::Action & POP  = LexicAnalyzer::ActionPop::Instance();
+
 int main(int argc, const char * argv[])
 {
 	LexicAnalyzer la;
+
+	{
+		// CONCAT
+		LexicAnalyzer::OperatorActions actions(PUSH, POP);
+		actions.Set(CONCAT, POP);
+		actions.Set(ALTER,  PUSH);
+		actions.Set(OPEN_R, PUSH);
+		actions.Set(OPEN_C, PUSH);
+	}
 
 	const std::string re = "a+b+";
 	std::auto_ptr<Expression::Node> currentNode;
