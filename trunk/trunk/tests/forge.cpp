@@ -2288,7 +2288,7 @@ class ExpressionParser
 
 // RegularExpressionParser
 
-class RegularExprTree
+class RegularExpressionTree
 {
 	public:
 	private:
@@ -2308,6 +2308,8 @@ class RegularExprTree
 				
 		};
 /*
+		class CharClass
+
 		class Concat : public Node
 		{
 		};
@@ -2829,7 +2831,7 @@ class LexicAnalyzer
 				const Action & actionOperand_;
 				std::map<unsigned int, const Action *> actionOperator_;
 		};
-
+/*
 		class NTN : public OperatorActions
 		{
 			public:
@@ -2868,7 +2870,7 @@ class LexicAnalyzer
 
 			private:
 		};
-
+*/
 	private:
 
 		Stack<Expression::Node> operands_;
