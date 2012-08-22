@@ -30,7 +30,12 @@ SET (
 		xtl/Exception.cpp
 		xtl/FormatString.cpp
 		xtl/StringUtils.cpp
-		xtl/Variant2.cpp
+		xtl/PrintStream.cpp
+		xtl/Variant.cpp
+		xtl/VariantArray.cpp
+		xtl/VariantPtr.cpp
+		xtl/VariantScalar.cpp
+		xtl/VariantStruct.cpp
 
 		xtl/linux/AccessMode.cpp
 		xtl/linux/SystemConfig.cpp
