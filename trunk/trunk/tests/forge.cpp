@@ -2535,6 +2535,18 @@ class Expression
 
 				virtual unsigned int Id() const = 0;
 
+				virtual unsigned int Priority() const = 0;
+
+				enum OperatorType
+				{
+					TN,  // +x
+					NT,  // x++
+					TNT, // ( x )
+					NTN  // x + y
+				};
+
+				virtual OperatorType Type() const = 0;
+
 				virtual unsigned int NeedParamsCount() const = 0;
 
 				virtual bool IsMultiParams() const
@@ -2784,26 +2796,31 @@ class LexicAnalyzer
 					actionOperator_[stackOperatorId] = &action;
 				}
 
-				bool OnEmptyStack(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
+				const Action & ActionEmptyStack() const
 				{
-					return actionEmptyStack_.Execute(lexic, node);
+					return actionEmptyStack_;
 				}
 
-				bool OnOperand(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
+				const Action & ActionOperand() const
 				{
-					return actionOperand_.Execute(lexic, node);
+					return actionOperand_;
 				}
 
-				bool OnOperator(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
+				const Action & ActionOperator(const Expression::Operator & topOperator) const
 				{
-					// Assert( !lexic.IsEmptyStack() && !lexic.Top().IsOperand() )
-					std::map<unsigned int, const Action *>::const_iterator itr = actionOperator_.find(lexic.GetTopId());
+					std::map<unsigned int, const Action *>::const_iterator itr = actionOperator_.find(topOperator.Id());
+
 					if (itr == actionOperator_.end())
 					{
 						throw std::runtime_error("Internal Error");
 					}
 
-					return itr->second->Execute(lexic, node);
+					if (itr->second == 0)
+					{
+						throw std::runtime_error("Internal Error");
+					}
+
+					return *(itr->second);
 				}
 
 			private:
@@ -2813,12 +2830,71 @@ class LexicAnalyzer
 				std::map<unsigned int, const Action *> actionOperator_;
 		};
 
+		class NTN : public OperatorActions
+		{
+			public:
+
+				const Action & ActionEmptyStack() const
+				{
+					return PUSH;
+				}
+
+				const Action & ActionOperand() const
+				{
+					return POP;
+				}
+
+				const Action & ActionOperator(const Expression::Operator & topOperator) const
+				{
+					if (topOperator.Type() == NTN)
+					{
+						return topOperator
+					}
+
+					std::map<unsigned int, const Action *>::const_iterator itr = actionOperator_.find(topOperator.Id());
+
+					if (itr == actionOperator_.end())
+					{
+						throw std::runtime_error("Internal Error");
+					}
+
+					if (itr->second == 0)
+					{
+						throw std::runtime_error("Internal Error");
+					}
+
+					return *(itr->second);
+				}
+
+			private:
+		};
+
 	private:
 
 		Stack<Expression::Node> operands_;
 		Stack<Expression::Node> operators_;
 		XTL::AutoPtrMap<unsigned int, OperatorActions> operatorActions_;
 };
+
+/*
+      TN    TNt   NTN  NTNtN NT     tNT    NtNTN
+@     PUSH  PUSH  PUSH PUSH  REDUCE ERROR  ERROR
+OPRND ERROR ERROR POP  POP   POP    POP    POP
+NTN   PUSH  PUSH  ?    ?     ?      POP    POP
+TN    PUSH  PUSH  ?    ?     ?      POP    POP
+TNt   PUSH  PUSH  PUSH PUSH  REDUCE ??     ERROR
+NTNtN PUSH  PUSH  PUSH PUSH  REDUCE ERROR  ??
+NtNTN PUSH  PUSH  ?    ?     ?      POP    POP
+NT, tNT - не могут быть в стеке, т.к. сворачиваются сразу при обработке
+
+?? - REDUCE or ERROR
+NT - PUSH_REDUCE
+
+++x++ => (++x)++ || ++(x++)
+!x+y  => !(x+y)  || (!x)+y
+a?b:x+y => (a?b:x)+y || a?b:(x+y)
+a?b:c?x:y => (a?b:c)?x:y | a?b:(c?x:y)
+*/
 
 bool LexicAnalyzer::ProcessNode(const OperatorActions & operatorActions, std::auto_ptr<Expression::Operator> & node)
 {
