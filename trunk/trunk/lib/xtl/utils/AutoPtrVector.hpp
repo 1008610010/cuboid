@@ -41,7 +41,7 @@ namespace XTL
 				items_.clear();
 			}
 
-			bool Empty() const
+			bool IsEmpty() const
 			{
 				return items_.empty();
 			}
@@ -60,6 +60,13 @@ namespace XTL
 			void PushBack(std::auto_ptr<U> ptr)
 			{
 				items_.push_back(ptr.release());
+			}
+
+			std::auto_ptr<T> PopBack()
+			{
+				std::auto_ptr<T> result(items_.back());
+				items_.pop_back();
+				return result;
 			}
 
 			AutoPtrVector & Set(unsigned int index, std::auto_ptr<T> ptr)
@@ -86,6 +93,16 @@ namespace XTL
 			const T * operator[] (unsigned int index) const
 			{
 				return items_[index];
+			}
+
+			T * Back()
+			{
+				return items_.back();
+			}
+
+			const T * Back() const
+			{
+				return items_.back();
 			}
 
 			void Erase(unsigned int index)
