@@ -50,6 +50,9 @@ ADD_SUBDIRECTORY (lib)
 ADD_EXECUTABLE (
 	expr
 		tests/expr.cpp
+		tests/Expression.cpp
+		tests/ExpressionOperator.cpp
+		tests/SyntaxAnalyzer.cpp
 )
 
 TARGET_LINK_LIBRARIES (
