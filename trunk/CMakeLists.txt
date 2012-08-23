@@ -47,6 +47,16 @@ ADD_SUBDIRECTORY (lib)
 #		xtl
 #)
 
+ADD_EXECUTABLE (
+	expr
+		tests/expr.cpp
+)
+
+TARGET_LINK_LIBRARIES (
+	expr
+		xtl
+)
+
 
 
 SET (GEN_SRC_PATH "${CMAKE_CURRENT_BINARY_DIR}/gen_src")
