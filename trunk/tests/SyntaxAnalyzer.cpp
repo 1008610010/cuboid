@@ -18,7 +18,7 @@ namespace XTL
 			{
 				const OperatorActions & operatorActions = inputOperator->GetActions();
 
-				const Action & action = ResolveAction(operatorActions);
+				const Action & action = ResolveAction(operatorActions, *inputOperator);
 
 				if (!action.Execute(*this, inputOperator))
 				{
@@ -28,21 +28,24 @@ namespace XTL
 		}
 	}
 
-	const SyntaxAnalyzer::Action & SyntaxAnalyzer::ResolveAction(const OperatorActions & operatorActions)
+	const SyntaxAnalyzer::Action & SyntaxAnalyzer::ResolveAction(const OperatorActions & operatorActions, const Expression::Operator & inputOperator)
 	{
 		if (operators_.IsEmpty())
 		{
-			return operatorActions.EmptyStackAction();
+			return operatorActions.EmptyStackAction(inputOperator);
 		}
 		else if (operators_.Top().IsOperand())
 		{
-			return operatorActions.OperandAction();
+			return operatorActions.OperandAction(inputOperator);
 		}
 		else
 		{
-			return operatorActions.OperatorAction(static_cast<Expression::Operator &>(operators_.Top()));
+			return operatorActions.OperatorAction(inputOperator, static_cast<Expression::Operator &>(operators_.Top()));
 		}
 	}
 
+	const SyntaxAnalyzer::ActionNothing SyntaxAnalyzer::OperatorActions::NOTHING;
+	const SyntaxAnalyzer::ActionPush    SyntaxAnalyzer::OperatorActions::PUSH;
+	const SyntaxAnalyzer::ActionPop     SyntaxAnalyzer::OperatorActions::POP;
 }
 

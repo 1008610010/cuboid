@@ -33,7 +33,9 @@ namespace XTL
 
 			virtual unsigned int Id() const = 0;
 
-			virtual unsigned int Priority() const = 0;
+			virtual unsigned int InputPriority() const = 0;
+
+			virtual unsigned int StackPriority() const = 0;
 
 			virtual unsigned int NeedParamsCount() const = 0;
 
@@ -43,6 +45,33 @@ namespace XTL
 			}
 
 			virtual const SyntaxAnalyzer::OperatorActions & GetActions() const = 0;
+
+			virtual void Reduce(XTL::AutoPtrStack<Node> & paramsStack)
+			{
+				if (IsFinished())
+				{
+					return;
+				}
+
+				AutoPtrStack<Expression::Node> tempStack;
+				for (unsigned int i = 0; i < NeedParamsCount(); ++i)
+				{
+					if (paramsStack.IsEmpty())
+					{
+						throw std::runtime_error("Syntax Error");
+					}
+
+					tempStack.Push(paramsStack.Pop());
+				}
+
+				for (unsigned int i = 0; i < NeedParamsCount(); ++i)
+				{
+					// TODO: pop all paramsCount_ items from paramsStack
+					AddParam(tempStack.Pop());
+				}
+
+				finished_ = true;
+			}
 
 /*
 				void IncParamsCount()
@@ -55,34 +84,7 @@ namespace XTL
 					++paramsCount_;
 				}
 */
-/*
-				virtual void Reduce(AutoPtrStack<Node> & paramsStack)
-				{
-					if (IsFinished())
-					{
-						return;
-					}
 
-					AutoPtrStack<Expression::Node> tempStack;
-					for (unsigned int i = 0; i < NeedParamsCount(); ++i)
-					{
-						if (paramsStack.IsEmpty())
-						{
-							throw std::runtime_error("Lexic Error");
-						}
-
-						tempStack.Push(paramsStack.Pop());
-					}
-
-					for (unsigned int i = 0; i < NeedParamsCount(); ++i)
-					{
-						// TODO: pop all paramsCount_ items from paramsStack
-						AddParam(tempStack.Pop());
-					}
-
-					finished_ = true;
-				}
-*/
 		private:
 
 			void AddParam(std::auto_ptr<Node> param)
@@ -92,11 +94,11 @@ namespace XTL
 					throw std::runtime_error("Internal Error");
 				}
 
-				params_.push_back(param.release());
+				params_.PushBack(param);
 			}
 
 			bool finished_;
-			std::vector<Node *> params_;
+			AutoPtrVector<Node> params_;
 	};
 }
 

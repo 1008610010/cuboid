@@ -11,13 +11,49 @@ namespace XTL
 	{
 		public:
 
-			class Action
+			struct Action
 			{
-				public:
+				virtual ~Action() throw() { ;; }
 
-					virtual ~Action() throw() { ;; }
+				virtual bool Execute(SyntaxAnalyzer & syntaxAnalyzer, std::auto_ptr<Expression::Operator> & inputOperator) const = 0;
+			};
 
-					virtual bool Execute(SyntaxAnalyzer & syntaxAnalyzer, std::auto_ptr<Expression::Operator> & inputOperator) const = 0;
+			struct ActionNothing : public Action
+			{
+				ActionNothing() { ;; }
+
+				virtual ~ActionNothing() throw() { ;; }
+
+				virtual bool Execute(SyntaxAnalyzer & syntaxAnalyzer, std::auto_ptr<Expression::Operator> & inputOperator) const
+				{
+					return false;
+				}
+			};
+
+			struct ActionPush : public Action
+			{
+				ActionPush() { ;; }
+
+				virtual ~ActionPush() throw() { ;; }
+
+				virtual bool Execute(SyntaxAnalyzer & syntaxAnalyzer, std::auto_ptr<Expression::Operator> & inputOperator) const
+				{
+					syntaxAnalyzer.Push(inputOperator);
+					return false;
+				}
+			};
+
+			struct ActionPop : public Action
+			{
+				ActionPop() { ;; }
+
+				virtual ~ActionPop() throw() { ;; }
+
+				virtual bool Execute(SyntaxAnalyzer & syntaxAnalyzer, std::auto_ptr<Expression::Operator> & inputOperator) const
+				{
+					syntaxAnalyzer.Pop();
+					return true;
+				}
 			};
 
 			class OperatorActions
@@ -26,11 +62,15 @@ namespace XTL
 
 					virtual ~OperatorActions() throw() { ;; }
 
-					virtual const Action & EmptyStackAction() const = 0;
+					virtual const Action & EmptyStackAction(const Expression::Operator & inputOperator) const = 0;
 
-					virtual const Action & OperandAction() const = 0;
+					virtual const Action & OperandAction(const Expression::Operator & inputOperator) const = 0;
 
-					virtual const Action & OperatorAction(const Expression::Operator & stackOperator) const = 0;
+					virtual const Action & OperatorAction(const Expression::Operator & inputOperator, const Expression::Operator & stackOperator) const = 0;
+
+					static const ActionNothing NOTHING;
+					static const ActionPush    PUSH;
+					static const ActionPop     POP;
 			};
 
 			SyntaxAnalyzer()
@@ -53,12 +93,12 @@ namespace XTL
 			{
 				operators_.Push(node);
 			}
-/*
+
 			void Push(std::auto_ptr<Expression::Operator> node)
 			{
 				operators_.Push(std::auto_ptr<Expression::Node>(node));
 			}
-*/
+
 			void Reduce()
 			{
 				operators_.Top().Reduce(operands_);
@@ -67,7 +107,7 @@ namespace XTL
 
 		private:
 
-			const Action & ResolveAction(const OperatorActions & operatorActions);
+			const Action & ResolveAction(const OperatorActions & operatorActions, const Expression::Operator & inputOperator);
 
 			XTL::AutoPtrStack<Expression::Node> operands_;
 			XTL::AutoPtrStack<Expression::Node> operators_;
