@@ -126,13 +126,14 @@ namespace XTL
 
 		std::vector<UnixClientSocket> disconnected;
 
-		for (AutoPtrMap<UnixClientSocket, Client>::const_iterator itr = clients_.begin(); itr != clients_.end(); ++itr)
+		const AutoPtrMap<UnixClientSocket, Client>::Iterator end = clients_.End();
+		for (AutoPtrMap<UnixClientSocket, Client>::Iterator itr = clients_.Begin(); itr != end; ++itr)
 		{
-			if (readable.Contains(itr->first))
+			if (readable.Contains(itr.Key()))
 			{
 				try
 				{
-					itr->second->Receive();
+					itr->Receive();
 				}
 				catch (const ClientDisconnected & e)
 				{
