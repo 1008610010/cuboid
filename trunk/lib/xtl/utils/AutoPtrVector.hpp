@@ -85,14 +85,21 @@ namespace XTL
 				return *this;
 			}
 
-			T * operator[] (unsigned int index)
+			T * operator[] (unsigned int index) throw()
 			{
 				return items_[index];
 			}
 
-			const T * operator[] (unsigned int index) const
+			const T * operator[] (unsigned int index) const throw()
 			{
 				return items_[index];
+			}
+
+			std::auto_ptr<T> Release(unsigned int index) const throw()
+			{
+				T * value = items_[index];
+				items_[index] = 0;
+				return std::auto_ptr<T>(value);
 			}
 
 			T * Back()
