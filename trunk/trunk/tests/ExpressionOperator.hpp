@@ -85,6 +85,29 @@ namespace XTL
 				}
 */
 
+			virtual const std::string ToString() const
+			{
+				return "OPERATOR";
+			}
+
+			virtual void DebugPrint(XTL::PrintStream & stream)
+			{
+				stream.Print("(");
+
+				for (unsigned int i = 0; i < params_.Size(); ++i)
+				{
+					params_[i]->DebugPrint(stream);
+					stream.Print(" ");
+				}
+
+				stream.Print(ToConstCharPtr());
+				stream.Print(")");
+			}
+			
+		protected:
+
+			virtual const char * ToConstCharPtr() const = 0;
+
 		private:
 
 			void AddParam(std::auto_ptr<Node> param)

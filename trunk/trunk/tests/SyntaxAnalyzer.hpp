@@ -104,6 +104,10 @@ namespace XTL
 				operators_.Top().Reduce(operands_);
 			}
 
+			std::auto_ptr<Expression::Node> Release()
+			{
+				return operands_.Pop();
+			}
 
 		private:
 

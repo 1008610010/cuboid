@@ -1,11 +1,17 @@
 #include "SyntaxAnalyzer.hpp"
 
+#include <stdio.h>
+
 #include "ExpressionOperator.hpp"
 
 namespace XTL
 {
 	void SyntaxAnalyzer::Process(std::auto_ptr<Expression::Node> node)
 	{
+		fprintf(stdout, "<<< ");
+		XTL::StandardPrintStream::Out().Print(node->ToString());
+		fprintf(stdout, "\n");
+
 		if (node->IsOperand())
 		{
 			operators_.Push(node);

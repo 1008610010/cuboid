@@ -1,6 +1,7 @@
 #ifndef XTL__EXPRESSION_HPP__
 #define XTL__EXPRESSION_HPP__ 1
 
+#include <xtl/PrintStream.hpp>
 #include <xtl/utils/AutoPtrStack.hpp>
 
 namespace XTL
@@ -20,6 +21,10 @@ namespace XTL
 					virtual bool IsOperand() const = 0;
 
 					virtual void Reduce(XTL::AutoPtrStack<Node> & paramsStack) = 0;
+
+					virtual const std::string ToString() const = 0;
+
+					virtual void DebugPrint(XTL::PrintStream & stream) = 0;
 
 				private:
 

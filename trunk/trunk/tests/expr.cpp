@@ -4,6 +4,8 @@
 #include "ExpressionOperator.hpp"
 #include "SyntaxAnalyzer.hpp"
 
+#include <xtl/PrintStream.hpp>
+
 class BinaryOperator : public XTL::Expression::Operator
 {
 	public:
@@ -72,6 +74,16 @@ class Identifier : public XTL::Expression::Operand
 
 		virtual ~Identifier() throw() { ;; }
 
+		virtual const std::string ToString() const
+		{
+			return name_;
+		}
+
+		virtual void DebugPrint(XTL::PrintStream & stream)
+		{
+			stream.Print(name_);
+		}
+
 	private:
 
 		const std::string name_;
@@ -88,6 +100,18 @@ class Addition : public BinaryOperator
 		virtual unsigned int InputPriority() const { return 1; }
 
 		virtual unsigned int StackPriority() const { return 2; }
+
+		virtual const std::string ToString() const
+		{
+			return "+";
+		}
+
+	protected:
+
+		virtual const char * ToConstCharPtr() const
+		{
+			return "+";
+		}
 };
 
 class Multiplication : public BinaryOperator
@@ -101,6 +125,18 @@ class Multiplication : public BinaryOperator
 		virtual unsigned int InputPriority() const { return 3; }
 
 		virtual unsigned int StackPriority() const { return 4; }
+
+		virtual const std::string ToString() const
+		{
+			return "*";
+		}
+
+	protected:
+
+		virtual const char * ToConstCharPtr() const
+		{
+			return "*";
+		}
 };
 
 class Terminator : public XTL::Expression::Operator
@@ -155,6 +191,18 @@ class Terminator : public XTL::Expression::Operator
 				OperatorActions() { ;; }
 		};
 
+		virtual const std::string ToString() const
+		{
+			return "#";
+		}
+
+	protected:
+
+		virtual const char * ToConstCharPtr() const
+		{
+			return "#";
+		}
+
 	private:
 };
 
@@ -163,7 +211,7 @@ int main(int argc, const char * argv[])
 {
 	std::auto_ptr<XTL::Expression::Node> node;
 
-	const std::string s = "x+y+z+z+";
+	const std::string s = "x+y*z*z";
 
 	XTL::SyntaxAnalyzer sa;
 
@@ -193,6 +241,12 @@ int main(int argc, const char * argv[])
 
 		node.reset(new Terminator());
 		sa.Process(node);
+
+		// TODO: move this shit to the Terminator::EmptyStackAction() method
+		std::auto_ptr<XTL::Expression::Node> expressionRoot = sa.Release();
+
+		expressionRoot->DebugPrint(XTL::StandardPrintStream::Out());
+		fprintf(stdout, "\n");
 	}
 	catch (const std::runtime_error & e)
 	{
