@@ -10,6 +10,75 @@
 #include "../io/OutputStream.hpp"
 #include "../io/Serializable.hpp"
 
+
+/*
+	TODO:
+#define PROTOTYPE(NAME) \
+	static const char * PrototypeName() { return NAME; } \
+	template <typename U, unsigned int I> struct A { enum { MaxIndex = A<U, I - 1>::MaxIndex }; }; \
+	template <typename U> struct A<U, 0> { enum { MaxIndex = 0 }; };
+
+#define FIELD(IDX, TYPE, NAME) \
+	template <typename U> struct A<U, IDX> : public A<U, IDX - 1> \
+	{ \
+		enum { MaxIndex = IDX }; \
+		A() : A<U, IDX - 1>() { printf("field %d: %s\n", IDX, #NAME); PrototypeBuilder().AddField_##TYPE(#NAME); } \
+	}; \
+	static unsigned int _field_index_##NAME() { static const unsigned int index = Prototype()->GetFieldIndex("" #NAME, sizeof(XTL::TYPE)); return index; } \
+	static unsigned int _field_offset_##NAME() { static const unsigned int offset = Prototype()->GetField(_field_index_##NAME())->Offset(); return offset; } \
+	XTL::TYPE NAME() const { return *reinterpret_cast<const XTL::TYPE *>(static_cast<const char *>(this->Data()) + _field_offset_##NAME()); } \
+	XTL::TYPE & NAME() { return *reinterpret_cast<XTL::TYPE *>(static_cast<char *>(this->Data()) + _field_offset_##NAME()); } \
+	void NAME(XTL::TYPE value) { *reinterpret_cast<XTL::TYPE *>(static_cast<char *>(this->Data()) + _field_offset_##NAME()) = value; }
+
+template <typename T>
+class RecordType : public XTL::PLAIN::RecordBase<T>
+{
+	public:
+
+		static XTL::PLAIN::RecordPrototype::SharedConstPtr Prototype()
+		{
+			static XTL::PLAIN::RecordPrototype::SharedConstPtr prototype = RecordType<T>::BuildPrototype();
+			return prototype;
+		}
+
+	public:
+
+		static XTL::PLAIN::RecordPrototypeBuilder & PrototypeBuilder()
+		{
+			static XTL::PLAIN::RecordPrototypeBuilder prototypeBuilder(T::PrototypeName());
+			return prototypeBuilder;
+		}
+
+		static XTL::PLAIN::RecordPrototype::SharedConstPtr BuildPrototype()
+		{
+			static typename T::template A<int, T::template A<int, 32>::MaxIndex> a;
+			return PrototypeBuilder().Finish();
+		}
+};
+
+class FriendPair : public RecordType<FriendPair>
+{
+	public:
+
+		PROTOTYPE("FriendPair")
+		FIELD( 1, UINT_32, user_id   )
+		FIELD( 2, UINT_64, friend_id )
+};
+
+	...
+	FriendPair::Rec rec;
+	rec.user_id(1);
+	rec.friend_id(2);
+	printf("PrototypeSize=%u\n", FriendPair::Prototype()->Size());
+	printf("sizeof(FriendPair)=%lu\n", sizeof(FriendPair));
+
+	FriendPair::Ref ref(rec);
+	ref.user_id(339052);
+
+	printf("user_id=%u friend_id=%llu\n", rec.user_id(), rec.friend_id());
+	...
+*/
+
 namespace XTL
 {
 namespace PLAIN
@@ -374,6 +443,5 @@ namespace PLAIN
 	TYPE NAME() const { return *reinterpret_cast<const TYPE *>(static_cast<const char *>(Data()) + _field_offset_##NAME()); } \
 	TYPE & NAME() { return *reinterpret_cast<TYPE *>(static_cast<char *>(Data()) + _field_offset_##NAME()); } \
 	void NAME(TYPE value) { *reinterpret_cast<TYPE *>(static_cast<char *>(Data()) + _field_offset_##NAME()) = value; }
-
 #endif
 
