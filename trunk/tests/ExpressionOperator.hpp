@@ -8,6 +8,11 @@
 
 namespace XTL
 {
+	/*
+		op X ...
+		X op
+		X op Y ...
+	*/
 	class Expression::Operator : public Expression::Node
 	{
 		public:
