@@ -56,6 +56,19 @@ namespace XTL
 				}
 			};
 
+			struct ActionReduce : public Action
+			{
+				ActionReduce() { ;; }
+
+				virtual ~ActionReduce() throw() { ;; }
+
+				virtual bool Execute(SyntaxAnalyzer & syntaxAnalyzer, std::auto_ptr<Expression::Operator> & inputOperator) const
+				{
+					syntaxAnalyzer.Reduce();
+					return false;
+				}
+			};
+
 			class OperatorActions
 			{
 				public:
@@ -71,6 +84,7 @@ namespace XTL
 					static const ActionNothing NOTHING;
 					static const ActionPush    PUSH;
 					static const ActionPop     POP;
+					static const ActionReduce  REDUCE;
 			};
 
 			SyntaxAnalyzer()
