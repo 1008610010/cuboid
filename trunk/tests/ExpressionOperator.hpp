@@ -44,6 +44,8 @@ namespace XTL
 
 			virtual unsigned int NeedParamsCount() const = 0;
 
+			virtual bool IsComposite() const = 0;
+
 			virtual bool IsMultiParams() const
 			{
 				return false;

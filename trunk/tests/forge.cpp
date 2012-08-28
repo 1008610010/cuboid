@@ -2440,277 +2440,6 @@ void ParseRegularExpression(const char * re)
 	}
 }
 
-
-
-
-class LexicAnalyzer
-{
-	public:
-
-		LexicAnalyzer()
-			: operands_(),
-			  operators_(),
-			  operatorActions_()
-		{
-			;;
-		}
-
-		bool IsTopOperand() const
-		{
-			return !operators_.IsEmpty() && operators_.Top().IsOperand();
-		}
-
-		unsigned int GetTopId() const
-		{
-			return static_cast<const Expression::Operator &>(operators_.Top()).Id();
-		}
-
-		void Process(std::auto_ptr<Expression::Node> node)
-		{
-			if (node->IsOperand())
-			{
-				operators_.Push(node);
-			}
-			else
-			{
-				std::auto_ptr<Expression::Operator> operatorNode(static_cast<Expression::Operator *>(node.release()));
-
-				unsigned int operatorNodeId = operatorNode->Id();
-				const OperatorActions * operatorActions = GetActionsFor(operatorNodeId);
-				if (operatorActions == 0)
-				{
-					throw std::runtime_error("Internal Error");
-				}
-
-				while (ProcessNode(*operatorActions, operatorNode))
-				{
-					if (operatorNodeId != operatorNode->Id())
-					{
-						operatorNodeId = operatorNode->Id();
-						operatorActions = GetActionsFor(operatorNodeId);
-					}
-				}
-			}
-		}
-
-		class OperatorActions;
-
-		const OperatorActions * GetActionsFor(unsigned int operatorId) const
-		{
-			return operatorActions_[operatorId];
-		}
-
-		void SetActionsFor(unsigned int operatorId, std::auto_ptr<OperatorActions> operatorActions)
-		{
-			operatorActions_.Set(operatorId, operatorActions);
-		}
-
-		bool ProcessNode(const OperatorActions & operatorActions, std::auto_ptr<Expression::Operator> & node);
-
-		void Pop()
-		{
-			std::auto_ptr<Expression::Node> node = operators_.Pop();
-			node->Reduce(operands_);
-			operands_.Push(node);
-		}
-
-		void Push(std::auto_ptr<Expression::Node> node)
-		{
-			operators_.Push(node);
-		}
-
-		void Push(std::auto_ptr<Expression::Operator> node)
-		{
-			operators_.Push(std::auto_ptr<Expression::Node>(node));
-		}
-
-		void Reduce()
-		{
-			operators_.Top().Reduce(operands_);
-		}
-
-		class Action
-		{
-			public:
-
-				virtual ~Action() throw() { ;; }
-
-				virtual bool Execute(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const = 0;
-		};
-
-		template <typename T>
-		class ActionSingleton : public Action
-		{
-			public:
-
-				static const Action & Instance()
-				{
-					static T instance;
-					return instance;
-				}
-
-				virtual ~ActionSingleton() throw()
-				{
-					;;
-				}
-
-			protected:
-
-				ActionSingleton() { ;; }
-		};
-
-		class ActionPush : public ActionSingleton<ActionPush>
-		{
-			public:
-
-				virtual ~ActionPush() throw() { ;; }
-
-				virtual bool Execute(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
-				{
-					lexic.Push(node);
-					return false;
-				}
-		};
-
-		class ActionPop : public ActionSingleton<ActionPop>
-		{
-			public:
-
-				virtual ~ActionPop() throw() { ;; }
-
-				virtual bool Execute(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
-				{
-					lexic.Pop();
-					return true;
-				}
-		};
-
-		class ActionReduce : public ActionSingleton<ActionReduce>
-		{
-			public:
-
-				virtual ~ActionReduce() throw() { ;; }
-
-				virtual bool Execute(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
-				{
-					lexic.Reduce();
-					return false;
-				}
-		};
-
-		class ActionPopPushReduce : public ActionSingleton<ActionPopPushReduce>
-		{
-			public:
-
-				virtual ~ActionPopPushReduce() throw() { ;; }
-
-				virtual bool Execute(LexicAnalyzer & lexic, std::auto_ptr<Expression::Operator> & node) const
-				{
-					// TODO: Optimize it.
-					lexic.Pop();
-					lexic.Push(node);
-					lexic.Reduce();
-					return false;
-				}
-		};
-
-		class OperatorActions
-		{
-			public:
-
-				OperatorActions(const Action & actionEmptyStack, const Action & actionOperand)
-					: actionEmptyStack_(actionEmptyStack),
-					  actionOperand_(actionOperand),
-					  actionOperator_()
-				{
-					;;
-				}
-
-				void Set(unsigned int stackOperatorId, const Action & action)
-				{
-					actionOperator_[stackOperatorId] = &action;
-				}
-
-				const Action & ActionEmptyStack() const
-				{
-					return actionEmptyStack_;
-				}
-
-				const Action & ActionOperand() const
-				{
-					return actionOperand_;
-				}
-
-				const Action & ActionOperator(const Expression::Operator & topOperator) const
-				{
-					std::map<unsigned int, const Action *>::const_iterator itr = actionOperator_.find(topOperator.Id());
-
-					if (itr == actionOperator_.end())
-					{
-						throw std::runtime_error("Internal Error");
-					}
-
-					if (itr->second == 0)
-					{
-						throw std::runtime_error("Internal Error");
-					}
-
-					return *(itr->second);
-				}
-
-			private:
-
-				const Action & actionEmptyStack_;
-				const Action & actionOperand_;
-				std::map<unsigned int, const Action *> actionOperator_;
-		};
-/*
-		class NTN : public OperatorActions
-		{
-			public:
-
-				const Action & ActionEmptyStack() const
-				{
-					return PUSH;
-				}
-
-				const Action & ActionOperand() const
-				{
-					return POP;
-				}
-
-				const Action & ActionOperator(const Expression::Operator & topOperator) const
-				{
-					if (topOperator.Type() == NTN)
-					{
-						return topOperator
-					}
-
-					std::map<unsigned int, const Action *>::const_iterator itr = actionOperator_.find(topOperator.Id());
-
-					if (itr == actionOperator_.end())
-					{
-						throw std::runtime_error("Internal Error");
-					}
-
-					if (itr->second == 0)
-					{
-						throw std::runtime_error("Internal Error");
-					}
-
-					return *(itr->second);
-				}
-
-			private:
-		};
-*/
-	private:
-
-		Stack<Expression::Node> operands_;
-		Stack<Expression::Node> operators_;
-		XTL::AutoPtrMap<unsigned int, OperatorActions> operatorActions_;
-};
-
 /*
       TN    TNt   NTN  NTNtN NT     tNT    NtNTN
 @     PUSH  PUSH  PUSH PUSH  REDUCE ERROR  ERROR
@@ -2731,24 +2460,7 @@ a?b:x+y => (a?b:x)+y || a?b:(x+y)
 a?b:c?x:y => (a?b:c)?x:y | a?b:(c?x:y)
 */
 
-bool LexicAnalyzer::ProcessNode(const OperatorActions & operatorActions, std::auto_ptr<Expression::Operator> & node)
-{
-	if (operators_.IsEmpty())
-	{
-		return operatorActions.OnEmptyStack(*this, node);
-	}
-	else if (operators_.Top().IsOperand())
-	{
-		return operatorActions.OnOperand(*this, node);
-	}
-	else
-	{
-		return operatorActions.OnOperator(*this, node);
-	}
-
-	return false;
-}
-
+/*
 class Char : public Expression::Operand
 {
 	public:
@@ -2762,6 +2474,7 @@ class Char : public Expression::Operand
 
 		const char c_;
 };
+*/
 
 enum
 {
@@ -2772,39 +2485,6 @@ enum
 	CLOSE_R,
 	OPEN_C,
 	CLOSE_C
-};
-
-class Concatenation : public Expression::Operator
-{
-	public:
-
-		virtual ~Concatenation() throw() { ;; }
-
-		virtual unsigned int Id() const { return CONCAT; }
-
-		virtual unsigned int NeedParamsCount() const { return 2; }
-};
-
-class Alternation : public Expression::Operator
-{
-	public:
-
-		virtual ~Alternation() throw() { ;; }
-
-		virtual unsigned int Id() const { return ALTER; }
-
-		virtual unsigned int NeedParamsCount() const { return 2; }
-};
-
-class Repetition : public Expression::Operator
-{
-	public:
-
-		virtual ~Repetition() throw() { ;; }
-
-		virtual unsigned int Id() const { return REPEAT; }
-
-		virtual unsigned int NeedParamsCount() const { return 1; }
 };
 
 /*
@@ -2828,62 +2508,90 @@ class Repetition : public Expression::Operator
 +---------+---------+------------+---------+---------+---------+---------+---------+---------+
 */
 
-const LexicAnalyzer::Action & PUSH = LexicAnalyzer::ActionPush::Instance();
-const LexicAnalyzer::Action & POP  = LexicAnalyzer::ActionPop::Instance();
+
+namespace XTL
+{
+	void NumberParser : public Parser
+	{
+		public:
+
+			explicit NumberParser(CharSource & charSource)
+				: charSource_(charSource),
+				  result_(0)
+			{
+				;;
+			}
+
+		protected:
+
+			void ParseNumber()
+			{
+				// Assert(NotAtEnd() && GetChar() =~ ["-", "0".."9"])
+				long long int result;
+
+				char c = GetChar();
+
+				if (c == '0')
+				{
+					Advance();
+					if (AtEnd())
+					{
+						result_ = 0;
+						return;
+					}
+
+					c = GetChar();
+					if (c == 'b')
+					{
+						ParseBinary();
+					}
+					else if (c == 'x')
+					{
+						ParseHexadecimal();
+					}
+					else if (CHAR_CLASS_DIGIT.Contains(c))
+					{
+						ParseOctal();
+					}
+					else if (c == '.')
+					{
+						
+					}
+					else if (c == 'e' || c == 'E')
+					{
+					}
+					else
+					{
+					}
+				}
+				else
+				{
+					bool negative = false;
+					if (c == '-')
+					{
+						negative = true;
+					}
+				}
+			}
+
+			void ParseDecimal()
+			{
+				
+			}
+
+		private:
+
+			long long int result_;
+	}
+}
+
 
 int main(int argc, const char * argv[])
 {
-	LexicAnalyzer la;
+	printf("xxx\n");
 
-	{
-		// CONCAT
-		LexicAnalyzer::OperatorActions actions(PUSH, POP);
-		actions.Set(CONCAT, POP);
-		actions.Set(ALTER,  PUSH);
-		actions.Set(OPEN_R, PUSH);
-		actions.Set(OPEN_C, PUSH);
-	}
-
-	const std::string re = "a+b+";
-	std::auto_ptr<Expression::Node> currentNode;
-	for (unsigned int i = 0; i < re.size(); ++i)
-	{
-		if (re[i] == '+')
-		{
-			if (!la.IsTopOperand())
-			{
-				throw std::runtime_error("");
-			}
-			currentNode.reset(new Repetition());
-		}
-		else if (re[i] == '|')
-		{
-			if (!la.IsTopOperand())
-			{
-				throw std::runtime_error("");
-			}
-			currentNode.reset(new Alternation());
-		}
-		else
-		{
-			currentNode.reset(new Char(re[i]));
-		}
-
-		if (currentNode->IsOperand())
-		{
-			if (la.IsTopOperand())
-			{
-				la.Process(std::auto_ptr<Expression::Node>(new Concatenation()));
-			}
-			la.Process(currentNode);
-		}
-		else
-		{
-			la.Process(currentNode);
-		}
-	}
-	
 	return 0;
+
 
 	StateSet stateSet;
 

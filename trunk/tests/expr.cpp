@@ -6,60 +6,25 @@
 
 #include <xtl/PrintStream.hpp>
 
-class BinaryOperator : public XTL::Expression::Operator
+template <typename T>
+class OperatorActionsSingleton : public XTL::SyntaxAnalyzer::OperatorActions
 {
 	public:
 
-		virtual unsigned int NeedParamsCount() const
+		static XTL::SyntaxAnalyzer::OperatorActions & Instance()
 		{
-			return 2;
+			static T instance;
+			return instance;
 		}
 
-		virtual const XTL::SyntaxAnalyzer::OperatorActions & GetActions() const
+		virtual ~OperatorActionsSingleton() throw()
 		{
-			return OperatorActions::Instance();
+			;;
 		}
+		
+	protected:
 
-		class OperatorActions : public XTL::SyntaxAnalyzer::OperatorActions
-		{
-			public:
-
-				static XTL::SyntaxAnalyzer::OperatorActions & Instance()
-				{
-					static OperatorActions instance;
-					return instance;
-				}
-
-				virtual ~OperatorActions() throw() { ;; }
-
-				virtual const XTL::SyntaxAnalyzer::Action & EmptyStackAction(const XTL::Expression::Operator & inputOperator) const
-				{
-					return PUSH;
-				}
-
-				virtual const XTL::SyntaxAnalyzer::Action & OperandAction(const XTL::Expression::Operator & inputOperator) const
-				{
-					return POP;
-				}
-
-				virtual const XTL::SyntaxAnalyzer::Action & OperatorAction(const XTL::Expression::Operator & inputOperator, const XTL::Expression::Operator & stackOperator) const
-				{
-					if (inputOperator.InputPriority() < stackOperator.StackPriority())
-					{
-						return POP;
-					}
-					else
-					{
-						return PUSH;
-					}
-				}
-
-			private:
-
-				OperatorActions() { ;; }
-		};
-
-	private:
+		OperatorActionsSingleton() { ;; }
 };
 
 class Identifier : public XTL::Expression::Operand
@@ -89,101 +54,24 @@ class Identifier : public XTL::Expression::Operand
 		const std::string name_;
 };
 
-class Addition : public BinaryOperator
+class BinaryOperator : public XTL::Expression::Operator
 {
 	public:
 
-		virtual ~Addition() throw() { ;; }
-
-		virtual unsigned int Id() const { return 0; }
-
-		virtual unsigned int InputPriority() const { return 1; }
-
-		virtual unsigned int StackPriority() const { return 2; }
-
-		virtual const std::string ToString() const { return "+"; }
-
-	protected:
-
-		virtual const char * ToConstCharPtr() const
+		virtual unsigned int NeedParamsCount() const
 		{
-			return "+";
-		}
-};
-
-class StackOperator;
-
-class InputOperator
-{
-	class InputOperatorAction
-	{
-		
-	};
-
-	class InputOperatorActions
-	{
-		virtual const InputOperatorAction & OnEmptyStack() const = 0;
-
-		virtual const InputOperatorAction & OnOperand() const = 0;
-
-		virtual const InputOperatorAction & OnOperator() const = 0;
-	};
-
-	virtual StackOperator * Convert() = 0;
-};
-
-class StackOperator
-{
-	class StackOperatorAction
-	{
-	};
-
-	class StackOperatorActions
-	{
-		virtual const StackOperatorAction & OnCompositeOperator() const = 0;
-	};
-};
-
-class CompositeOperator : public XTL::Expression::Operator
-{
-	public:
-
-//		virtual const XTL::SyntaxAnalyzer::OperatorActions & GetActions() const
-};
-
-class CompositeOperatorHead : public XTL::Expression::Operator
-{
-	public:
-
-		
-};
-
-template <typename T>
-class OperatorActionsSingleton : public XTL::SyntaxAnalyzer::OperatorActions
-{
-	public:
-
-		static XTL::SyntaxAnalyzer::OperatorActions & Instance()
-		{
-			static T instance;
-			return instance;
+			return 2;
 		}
 
-		virtual ~OperatorActionsSingleton() throw()
+		virtual bool IsComposite() const
 		{
-			;;
+			return false;
 		}
-		
-	protected:
 
-		OperatorActionsSingleton() { ;; }
-};
-
-
-
-class CompositeOperatorTail : public XTL::Expression::Operator
-{
-	public:
+		virtual const XTL::SyntaxAnalyzer::OperatorActions & GetActions() const
+		{
+			return OperatorActions::Instance();
+		}
 
 		class OperatorActions : public OperatorActionsSingleton<OperatorActions>
 		{
@@ -203,13 +91,70 @@ class CompositeOperatorTail : public XTL::Expression::Operator
 
 				virtual const XTL::SyntaxAnalyzer::Action & OperatorAction(const XTL::Expression::Operator & inputOperator, const XTL::Expression::Operator & stackOperator) const
 				{
-					return PUSH;
+					if (stackOperator.IsComposite() || stackOperator.StackPriority() <= inputOperator.InputPriority())
+					{
+						return PUSH;
+					}
+					else
+					{
+						return POP;
+					}
 				}
-
-			private:
-
 		};
-		
+};
+
+class InputOperator : public XTL::Expression::Operator
+{
+	public:
+	
+		virtual ~InputOperator() throw()
+		{
+			;;
+		}
+
+		virtual unsigned int NeedParamsCount() const
+		{
+			throw std::runtime_error("InputOperator has not NeedParamsCount");
+		}
+
+		virtual unsigned int StackPriority() const
+		{
+			throw std::runtime_error("InputOperator has not StackPriority");
+		}
+};
+
+enum OPERATORS
+{
+	TERMINATOR,
+	ADDITION,
+	MULTIPLICATION,
+	ROUND_BRACKETS
+};
+
+static const unsigned int MIN_PRIORITY = 0;
+static const unsigned int MAX_PRIORITY = 65536;
+
+
+class Addition : public BinaryOperator
+{
+	public:
+
+		virtual ~Addition() throw() { ;; }
+
+		virtual unsigned int Id() const { return ADDITION; }
+
+		virtual unsigned int InputPriority() const { return 1; }
+
+		virtual unsigned int StackPriority() const { return 2; }
+
+		virtual const std::string ToString() const { return "+"; }
+
+	protected:
+
+		virtual const char * ToConstCharPtr() const
+		{
+			return "+";
+		}
 };
 
 class OpenBracket : public XTL::Expression::Operator
@@ -221,7 +166,10 @@ class OpenBracket : public XTL::Expression::Operator
 			return 1;
 		}
 
-		virtual unsigned int OperatorId() const = 0;
+		virtual bool IsComposite() const
+		{
+			return true;
+		}
 
 		virtual const XTL::SyntaxAnalyzer::OperatorActions & GetActions() const
 		{
@@ -261,16 +209,9 @@ class OpenBracket : public XTL::Expression::Operator
 		};
 };
 
-class CloseBracket : public XTL::Expression::Operator
+class CloseBracket : public InputOperator
 {
 	public:
-
-		virtual unsigned int NeedParamsCount() const
-		{
-			return 0;
-		}
-
-		virtual unsigned int OperatorId() const = 0;
 
 		virtual const XTL::SyntaxAnalyzer::OperatorActions & GetActions() const
 		{
@@ -295,18 +236,21 @@ class CloseBracket : public XTL::Expression::Operator
 
 				virtual const XTL::SyntaxAnalyzer::Action & OperatorAction(const XTL::Expression::Operator & inputOperator, const XTL::Expression::Operator & stackOperator) const
 				{
-					// return stackOperator.GetActions().CompositeOperatorAction();
-					return REDUCE;
-					/*
-					if (inputOperator.OperatorId() == stackOperator.OperatorId())
+					if (stackOperator.IsComposite())
 					{
-						return REDUCE;
+						if (stackOperator.Id() == inputOperator.Id())
+						{
+							return REDUCE;
+						}
+						else
+						{
+							throw std::runtime_error("Syntax Error");
+						}
 					}
 					else
 					{
 						return POP;
 					}
-					*/
 				}
 		};
 };
@@ -317,7 +261,7 @@ class Multiplication : public BinaryOperator
 
 		virtual ~Multiplication() throw() { ;; }
 
-		virtual unsigned int Id() const { return 0; }
+		virtual unsigned int Id() const { return MULTIPLICATION; }
 
 		virtual unsigned int InputPriority() const { return 3; }
 
@@ -336,20 +280,20 @@ class Multiplication : public BinaryOperator
 		}
 };
 
-class Terminator : public XTL::Expression::Operator
+class Terminator : public InputOperator
 {
 	public:
 
-		virtual unsigned int NeedParamsCount() const
-		{
-			return 0;
-		}
+		virtual ~Terminator() throw() { ;; }
 
-		virtual unsigned int Id() const { return 0; }
+		virtual unsigned int Id() const { return TERMINATOR; }
 
 		virtual unsigned int InputPriority() const { return 0; }
 
-		virtual unsigned int StackPriority() const { return 0; }
+		virtual bool IsComposite() const
+		{
+			return false;
+		}
 
 		virtual const XTL::SyntaxAnalyzer::OperatorActions & GetActions() const
 		{
@@ -364,6 +308,7 @@ class Terminator : public XTL::Expression::Operator
 
 				virtual const XTL::SyntaxAnalyzer::Action & EmptyStackAction(const XTL::Expression::Operator & inputOperator) const
 				{
+					// TODO: Pop result expression tree
 					return NOTHING;
 				}
 
@@ -374,7 +319,14 @@ class Terminator : public XTL::Expression::Operator
 
 				virtual const XTL::SyntaxAnalyzer::Action & OperatorAction(const XTL::Expression::Operator & inputOperator, const XTL::Expression::Operator & stackOperator) const
 				{
-					return POP;
+					if (stackOperator.IsComposite())
+					{
+						throw std::runtime_error("Syntax Error");
+					}
+					else
+					{
+						return POP;
+					}
 				}
 		};
 
@@ -387,36 +339,98 @@ class Terminator : public XTL::Expression::Operator
 	private:
 };
 
-struct A
+class RoundBrackets : public OpenBracket
 {
+	public:
+
+		virtual unsigned int Id() const
+		{
+			return ROUND_BRACKETS;
+		}
+
+		virtual unsigned int InputPriority() const
+		{
+			return MIN_PRIORITY;
+		}
+
+		virtual unsigned int StackPriority() const
+		{
+			return MAX_PRIORITY;
+		}
+
+		virtual const char * ToConstCharPtr() const
+		{
+			return "R";
+		}
 };
 
-struct B : public A
+class RoundBracketClose : public CloseBracket
 {
+	public:
+
+		virtual unsigned int Id() const
+		{
+			return ROUND_BRACKETS;
+		}
+
+		virtual unsigned int InputPriority() const
+		{
+			return MAX_PRIORITY;
+		}
+
+		virtual unsigned int StackPriority() const
+		{
+			throw std::runtime_error("InputOperator have not StackPriority");
+		}
+
+		virtual const char * ToConstCharPtr() const
+		{
+			return "R";
+		}
+
+		virtual bool IsComposite() const
+		{
+			return false;
+		}
 };
+
+/*
+struct A {};
+
+struct B : public A {};
+
+struct C : public A {};
 
 void F(const A & a)
 {
 	printf("F(A)\n");
 }
 
-void F(const B & a)
+void F(const B & b)
 {
 	printf("F(B)\n");
 }
 
-struct C
+void F(const C & c)
 {
-	
-};
+	printf("F(C)\n");
+}
+
+struct Test : public B {};
 
 
+	Test t;
+	F(t);
+	return 0;
+*/
 
 int main(int argc, const char * argv[])
 {
+
+
 	std::auto_ptr<XTL::Expression::Node> node;
 
-	const std::string s = "x+y*z*z";
+	const std::string s = "(x+y)*(a+b)";
 
 	XTL::SyntaxAnalyzer sa;
 
@@ -431,6 +445,14 @@ int main(int argc, const char * argv[])
 			else if (s[i] == '*')
 			{
 				node.reset(new Multiplication());
+			}
+			else if (s[i] == '(')
+			{
+				node.reset(new RoundBrackets());
+			}
+			else if (s[i] == ')')
+			{
+				node.reset(new RoundBracketClose());
 			}
 			else if (s[i] >= 'a' && s[i] <= 'z')
 			{
