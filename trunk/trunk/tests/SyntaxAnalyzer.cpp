@@ -53,5 +53,6 @@ namespace XTL
 	const SyntaxAnalyzer::ActionNothing SyntaxAnalyzer::OperatorActions::NOTHING;
 	const SyntaxAnalyzer::ActionPush    SyntaxAnalyzer::OperatorActions::PUSH;
 	const SyntaxAnalyzer::ActionPop     SyntaxAnalyzer::OperatorActions::POP;
+	const SyntaxAnalyzer::ActionReduce  SyntaxAnalyzer::OperatorActions::REDUCE;
 }
 

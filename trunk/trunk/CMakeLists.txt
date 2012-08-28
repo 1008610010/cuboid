@@ -36,16 +36,16 @@ INCLUDE_DIRECTORIES (
 
 ADD_SUBDIRECTORY (lib)
 
-#ADD_EXECUTABLE (
-#	forge
-#		tests/forge.cpp
-#)
+ADD_EXECUTABLE (
+	forge
+		tests/forge.cpp
+)
 
-#TARGET_LINK_LIBRARIES (
-#	forge
-#		xtl-pgsql
-#		xtl
-#)
+TARGET_LINK_LIBRARIES (
+	forge
+		xtl-pgsql
+		xtl
+)
 
 ADD_EXECUTABLE (
 	expr
