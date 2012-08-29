@@ -70,6 +70,13 @@ namespace XTL
 				;;
 			}
 
+			explicit ConstCharPtr(const std::string & s)
+				: ptr_(s.data()),
+				  end_(s.data() + s.size()),
+				  marked_()
+			{
+			}
+
 			virtual ~ConstCharPtr() throw()
 			{
 				;;

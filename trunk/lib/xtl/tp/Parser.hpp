@@ -14,21 +14,21 @@ namespace XTL
 		public:
 
 			static const CharClassBits CHAR_NULL             = 0x00000001; // '\0'
-			static const CharClassBits CHAR_DIGIT            = 0x00000002; // '0' .. '9'
+			static const CharClassBits CHAR_DECIMAL          = 0x00000002; // '0' .. '9'
 			static const CharClassBits CHAR_LETTER_UC        = 0x00000004; // 'A' .. 'Z'
 			static const CharClassBits CHAR_LETTER_LC        = 0x00000008; // 'a' .. 'z'
 			static const CharClassBits CHAR_HEX_UC           = 0x00000010; // 'A' .. 'F'
 			static const CharClassBits CHAR_HEX_LC           = 0x00000020; // 'a' .. 'f'
-			static const CharClassBits CHAR_SPACE            = 0x00000040; // ' '
-			static const CharClassBits CHAR_TAB              = 0x00000080; // '\t'
-			static const CharClassBits CHAR_CARRIAGE_RETURN  = 0x00000100; // '\r'
-			static const CharClassBits CHAR_LINE_FEED        = 0x00000200; // '\n'
-			static const CharClassBits CHAR_PLUS             = 0x00000400; // '+'
-			static const CharClassBits CHAR_MINUS            = 0x00000800; // '-'
-			static const CharClassBits CHAR_UNDERSCORE       = 0x00001000; // '_'
+			static const CharClassBits CHAR_OCTAL            = 0x00000040; // '0' .. '7'
+			static const CharClassBits CHAR_BINARY           = 0x00000080; // '0' .. '1'
+			static const CharClassBits CHAR_SPACE            = 0x00000100; // ' '
+			static const CharClassBits CHAR_TAB              = 0x00000200; // '\t'
+			static const CharClassBits CHAR_CARRIAGE_RETURN  = 0x00000400; // '\r'
+			static const CharClassBits CHAR_LINE_FEED        = 0x00000800; // '\n'
+			static const CharClassBits CHAR_PLUS             = 0x00001000; // '+'
+			static const CharClassBits CHAR_MINUS            = 0x00002000; // '-'
+			static const CharClassBits CHAR_UNDERSCORE       = 0x00004000; // '_'
 
-			static const CharClassBits CHAR_OCTAL            = 0x00002000; // '0' .. '7'
-			static const CharClassBits CHAR_BINARY           = 0x00004000; // '0' .. '1'
 
 			static const CharClassBits CHAR_LETTER           = CHAR_LETTER_UC | CHAR_LETTER_LC;
 
@@ -118,7 +118,9 @@ namespace XTL
 						: CharClassifier()
 					{
 						Add(CHAR_NULL,             '\0');
-						Add(CHAR_DIGIT,            '0', '9');
+						Add(CHAR_DECIMAL,          '0', '9');
+						Add(CHAR_OCTAL,            '0', '7');
+						Add(CHAR_BINARY,           '0', '1');
 						Add(CHAR_LETTER_UC,        'A', 'Z');
 						Add(CHAR_LETTER_LC,        'a', 'z');
 						Add(CHAR_HEX_UC,           'A', 'F');

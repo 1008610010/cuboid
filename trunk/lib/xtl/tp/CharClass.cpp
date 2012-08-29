@@ -18,12 +18,12 @@ namespace XTL
 	}
 
 	const CharClass CharClass::DECIMAL = Parser::CreateCommonClass(
-		Parser::CHAR_DIGIT
+		Parser::CHAR_DECIMAL
 	);
 
 	const CharClass CharClass::HEXADECIMAL = Parser::CreateCommonClass(
-		Parser::CHAR_DIGIT  |
-		Parser::CHAR_HEX_UC |
+		Parser::CHAR_DECIMAL  |
+		Parser::CHAR_HEX_UC   |
 		Parser::CHAR_HEX_LC
 	);
 
@@ -37,7 +37,7 @@ namespace XTL
 		Parser::CHAR_LETTER_UC  |
 		Parser::CHAR_LETTER_LC  |
 		Parser::CHAR_UNDERSCORE |
-		Parser::CHAR_DIGIT
+		Parser::CHAR_DECIMAL
 	);
 
 
