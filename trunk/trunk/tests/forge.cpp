@@ -2474,6 +2474,11 @@ namespace XTL
 
 		protected:
 
+			class NumberBuilder
+			{
+
+			};
+
 			void SetZero()
 			{
 			}
@@ -2495,6 +2500,10 @@ namespace XTL
 			void OnIntegerDigit(int digit)
 			{
 				;;
+			}
+
+			void OnOctalDigit(int digit)
+			{
 			}
 
 			void OnBinaryDigit(int digit)
@@ -2609,8 +2618,9 @@ namespace XTL
 				{
 					throw std::runtime_error("");
 				}
+
 				char c = GetChar();
-				if (c != '0' && c != '1')
+				if (!CharClass::BINARY.Contains(c))
 				{
 					throw std::runtime_error("");
 				}
@@ -2625,7 +2635,35 @@ namespace XTL
 					}
 					c = GetChar();
 				}
-				while (c == '0' || c == '1');
+				while (CharClass::BINARY.Contains(c));
+
+				if (CharClass::DECIMAL.Contains(c))
+				{
+					throw std::runtime_error("");
+				}
+			}
+
+			void ParseOctal()
+			{
+				// Assert( CharClass::DECIMAL.Contains(NeedChar()) )
+
+				char c = GetChar();
+				if (!CharClass::OCTAL.Contains(c))
+				{
+					throw std::runtime_error("");
+				}
+
+				do
+				{
+					OnOctalDigit(c - '0');
+					Advance();
+					if (AtEnd())
+					{
+						return;
+					}
+					c = GetChar();
+				}
+				while (CharClass::OCTAL.Contains(c));
 
 				if (CharClass::DECIMAL.Contains(c))
 				{

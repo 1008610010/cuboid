@@ -21,6 +21,14 @@ namespace XTL
 		Parser::CHAR_DECIMAL
 	);
 
+	const CharClass CharClass::OCTAL = Parser::CreateCommonClass(
+		Parser::CHAR_OCTAL
+	);
+
+	const CharClass CharClass::BINARY = Parser::CreateCommonClass(
+		Parser::CHAR_BINARY
+	);
+
 	const CharClass CharClass::HEXADECIMAL = Parser::CreateCommonClass(
 		Parser::CHAR_DECIMAL  |
 		Parser::CHAR_HEX_UC   |
