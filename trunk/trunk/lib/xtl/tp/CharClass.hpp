@@ -13,9 +13,14 @@ namespace XTL
 	{
 		public:
 
-			CharClass(const CharClassifier & classifier, XTL::UINT_32 classBits);
+			CharClass(const CharClassifier & classifier, CharClassBits classBits);
 
 			bool Contains(char c) const;
+
+			static const CharClass DECIMAL;
+			static const CharClass HEXADECIMAL;
+			static const CharClass IDENTIFIER_HEAD;
+			static const CharClass IDENTIFIER_TAIL;
 
 		private:
 

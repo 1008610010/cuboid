@@ -27,14 +27,19 @@ namespace XTL
 			static const CharClassBits CHAR_MINUS            = 0x00000800; // '-'
 			static const CharClassBits CHAR_UNDERSCORE       = 0x00001000; // '_'
 
+			static const CharClassBits CHAR_OCTAL            = 0x00002000; // '0' .. '7'
+			static const CharClassBits CHAR_BINARY           = 0x00004000; // '0' .. '1'
+
 			static const CharClassBits CHAR_LETTER           = CHAR_LETTER_UC | CHAR_LETTER_LC;
 
 			class EndOfFile
 			{
 			};
 
-			static const CharClass IDENTIFIER_HEAD;
-			static const CharClass IDENTIFIER_TAIL;
+			static const CharClass CreateCommonClass(CharClassBits classBits)
+			{
+				return CommonCharClassifier::Instance().CreateClass(classBits);
+			}
 
 		protected:
 

@@ -39,6 +39,25 @@ namespace XTL
 
 			CharClassBits charBits_[CHARS_COUNT];
 	};
+/*
+	template <typename T>
+	class CharClassifierSingleton : public CharClassifier
+	{
+		public:
+
+			static const CharClassifier & Instance()
+			{
+				static T instance;
+
+				return instance;
+			}
+
+			static CharClass CreateClass(CharClassBits classBits) const
+			{
+				return CharClass(*this, classBits);
+			}
+	};
+*/
 }
 
 #endif

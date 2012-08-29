@@ -278,7 +278,7 @@ class HexOutputStream : public XTL::OutputStream
 			: bytesPerLine_(bytesPerLine),
 			  bytesWritten_(0)
 		{
-			
+
 		}
 
 		virtual void Write(const void * buffer, unsigned int size)
@@ -361,7 +361,7 @@ class TestInteger
 
 		TestInteger()
 			: value_(0), initialized_(false) { ;; }
-		
+
 		TestInteger(int value)
 			: value_(value), initialized_(true) { ;; }
 
@@ -483,7 +483,7 @@ namespace XTL
 
 			FileTransaction(const FilePath & directoryPath, const std::string & fileName)
 				: status_(INACTIVE),
-				  filePath_(directoryPath + fileName), 
+				  filePath_(directoryPath + fileName),
 				  file_(TemporaryFilePath(directoryPath, fileName)),
 				  bufferedFileStream_(new FileOutputStream(file_))
 			{
@@ -1961,7 +1961,7 @@ class Searcher
 		{
 			public:
 
-				
+
 
 			private:
 
@@ -2298,13 +2298,13 @@ class RegularExpressionTree
 
 				virtual ~Node() throw() { ;; }
 		};
-		
+
 		class NodeChar : public Node
 		{
 			public:
-				
+
 				virtual ~NodeChar() throw() { ;; }
-				
+
 		};
 /*
 		class CharClass
@@ -2316,11 +2316,11 @@ class RegularExpressionTree
 		class Repeat0 : public Node
 		{
 		};
-		
+
 		class Alternation: public Node
 		{
 			private:
-			
+
 				std::vector<Node *> nodes_;
 		};
 */
@@ -2359,7 +2359,7 @@ enum
 /*
 	   c C * | ( ) { }
 	@  P
-	c  
+	c
 */
 
 
@@ -2508,26 +2508,91 @@ enum
 +---------+---------+------------+---------+---------+---------+---------+---------+---------+
 */
 
+#include <xtl/tp/Parser.hpp>
 
 namespace XTL
 {
-	void NumberParser : public Parser
+	class NumberParser : public Parser
 	{
 		public:
 
 			explicit NumberParser(CharSource & charSource)
-				: charSource_(charSource),
+				: Parser(charSource),
 				  result_(0)
 			{
 				;;
 			}
 
+			class Number
+			{
+				public:
+
+					void OnIntegerDigit(int digit)
+					{
+						value.u = 10 * value.u + digit;
+					}
+
+				private:
+
+					union Value
+					{
+						unsigned long long int u;
+						long long int i;
+						double d;
+
+						Value()
+							: u(0)
+						{
+							;;
+						}
+					};
+
+					Value value;
+			};
+
+			Number Release()
+			{
+			}
+
 		protected:
+
+			void SetNegative()
+			{
+				;;
+			}
+
+			void SetFloat()
+			{
+				;;
+			}
+
+			void SetNegativeExponent()
+			{
+			}
+
+			void OnIntegerDigit(int digit)
+			{
+				;;
+			}
+
+			void OnBinaryDigit(int digit)
+			{
+				;;
+			}
+
+			void OnFractionalDigit(int digit)
+			{
+				;;
+			}
+
+			void OnExponentDigit(int digit)
+			{
+				;;
+			}
 
 			void ParseNumber()
 			{
 				// Assert(NotAtEnd() && GetChar() =~ ["-", "0".."9"])
-				long long int result;
 
 				char c = GetChar();
 
@@ -2536,7 +2601,6 @@ namespace XTL
 					Advance();
 					if (AtEnd())
 					{
-						result_ = 0;
 						return;
 					}
 
@@ -2544,22 +2608,66 @@ namespace XTL
 					if (c == 'b')
 					{
 						ParseBinary();
+						return;
 					}
 					else if (c == 'x')
 					{
 						ParseHexadecimal();
+						return;
 					}
-					else if (CHAR_CLASS_DIGIT.Contains(c))
+					else if (CharClass::DECIMAL.Contains(c))
 					{
-						ParseOctal();
+						// ParseOctal();
+						return;
 					}
 					else if (c == '.')
 					{
-						
+						ParseFractional();
+						return;
 					}
 					else if (c == 'e' || c == 'E')
 					{
+						ParseExponent();
+						return;
 					}
+					else
+					{
+						return;
+					}
+				}
+
+				if (c == '-')
+				{
+					SetNegative();
+					Advance();
+					if (AtEnd() || !CharClass::DECIMAL.Contains(GetChar()))
+					{
+						throw std::runtime_error("");
+					}
+				}
+
+				// Assert( CHAR_CLASS_DIGIT.Contains(NeedChar()) )
+				do
+				{
+					OnIntegerDigit(GetChar() - '0');
+
+					Advance();
+					if (AtEnd())
+					{
+						return;
+					}
+				}
+				while (CharClass::DECIMAL.Contains(GetChar()));
+
+				if (GetChar() == '.')
+				{
+					ParseFractional();
+				}
+			}
+
+/*
+				if (c == '0')
+				{
 					else
 					{
 					}
@@ -2572,17 +2680,129 @@ namespace XTL
 						negative = true;
 					}
 				}
+*/
+
+			void ParseBinary()
+			{
+				// Assert( NeedChar() == 'b' )
+
+				Advance();
+				if (AtEnd())
+				{
+					throw std::runtime_error("");
+				}
+				char c = GetChar();
+				if (c != '0' && c != '1')
+				{
+					throw std::runtime_error("");
+				}
+
+				do
+				{
+					OnBinaryDigit(c - '0');
+					Advance();
+					if (AtEnd())
+					{
+						return;
+					}
+					c = GetChar();
+				}
+				while (c == '0' || c == '1');
+
+				if (CharClass::DECIMAL.Contains(c))
+				{
+					throw std::runtime_error("");
+				}
 			}
 
-			void ParseDecimal()
+			void ParseHexadecimal()
 			{
-				
 			}
+
 
 		private:
 
+			void ParseFractional()
+			{
+				// Assert( NeedChar() == '.' )
+
+				SetFloat();
+				Advance();
+				if (AtEnd() || !CharClass::DECIMAL.Contains(GetChar()))
+				{
+					throw std::runtime_error("");
+				}
+
+				// Assert( CHAR_CLASS_DIGIT.Contains(NeedChar()) )
+				do
+				{
+					OnFractionalDigit(GetChar() - '0');
+
+					Advance();
+					if (AtEnd())
+					{
+						return;
+					}
+				}
+				while (CharClass::DECIMAL.Contains(GetChar()));
+
+				char c = GetChar();
+				if (c == 'e' || c == 'E')
+				{
+					ParseExponent();
+				}
+			}
+
+			void ParseExponent()
+			{
+				// Assert( NeedChar() == 'e' || NeedChar() == 'E' )
+				Advance();
+				if (AtEnd())
+				{
+					throw std::runtime_error("");
+				}
+
+				char c = GetChar();
+				if (c == '+')
+				{
+					Advance();
+					if (AtEnd())
+					{
+						throw std::runtime_error("");
+					}
+					c = GetChar();
+				}
+				else if (c == '-')
+				{
+					SetNegativeExponent();
+					Advance();
+					if (AtEnd())
+					{
+						throw std::runtime_error("");
+					}
+					c = GetChar();
+				}
+
+				if (!CharClass::DECIMAL.Contains(c))
+				{
+					throw std::runtime_error("");
+				}
+
+				do
+				{
+					OnExponentDigit(c - '0');
+					Advance();
+					if (AtEnd())
+					{
+						throw std::runtime_error("");
+					}
+					c = GetChar();
+				}
+				while (CharClass::DECIMAL.Contains(c));
+			}
+
 			long long int result_;
-	}
+	};
 }
 
 

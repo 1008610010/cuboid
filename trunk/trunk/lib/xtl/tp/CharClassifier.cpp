@@ -36,4 +36,3 @@ namespace XTL
 		return *this;
 	}
 }
-

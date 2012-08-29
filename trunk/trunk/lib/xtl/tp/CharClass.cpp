@@ -1,6 +1,7 @@
 #include "CharClass.hpp"
 
 #include "CharClassifier.hpp"
+#include "Parser.hpp"
 
 namespace XTL
 {
@@ -15,5 +16,30 @@ namespace XTL
 	{
 		return (classifier_[c] & classBits_) != 0;
 	}
+
+	const CharClass CharClass::DECIMAL = Parser::CreateCommonClass(
+		Parser::CHAR_DIGIT
+	);
+
+	const CharClass CharClass::HEXADECIMAL = Parser::CreateCommonClass(
+		Parser::CHAR_DIGIT  |
+		Parser::CHAR_HEX_UC |
+		Parser::CHAR_HEX_LC
+	);
+
+	const CharClass CharClass::IDENTIFIER_HEAD = Parser::CreateCommonClass(
+		Parser::CHAR_LETTER_UC  |
+		Parser::CHAR_LETTER_LC  |
+		Parser::CHAR_UNDERSCORE
+	);
+
+	const CharClass CharClass::IDENTIFIER_TAIL = Parser::CreateCommonClass(
+		Parser::CHAR_LETTER_UC  |
+		Parser::CHAR_LETTER_LC  |
+		Parser::CHAR_UNDERSCORE |
+		Parser::CHAR_DIGIT
+	);
+
+
 }
 
