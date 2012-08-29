@@ -15,6 +15,11 @@ namespace XTL
 
 			CharClass(const CharClassifier & classifier, CharClassBits classBits);
 
+			CharClassBits Bits() const
+			{
+				return classBits_;
+			}
+
 			bool Contains(char c) const;
 
 			static const CharClass DECIMAL;
