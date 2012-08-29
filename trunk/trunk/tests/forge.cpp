@@ -2436,7 +2436,7 @@ namespace XTL
 
 			explicit NumberParser(CharSource & charSource)
 				: Parser(charSource),
-				  result_(0)
+				  numberBuilder_()
 			{
 				;;
 			}
@@ -2476,56 +2476,54 @@ namespace XTL
 
 			class NumberBuilder
 			{
+				public:
 
+					void SetZero()
+					{
+					}
+
+					void SetNegative()
+					{
+					}
+
+					void SetFloat()
+					{
+					}
+
+					void SetNegativeExponent()
+					{
+					}
+
+					void OnIntegerDigit(int digit)
+					{
+						;;
+					}
+
+					void OnOctalDigit(int digit)
+					{
+					}
+
+					void OnBinaryDigit(int digit)
+					{
+						;;
+					}
+
+					void OnFractionalDigit(int digit)
+					{
+						;;
+					}
+
+					void OnExponentDigit(int digit)
+					{
+						;;
+					}
 			};
-
-			void SetZero()
-			{
-			}
-
-			void SetNegative()
-			{
-				;;
-			}
-
-			void SetFloat()
-			{
-				;;
-			}
-
-			void SetNegativeExponent()
-			{
-			}
-
-			void OnIntegerDigit(int digit)
-			{
-				;;
-			}
-
-			void OnOctalDigit(int digit)
-			{
-			}
-
-			void OnBinaryDigit(int digit)
-			{
-				;;
-			}
-
-			void OnFractionalDigit(int digit)
-			{
-				;;
-			}
-
-			void OnExponentDigit(int digit)
-			{
-				;;
-			}
 
 			void ParseNumber()
 			{
 				// Assert(NotAtEnd() && GetChar() =~ ["-", "0".."9"])
 
-				SetZero();
+				numberBuilder_.SetZero();
 
 				char c = GetChar();
 
@@ -2565,7 +2563,7 @@ namespace XTL
 
 				if (c == '-')
 				{
-					SetNegative();
+					numberBuilder_.SetNegative();
 					Advance();
 					if (AtEnd() || !CharClass::DECIMAL.Contains(GetChar()))
 					{
@@ -2576,7 +2574,7 @@ namespace XTL
 				// Assert( CHAR_CLASS_DIGIT.Contains(NeedChar()) )
 				do
 				{
-					OnIntegerDigit(GetChar() - '0');
+					numberBuilder_.OnIntegerDigit(GetChar() - '0');
 
 					Advance();
 					if (AtEnd())
@@ -2627,7 +2625,7 @@ namespace XTL
 
 				do
 				{
-					OnBinaryDigit(c - '0');
+					numberBuilder_.OnBinaryDigit(c - '0');
 					Advance();
 					if (AtEnd())
 					{
@@ -2655,7 +2653,7 @@ namespace XTL
 
 				do
 				{
-					OnOctalDigit(c - '0');
+					numberBuilder_.OnOctalDigit(c - '0');
 					Advance();
 					if (AtEnd())
 					{
@@ -2675,14 +2673,13 @@ namespace XTL
 			{
 			}
 
-
 		private:
 
 			void ParseFractional()
 			{
 				// Assert( NeedChar() == '.' )
 
-				SetFloat();
+				numberBuilder_.SetFloat();
 				Advance();
 				if (AtEnd() || !CharClass::DECIMAL.Contains(GetChar()))
 				{
@@ -2692,7 +2689,7 @@ namespace XTL
 				// Assert( CHAR_CLASS_DIGIT.Contains(NeedChar()) )
 				do
 				{
-					OnFractionalDigit(GetChar() - '0');
+					numberBuilder_.OnFractionalDigit(GetChar() - '0');
 
 					Advance();
 					if (AtEnd())
@@ -2730,7 +2727,7 @@ namespace XTL
 				}
 				else if (c == '-')
 				{
-					SetNegativeExponent();
+					numberBuilder_.SetNegativeExponent();
 					Advance();
 					if (AtEnd())
 					{
@@ -2746,7 +2743,7 @@ namespace XTL
 
 				do
 				{
-					OnExponentDigit(c - '0');
+					numberBuilder_.OnExponentDigit(c - '0');
 					Advance();
 					if (AtEnd())
 					{
@@ -2757,14 +2754,85 @@ namespace XTL
 				while (CharClass::DECIMAL.Contains(c));
 			}
 
-			long long int result_;
+			NumberBuilder numberBuilder_;
 	};
 }
 
 
+class IntegerBuilder
+{
+	public:
+
+		IntegerBuilder()
+			: value_(0),
+			  negative_(false)
+		{
+			;;
+		}
+
+		void SetNegative()
+		{
+			if (!negative_)
+			{
+				if (value_ > MAX_SIGNED)
+				{
+					throw std::runtime_error("Overflow");
+				}
+				negative_ = true;
+			}
+		}
+
+		static const XTL::UINT_32 MAX_UNSIGNED = 4294967295;
+		static const XTL::UINT_32 MAX_SIGNED   = 2147483648;
+
+		void AppendIntegerDigit(unsigned int digit)
+		{
+			if (CanAppendIntegerDigit(digit))
+			{
+				value_ *= 10;
+				value_ += digit;
+			}
+			else
+			{
+				throw std::runtime_error("Overflow");
+			}
+		}
+
+	private:
+
+		bool CanAppendIntegerDigit(unsigned int digit)
+		{
+			if (negative_)
+			{
+				return value_ < MAX_SIGNED / 10 || (value_ == MAX_SIGNED / 10 && digit <= MAX_SIGNED % 10);
+			}
+			else
+			{
+				return value_ < MAX_UNSIGNED / 10 || (value_ == MAX_UNSIGNED / 10 && digit <= MAX_UNSIGNED % 10);
+			}
+		}
+
+		XTL::UINT_32 value_;
+		bool         negative_;
+};
+
 int main(int argc, const char * argv[])
 {
 	printf("xxx\n");
+
+	IntegerBuilder ib;
+
+	ib.AppendIntegerDigit(4);
+	ib.AppendIntegerDigit(2);
+	ib.AppendIntegerDigit(9);
+	ib.AppendIntegerDigit(4);
+	ib.AppendIntegerDigit(9);
+	ib.AppendIntegerDigit(6);
+	ib.AppendIntegerDigit(7);
+	ib.AppendIntegerDigit(2);
+	ib.AppendIntegerDigit(9);
+	ib.AppendIntegerDigit(5);
+	ib.SetNegative();
 
 	return 0;
 
