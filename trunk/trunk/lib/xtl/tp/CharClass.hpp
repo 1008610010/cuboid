@@ -26,6 +26,9 @@ namespace XTL
 			static const CharClass HEXADECIMAL;
 			static const CharClass OCTAL;
 			static const CharClass BINARY;
+			static const CharClass WHITESPACE;
+			static const CharClass LINEAR_SPACE;
+			static const CharClass NEW_LINE;
 			static const CharClass IDENTIFIER_HEAD;
 			static const CharClass IDENTIFIER_TAIL;
 

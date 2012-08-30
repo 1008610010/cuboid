@@ -35,6 +35,23 @@ namespace XTL
 		Parser::CHAR_HEX_LC
 	);
 
+	const CharClass CharClass::WHITESPACE = Parser::CreateCommonClass(
+		Parser::CHAR_SPACE           |
+		Parser::CHAR_TAB             |
+		Parser::CHAR_CARRIAGE_RETURN |
+		Parser::CHAR_LINE_FEED
+	);
+
+	const CharClass CharClass::LINEAR_SPACE = Parser::CreateCommonClass(
+		Parser::CHAR_SPACE           |
+		Parser::CHAR_TAB
+	);
+
+	const CharClass CharClass::NEW_LINE = Parser::CreateCommonClass(
+		Parser::CHAR_CARRIAGE_RETURN |
+		Parser::CHAR_LINE_FEED
+	);
+
 	const CharClass CharClass::IDENTIFIER_HEAD = Parser::CreateCommonClass(
 		Parser::CHAR_LETTER_UC  |
 		Parser::CHAR_LETTER_LC  |

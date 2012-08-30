@@ -45,9 +45,9 @@ namespace XTL
 
 			explicit Parser(CharSource & charSource);
 
-			bool NotAtEnd() const              { return charSource_.NotAtEnd(); }
-
 			bool AtEnd() const                 { return charSource_.AtEnd(); }
+
+			bool NotAtEnd() const              { return charSource_.NotAtEnd(); }
 
 			char GetChar() const               { return charSource_.GetChar(); }
 
@@ -58,6 +58,10 @@ namespace XTL
 			void Unmark()                      { charSource_.Unmark(); }
 
 			const std::string ReleaseString()  { return charSource_.ReleaseString(); }
+
+			bool InClass(const CharClass & charClass) const    { return charClass.Contains(GetChar()); }
+
+			bool NotInClass(const CharClass & charClass) const { return !charClass.Contains(GetChar()); }
 
 			/**
 			 * @return Current character
