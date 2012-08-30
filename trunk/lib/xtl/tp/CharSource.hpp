@@ -9,6 +9,8 @@
 
 namespace XTL
 {
+	class CharBuffer;
+
 	class CharSource
 	{
 		public:
@@ -35,6 +37,8 @@ namespace XTL
 
 			virtual const std::string ReleaseString() = 0;
 
+			virtual void ReleaseString(CharBuffer & buffer) = 0;
+
 			class ConstCharPtr;
 	};
 
@@ -48,7 +52,7 @@ namespace XTL
 				;;
 			}
 
-			bool IsInCharSource(const CharSource & charSource) const
+			bool FromCharSource(const CharSource & charSource) const
 			{
 				return charSource_ == &charSource;
 			}
@@ -62,79 +66,32 @@ namespace XTL
 	{
 		public:
 
-			ConstCharPtr(const char * ptr, unsigned int size)
-				: ptr_(ptr),
-				  end_(ptr + size),
-				  marked_()
-			{
-				;;
-			}
+			ConstCharPtr(const char * ptr, unsigned int size);
 
-			explicit ConstCharPtr(const std::string & s)
-				: ptr_(s.data()),
-				  end_(s.data() + s.size()),
-				  marked_()
-			{
-			}
+			virtual ~ConstCharPtr() throw();
 
-			virtual ~ConstCharPtr() throw()
-			{
-				;;
-			}
+			virtual bool NotAtEnd() const;
 
-			virtual bool NotAtEnd() const
-			{
-				return ptr_ < end_;
-			}
+			virtual bool AtEnd() const;
 
-			virtual bool AtEnd() const
-			{
-				return ptr_ >= end_;
-			}
+			virtual char GetChar() const;
 
-			virtual char GetChar() const
-			{
-				return *ptr_;
-			}
+			virtual void Advance();
 
-			virtual void Advance()
-			{
-				++ptr_;
-			}
+			virtual void Mark();
 
-			virtual void Mark()
-			{
-				marked_.push(ptr_);
-			}
+			virtual void Unmark();
 
-			virtual void Unmark()
-			{
-				PopPtr();
-			}
+			virtual const std::string ReleaseString();
 
-			virtual const std::string ReleaseString()
-			{
-				const char * begin = PopPtr();
-
-				return std::string(begin, ptr_ - begin);
-			}
+			virtual void ReleaseString(CharBuffer & buffer);
 
 		private:
 
 			ConstCharPtr(const ConstCharPtr &);
 			ConstCharPtr & operator= (const ConstCharPtr &);
 
-			const char * PopPtr()
-			{
-				if (marked_.empty())
-				{
-					throw std::runtime_error("CharSource was not marked");
-				}
-
-				const char * p = marked_.top();
-				marked_.pop();
-				return p;
-			}
+			const char * PopPtr();
 
 			const char * ptr_;
 			const char * const end_;

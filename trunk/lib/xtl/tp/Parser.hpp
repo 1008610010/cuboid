@@ -45,19 +45,21 @@ namespace XTL
 
 			explicit Parser(CharSource & charSource);
 
-			bool AtEnd() const                 { return charSource_.AtEnd(); }
+			bool AtEnd() const                      { return charSource_.AtEnd(); }
 
-			bool NotAtEnd() const              { return charSource_.NotAtEnd(); }
+			bool NotAtEnd() const                   { return charSource_.NotAtEnd(); }
 
-			char GetChar() const               { return charSource_.GetChar(); }
+			char GetChar() const                    { return charSource_.GetChar(); }
 
-			void Advance()                     { charSource_.Advance(); }
+			void Advance()                          { charSource_.Advance(); }
 
-			void Mark()                        { charSource_.Mark(); }
+			void Mark()                             { charSource_.Mark(); }
 
-			void Unmark()                      { charSource_.Unmark(); }
+			void Unmark()                           { charSource_.Unmark(); }
 
-			const std::string ReleaseString()  { return charSource_.ReleaseString(); }
+			const std::string ReleaseString()       { return charSource_.ReleaseString(); }
+
+			void ReleaseString(CharBuffer & buffer) { charSource_.ReleaseString(buffer); }
 
 			bool InClass(const CharClass & charClass) const    { return charClass.Contains(GetChar()); }
 

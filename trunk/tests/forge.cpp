@@ -1114,21 +1114,6 @@ struct Alignment
 	static const unsigned int Value = offsetof(Dummy, value);
 };
 
-class Scalar
-{
-	public:
-
-
-	private:
-
-		union {
-			XTL::INT_64 i_;
-			double      f_;
-		};
-
-		const char * s_;
-};
-
 #include <xtl/tp/TextCharSource.hpp>
 
 
@@ -2770,6 +2755,12 @@ class IntegerBuilder
 			;;
 		}
 
+		void SetZero()
+		{
+			value_ = 0;
+			negative_ = false;
+		}
+
 		void SetNegative()
 		{
 			if (!negative_)
@@ -2840,7 +2831,10 @@ namespace XTL
 				: Parser(charSource),
 				  currentSection_()
 			{
-				// Parse();
+				while (NotAtEnd())
+				{
+					ParseLine();
+				}
 			}
 
 			void ParseLine()
@@ -2861,7 +2855,7 @@ namespace XTL
 					ReadCommand();
 				}
 				*/
-				else if (c == ';')
+				else if (c == ';' || c == '#')
 				{
 					SkipComments();
 				}
@@ -2870,6 +2864,10 @@ namespace XTL
 					ReadKeyValue();
 				}
 
+				while (NotAtEnd() && InClass(CharClass::NEW_LINE))
+				{
+					Advance();
+				}
 			}
 
 		private:
@@ -2884,6 +2882,10 @@ namespace XTL
 				return AtEnd() || InClass(CharClass::NEW_LINE);
 			}
 
+			/*
+			 * ... '[' \s* [A-Za-z_][A-Za-z0-9_]* \s* ']' ...
+			 *   ---^                                     ^---
+			 */
 			void ReadSection()
 			{
 				// Assert( NeedChar() == '[' )
@@ -2950,9 +2952,30 @@ namespace XTL
 				ReadValue();
 			}
 
+			/*
+			 * " ( [^\\"] | '\\' [rnt\\"]  )* "
+			 * ' ( [^\\'] | '\\' [\\'] )* '
+			 * -? [0-9]+ ( '.' [0-9]+ )? ( [eE] [+-] [0-9]+ )
+			 * '0' ( ('x' [0-9A-Fa-f]+) | ('b' [0-1]+) | ([0-7]*) )
+			 */
 			void ReadValue()
 			{
 				// Assert( NotAtEnd() && NotInClass(CharClass::LINEAR_SPACE) )
+
+				char c = GetChar();
+
+				if (c == '"')
+				{
+				}
+				else if (c == '\'')
+				{
+				}
+				else if (CharClass::NUMBER_HEAD.Contains(c))
+				{
+				}
+				else if (CharClass::IDENTIFIER_HEAD.Contains(c))
+				{
+				}
 			}
 
 			const std::string ReadIdentifier()
@@ -2970,15 +2993,77 @@ namespace XTL
 				return ReleaseString();
 			}
 
-			bool SkipComments()
+			void SkipComments()
 			{
+				// Assert( NeedChar() == ';' || NeedChar() == '#' )
+
+				do
+				{
+					Advance();
+				}
+				while (NotAtEnd() && GetChar() != '\n');
+			}
+
+			/*
+			 * WARNING: charSource_ is marked, if EOF found
+			 */
+			const std::string ReadStringDoubleQuoted()
+			{
+				// Assert( NeedChar() == '"' )
+				Advance();
+
+				std::string result;
+				Mark();
+
+				try
+				{
+					char c = NeedChar();
+
+					while (c != '"')
+					{
+						if (c == '\\')
+						{
+							result.append(ReleaseString());
+
+							Advance();
+							c = NeedChar();
+							switch (c)
+							{
+								case 't'  : result.append(1, '\t'); break;
+								case 'r'  : result.append(1, '\r'); break;
+								case 'n'  : result.append(1, '\n'); break;
+								case '"'  : result.append(1, '"');  break;
+								case '\\' : result.append(1, '\\'); break;
+								default   : throw std::runtime_error("Unknown escape sequence");
+							}
+
+							Advance();
+							Mark();
+						}
+						else
+						{
+							Advance();
+						}
+
+						c = NeedChar();
+					}
+				}
+				catch (const EndOfFile &)
+				{
+					throw std::runtime_error("Parse string error");
+				}
+
+				result.append(ReleaseString());
+				Advance();
+
+				return result;
 			}
 
 			std::string currentSection_;
 	};
-
-
 }
+
+#include <xtl/CharBuffer.hpp>
 
 int main(int argc, const char * argv[])
 {
@@ -3050,8 +3135,6 @@ int main(int argc, const char * argv[])
 
 	printf("%s\n", parser.Parse(charSource).c_str());
 */
-//	printf("%lu\n", sizeof(Scalar));
-	return 0;
 
 	HexOutputStream hos(16);
 
