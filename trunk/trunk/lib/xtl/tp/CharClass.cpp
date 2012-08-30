@@ -29,6 +29,11 @@ namespace XTL
 		Parser::CHAR_BINARY
 	);
 
+	const CharClass CharClass::NUMBER_HEAD = Parser::CreateCommonClass(
+		Parser::CHAR_DECIMAL  |
+		Parser::CHAR_MINUS
+	);
+
 	const CharClass CharClass::HEXADECIMAL = Parser::CreateCommonClass(
 		Parser::CHAR_DECIMAL  |
 		Parser::CHAR_HEX_UC   |
