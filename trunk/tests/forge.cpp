@@ -2816,6 +2816,170 @@ class IntegerBuilder
 		bool         negative_;
 };
 
+namespace XTL
+{
+	class IniFileParser : public Parser
+	{
+		public:
+
+			class Error
+			{
+				public:
+
+					explicit Error(const std::string & what)
+						: what_(what) { ;; }
+
+					const char * What() const { return what_.c_str(); }
+
+				private:
+
+					const std::string what_;
+			};
+
+			IniFileParser(CharSource & charSource)
+				: Parser(charSource),
+				  currentSection_()
+			{
+				// Parse();
+			}
+
+			void ParseLine()
+			{
+				if (SkipSpacesAtEnd())
+				{
+					return;
+				}
+
+				char c = GetChar();
+				if (c == '[')
+				{
+					ReadSection();
+				}
+				/*
+				else if (c == '{')
+				{
+					ReadCommand();
+				}
+				*/
+				else if (c == ';')
+				{
+					SkipComments();
+				}
+				else if (CharClass::IDENTIFIER_HEAD.Contains(c))
+				{
+					ReadKeyValue();
+				}
+
+			}
+
+		private:
+
+			bool SkipSpacesAtEnd()
+			{
+				while (NotAtEnd() && InClass(CharClass::LINEAR_SPACE))
+				{
+					Advance();
+				}
+
+				return AtEnd() || InClass(CharClass::NEW_LINE);
+			}
+
+			void ReadSection()
+			{
+				// Assert( NeedChar() == '[' )
+
+				Advance();
+
+				if (SkipSpacesAtEnd())
+				{
+					throw Error("Invalid section");
+				}
+
+				if (NotInClass(CharClass::IDENTIFIER_HEAD))
+				{
+					throw Error("Invalid section");
+				}
+
+				currentSection_ = ReadIdentifier();
+
+				if (SkipSpacesAtEnd())
+				{
+					throw Error("Invalid section");
+				}
+
+				if (GetChar() != ']')
+				{
+					throw Error("Invalid section: character ']' expected");
+				}
+
+				Advance();
+			}
+
+			void ReadKeyValue()
+			{
+				// Assert( CharClass.IDENTIFIER_HEAD.Contains(NeedChar()) )
+
+				const std::string key = ReadIdentifier();
+
+				bool wasSpace = false;
+				if (NotAtEnd() && InClass(CharClass::LINEAR_SPACE))
+				{
+					wasSpace = true;
+					Advance();
+				}
+
+				if (SkipSpacesAtEnd())
+				{
+					throw Error("Value expected");
+				}
+
+				char c = GetChar();
+				if (c == ':' || c == '=')
+				{
+					Advance();
+					if (SkipSpacesAtEnd())
+					{
+						throw Error("Value expected");
+					}
+				}
+				else if (!wasSpace)
+				{
+					throw Error("Key-value divider expected (':', '=' or SPACE)");
+				}
+
+				ReadValue();
+			}
+
+			void ReadValue()
+			{
+				// Assert( NotAtEnd() && NotInClass(CharClass::LINEAR_SPACE) )
+			}
+
+			const std::string ReadIdentifier()
+			{
+				// Assert( CharClass.IDENTIFIER_HEAD.Contains(NeedChar()) )
+
+				Mark();
+
+				do
+				{
+					Advance();
+				}
+				while (NotAtEnd() && InClass(CharClass::IDENTIFIER_TAIL));
+
+				return ReleaseString();
+			}
+
+			bool SkipComments()
+			{
+			}
+
+			std::string currentSection_;
+	};
+
+
+}
+
 int main(int argc, const char * argv[])
 {
 	printf("xxx\n");
