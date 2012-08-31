@@ -10,8 +10,9 @@ namespace XTL
 	{
 		public:
 
-			StringLiteralParser(char boundingChar, char escapeSequenceChar)
-				: boundingChar_(boundingChar),
+			StringLiteralParser(CharSource & charSource, char boundingChar, char escapeSequenceChar)
+				: Parser(charSource),
+				  boundingChar_(boundingChar),
 				  escapeSequenceChar_(escapeSequenceChar)
 			{
 				;;
@@ -22,25 +23,47 @@ namespace XTL
 				;;
 			}
 
-			const std::string Parse() const
+			const std::string Parse()
 			{
 				// Assert( NeedChar() == boundingChar_ )
+
+				Mark();
 
 				CharBuffer result;
 
 				Advance();
 				Mark();
 
-				char c;
-				while ((c = NeedChar()) != boundingChar_)
+				while (true)
 				{
-					if (c == escapeSequenceChar_)
+					if (AtEnd())
+					{
+						Unmark();
+						ThrowError(ReleaseCursor(), "Unclosed string literal");
+					}
+
+					char c = GetChar();
+					if (c == boundingChar_)
+					{
+						break;
+					}
+					else if (c == escapeSequenceChar_)
 					{
 						ReleaseString(result);
 
 						Advance();
 
-						ParseEscapeSequence
+						try
+						{
+							ParseEscapeSequence(result);
+						}
+						catch (const Error & e)
+						{
+							Unmark();
+							throw;
+						}
+
+						Mark();
 					}
 					else
 					{
@@ -51,42 +74,12 @@ namespace XTL
 				ReleaseString(result);
 				Advance();
 
-				return result;
+				Unmark();
+
+				return result.ToString();
 			}
 
-					if (charSource.AtEnd())
-					{
-						throw std::runtime_error("Error");
-					}
-					else if (c == escapeSequenceChar_)
-					{
-
-						charSource.Advance();
-
-						if (GetEscapeSequenceParser().Parse(charSource, result))
-						{
-							charSource.Mark();
-						}
-						else
-						{
-							throw std::runtime_error(XTL::FormatString("Invalid escape sequence in string literal: %c%c", escapeSequenceChar_, charSource.GetChar()));
-						}
-					}
-					else
-					{
-						charSource.Advance();
-					}
-				}
-
-				result.append(charSource.ReleaseString());
-				charSource.Unmark();
-
-				return result;
-			}
-
-		protected:
-
-			virtual const EscapeSequenceParser & GetEscapeSequenceParser() const = 0;
+			virtual void ParseEscapeSequence(CharBuffer & buffer) = 0;
 
 		private:
 

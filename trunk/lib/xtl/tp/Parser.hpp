@@ -2,6 +2,7 @@
 #define XTL__PARSER_HPP__ 1
 
 #include "../Types.hpp"
+#include "../FormatString.hpp"
 
 #include "CharClass.hpp"
 #include "CharClassifier.hpp"
@@ -29,8 +30,24 @@ namespace XTL
 			static const CharClassBits CHAR_MINUS            = 0x00002000; // '-'
 			static const CharClassBits CHAR_UNDERSCORE       = 0x00004000; // '_'
 
-
 			static const CharClassBits CHAR_LETTER           = CHAR_LETTER_UC | CHAR_LETTER_LC;
+
+			class Error
+			{
+				public:
+
+					Error(const TextCursor & cursor, const std::string & what)
+						: cursor_(cursor),
+						  what_(what)
+					{
+						;;
+					}
+
+				private:
+
+					const TextCursor  cursor_;
+					const std::string what_;
+			};
 
 			class EndOfFile
 			{
@@ -45,6 +62,8 @@ namespace XTL
 
 			explicit Parser(CharSource & charSource);
 
+			CharSource & GetCharSource() const      { return charSource_; }
+
 			bool AtEnd() const                      { return charSource_.AtEnd(); }
 
 			bool NotAtEnd() const                   { return charSource_.NotAtEnd(); }
@@ -53,13 +72,17 @@ namespace XTL
 
 			void Advance()                          { charSource_.Advance(); }
 
-			void Mark()                             { charSource_.Mark(); }
+			unsigned int Mark()                     { return charSource_.Mark(); }
 
 			void Unmark()                           { charSource_.Unmark(); }
 
 			const std::string ReleaseString()       { return charSource_.ReleaseString(); }
 
 			void ReleaseString(CharBuffer & buffer) { charSource_.ReleaseString(buffer); }
+
+			const TextCursor GetCursor() const      { return charSource_.GetCursor(); }
+
+			const TextCursor ReleaseCursor()        { return charSource_.ReleaseCursor(); }
 
 			bool InClass(const CharClass & charClass) const    { return charClass.Contains(GetChar()); }
 
@@ -85,6 +108,40 @@ namespace XTL
 			 * @throws EndOfFile - if end of char source was reached;
 			 */
 			void SkipCharClass(const CharClass & charClass);
+
+			void ThrowError(const TextCursor & cursor, const char * what)
+			{
+				throw Error(cursor, what);
+			}
+
+			template <typename T1>
+			void ThrowError(const TextCursor & cursor, const char * format, const T1 & t1)
+			{
+				throw Error(cursor, XTL::FormatString(format, t1));
+			}
+
+			template <typename T1, typename T2>
+			void ThrowError(const TextCursor & cursor, const char * format, const T1 & t1, const T2 & t2)
+			{
+				throw Error(cursor, XTL::FormatString(format, t1, t2));
+			}
+
+			void ThrowError(const char * what)
+			{
+				ThrowError(GetCursor(), what);
+			}
+
+			template <typename T1>
+			void ThrowError(const char * format, const T1 & t1)
+			{
+				ThrowError(GetCursor(), format, t1);
+			}
+
+			template <typename T1, typename T2>
+			void ThrowError(const char * format, const T1 & t1, const T2 & t2)
+			{
+				throw Error(GetCursor(), XTL::FormatString(format, t1, t2));
+			}
 
 		private:
 

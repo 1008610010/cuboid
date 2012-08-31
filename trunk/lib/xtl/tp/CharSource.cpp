@@ -6,6 +6,7 @@ namespace XTL
 {
 	CharSource::ConstCharPtr::ConstCharPtr(const char * ptr, unsigned int size)
 		: ptr_(ptr),
+		  begin_(ptr),
 		  end_(ptr + size),
 		  marked_()
 	{
@@ -37,14 +38,20 @@ namespace XTL
 		++ptr_;
 	}
 
-	void CharSource::ConstCharPtr::Mark()
+	unsigned int CharSource::ConstCharPtr::Mark()
 	{
 		marked_.push(ptr_);
+		return marked_.size();
 	}
 
 	void CharSource::ConstCharPtr::Unmark()
 	{
 		PopPtr();
+	}
+
+	unsigned int CharSource::ConstCharPtr::MarkIndex() const
+	{
+		return marked_.size();
 	}
 
 	const std::string CharSource::ConstCharPtr::ReleaseString()
@@ -61,6 +68,16 @@ namespace XTL
 		buffer.Append(begin, ptr_);
 	}
 
+	const TextCursor CharSource::ConstCharPtr::GetCursor() const
+	{
+		return GetCursor(ptr_);
+	}
+
+	const TextCursor CharSource::ConstCharPtr::ReleaseCursor()
+	{
+		return GetCursor(PopPtr());
+	}
+
 	const char * CharSource::ConstCharPtr::PopPtr()
 	{
 		if (marked_.empty())
@@ -71,5 +88,24 @@ namespace XTL
 		const char * p = marked_.top();
 		marked_.pop();
 		return p;
+	}
+
+	const TextCursor CharSource::ConstCharPtr::GetCursor(const char * to) const
+	{
+		TextCursor cursor;
+
+		for (const char * p = begin_; p < to; ++p)
+		{
+			if (*p == '\n')
+			{
+				cursor.NextRow();
+			}
+			else
+			{
+				cursor.NextColumn();
+			}
+		}
+
+		return cursor;
 	}
 }
