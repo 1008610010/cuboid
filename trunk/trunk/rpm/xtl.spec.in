@@ -64,15 +64,22 @@ XTL C++ Library development files
 %defattr(-,root,root,-)
 %{_prefix}/include/xtl/BTree.hpp
 %{_prefix}/include/xtl/BitSet.hpp
+%{_prefix}/include/xtl/CharBuffer.hpp
 %{_prefix}/include/xtl/Exception.hpp
 %{_prefix}/include/xtl/FormatString.hpp
 %{_prefix}/include/xtl/FormatString.inc
 %{_prefix}/include/xtl/Logger.hpp
+%{_prefix}/include/xtl/PrintStream.hpp
 %{_prefix}/include/xtl/SharedPtr.hpp
 %{_prefix}/include/xtl/StringUtils.hpp
 %{_prefix}/include/xtl/TypeTraits.hpp
 %{_prefix}/include/xtl/Types.hpp
-%{_prefix}/include/xtl/Variant2.hpp
+%{_prefix}/include/xtl/Variant.hpp
+%{_prefix}/include/xtl/VariantArray.hpp
+%{_prefix}/include/xtl/VariantPtr.hpp
+%{_prefix}/include/xtl/VariantScalar.hpp
+%{_prefix}/include/xtl/VariantStruct.hpp
+%{_prefix}/include/xtl/VariantStructReader.hpp
 %{_prefix}/include/xtl/io/FileInputStream.hpp
 %{_prefix}/include/xtl/io/FileInputStreamBuffered.hpp
 %{_prefix}/include/xtl/io/FileOutputStream.hpp
@@ -87,6 +94,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/linux/SystemConfig.hpp
 %{_prefix}/include/xtl/linux/UnixError.hpp
 %{_prefix}/include/xtl/linux/UnixUser.hpp
+%{_prefix}/include/xtl/linux/fs/DirectoryReader.hpp
 %{_prefix}/include/xtl/linux/fs/File.hpp
 %{_prefix}/include/xtl/linux/fs/FilePath.hpp
 %{_prefix}/include/xtl/linux/fs/FilePathTokenizer.hpp
@@ -140,12 +148,14 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/tp/CharClassifier.hpp
 %{_prefix}/include/xtl/tp/CharSource.hpp
 %{_prefix}/include/xtl/tp/Parser.hpp
+%{_prefix}/include/xtl/tp/StringLiteralParser.hpp
 %{_prefix}/include/xtl/tp/TextCharSource.hpp
 %{_prefix}/include/xtl/tp/TextCursor.hpp
-%{_prefix}/include/xtl/tp/TextParser.hpp
 
 %{_prefix}/include/xtl/utils/Algorithm.hpp
+%{_prefix}/include/xtl/utils/AutoPtrPair.hpp
 %{_prefix}/include/xtl/utils/AutoPtrMap.hpp
+%{_prefix}/include/xtl/utils/AutoPtrStack.hpp
 %{_prefix}/include/xtl/utils/AutoPtrVector.hpp
 %{_prefix}/include/xtl/utils/BitUtils.hpp
 %{_prefix}/include/xtl/utils/Chronometer.hpp
