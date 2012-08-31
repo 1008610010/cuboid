@@ -3176,7 +3176,7 @@ class MyStringParser : public XTL::StringLiteralParser
 
 int main(int argc, const char * argv[])
 {
-	const std::string s0 = "\"ab\\ncd\"";
+	const std::string s0 = "\"ab\\rz\\ncd\"";
 
 	XTL::CharSource::ConstCharPtr cs(s0.data(), s0.size());
 	MyStringParser msp(cs);
