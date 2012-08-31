@@ -31,35 +31,21 @@ namespace XTL
 
 			virtual void Advance() = 0;
 
-			virtual void Mark() = 0;
+			virtual unsigned int Mark() = 0;
 
 			virtual void Unmark() = 0;
+
+			virtual unsigned int MarkIndex() const = 0;
 
 			virtual const std::string ReleaseString() = 0;
 
 			virtual void ReleaseString(CharBuffer & buffer) = 0;
 
+			virtual const TextCursor GetCursor() const = 0;
+
+			virtual const TextCursor ReleaseCursor() = 0;
+
 			class ConstCharPtr;
-	};
-
-	class Position
-	{
-		public:
-
-			explicit Position(const CharSource & charSource)
-				: charSource_(&charSource)
-			{
-				;;
-			}
-
-			bool FromCharSource(const CharSource & charSource) const
-			{
-				return charSource_ == &charSource;
-			}
-
-		private:
-
-			const CharSource * const charSource_;
 	};
 
 	class CharSource::ConstCharPtr : public CharSource
@@ -78,13 +64,19 @@ namespace XTL
 
 			virtual void Advance();
 
-			virtual void Mark();
+			virtual unsigned int Mark();
 
 			virtual void Unmark();
+
+			virtual unsigned int MarkIndex() const;
 
 			virtual const std::string ReleaseString();
 
 			virtual void ReleaseString(CharBuffer & buffer);
+
+			virtual const TextCursor GetCursor() const;
+
+			virtual const TextCursor ReleaseCursor();
 
 		private:
 
@@ -93,7 +85,10 @@ namespace XTL
 
 			const char * PopPtr();
 
+			const TextCursor GetCursor(const char * to) const;
+
 			const char * ptr_;
+			const char * const begin_;
 			const char * const end_;
 			std::stack<const char *> marked_;
 	};

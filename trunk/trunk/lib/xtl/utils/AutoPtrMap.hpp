@@ -50,7 +50,7 @@ namespace XTL
 				return *this;
 			}
 
-			ValueType * operator[] (const KeyType & key) const
+			ValueType * const operator[] (const KeyType & key) const
 			{
 				typename std::map<KeyType, ValueType *>::const_iterator itr = map_.find(key);
 
@@ -178,7 +178,7 @@ namespace XTL
 					{
 						;;
 					}
-					
+
 					typename std::map<KeyType, ValueType *>::iterator itr_;
 			};
 

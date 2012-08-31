@@ -24,9 +24,10 @@ namespace XTL
 		return result;
 	}
 
-	void TextCharSource::ConstCharPtr::Mark()
+	unsigned int TextCharSource::ConstCharPtr::Mark()
 	{
 		markedList_.push_back(ptr_);
+		return markedList_.size();
 	}
 
 	void TextCharSource::ConstCharPtr::Unmark()

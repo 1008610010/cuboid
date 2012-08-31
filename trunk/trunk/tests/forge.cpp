@@ -1967,7 +1967,7 @@ class Searcher
 
 			while (!newStates.empty())
 			{
-				unsigned int stateSet = newStates.front();
+//				unsigned int stateSet = newStates.front();
 				newStates.pop_front();
 
 				std::map<char, StateSet> stateSetLinks;
@@ -2453,10 +2453,6 @@ namespace XTL
 					Value value;
 			};
 
-			Number Release()
-			{
-			}
-
 		protected:
 
 			class NumberBuilder
@@ -2773,8 +2769,8 @@ class IntegerBuilder
 			}
 		}
 
-		static const XTL::UINT_32 MAX_UNSIGNED = 4294967295;
-		static const XTL::UINT_32 MAX_SIGNED   = 2147483648;
+		static const XTL::UINT_32 MAX_UNSIGNED = 4294967295u;
+		static const XTL::UINT_32 MAX_SIGNED   = 2147483648u;
 
 		void AppendIntegerDigit(unsigned int digit)
 		{
@@ -3065,9 +3061,129 @@ namespace XTL
 
 #include <xtl/CharBuffer.hpp>
 
+#include <xtl/tp/StringLiteralParser.hpp>
+
+
+namespace XTL
+{
+	class EscapeSequence
+	{
+		public:
+
+			virtual ~EscapeSequence() throw() { ;; }
+
+			virtual void Parse(CharSource & charSource, CharBuffer & result) = 0;
+
+			class Char;
+	};
+
+	class EscapeSequence::Char : public EscapeSequence
+	{
+		public:
+
+			explicit Char(char outputChar)
+				: outputChar_(outputChar) { ;; }
+
+			virtual ~Char() throw() { ;; }
+
+			virtual void Parse(CharSource & charSource, CharBuffer & result)
+			{
+				result.Append(outputChar_);
+				charSource.Advance();
+			}
+
+		private:
+
+			char outputChar_;
+	};
+
+	template <class Subclass>
+	class EscapeSequenceSet
+	{
+		public:
+
+			static const EscapeSequenceSet & Instance()
+			{
+				static Subclass instance;
+				return instance;
+			}
+
+			void Parse(CharSource & charSource, CharBuffer & result) const
+			{
+				EscapeSequence * seq = sequences_[charSource.GetChar()];
+				if (seq == 0)
+				{
+					throw Parser::Error(charSource.GetCursor(), "Invalid escape sequence");
+				}
+
+				seq->Parse(charSource, result);
+			}
+
+		protected:
+
+			EscapeSequenceSet()
+				: sequences_()
+			{
+				;;
+			}
+
+			void Add(char c, std::auto_ptr<EscapeSequence> seq)
+			{
+				sequences_.Set(c, seq);
+			}
+
+			void Add(char from, char to)
+			{
+				Add(from, std::auto_ptr<EscapeSequence>(new EscapeSequence::Char(to)));
+			}
+
+		private:
+
+			AutoPtrMap<char, EscapeSequence> sequences_;
+	};
+}
+
+class MyStringParser : public XTL::StringLiteralParser
+{
+	public:
+
+		explicit MyStringParser(XTL::CharSource & charSource)
+			: XTL::StringLiteralParser(charSource, '"', '\\')
+		{
+			;;
+		}
+
+	protected:
+
+		class ES : public XTL::EscapeSequenceSet<ES>
+		{
+			public:
+
+				ES()
+					: XTL::EscapeSequenceSet<ES>()
+				{
+					Add('r', '\r');
+					Add('n', '\n');
+					Add('t', '\t');
+				}
+		};
+
+		void ParseEscapeSequence(XTL::CharBuffer & result)
+		{
+			ES::Instance().Parse(GetCharSource(), result);
+		}
+};
+
 int main(int argc, const char * argv[])
 {
-	printf("xxx\n");
+	const std::string s0 = "\"ab\\ncd\"";
+
+	XTL::CharSource::ConstCharPtr cs(s0.data(), s0.size());
+	MyStringParser msp(cs);
+
+
+	printf("%s\n", msp.Parse().c_str());
+	return 0;
 
 	IntegerBuilder ib;
 

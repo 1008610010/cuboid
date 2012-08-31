@@ -68,7 +68,7 @@ namespace XTL
 
 			virtual const TextCursor GetCursor() const;
 
-			virtual void Mark();
+			virtual unsigned int Mark();
 
 			virtual void Unmark();
 
