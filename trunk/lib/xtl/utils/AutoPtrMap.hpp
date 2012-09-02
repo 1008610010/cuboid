@@ -2,6 +2,7 @@
 #define XTL__AUTO_PTR_MAP_HPP__ 1
 
 #include <map>
+#include <memory>
 
 namespace XTL
 {

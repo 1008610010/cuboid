@@ -3063,86 +3063,6 @@ namespace XTL
 
 #include <xtl/tp/StringLiteralParser.hpp>
 
-
-namespace XTL
-{
-	class EscapeSequence
-	{
-		public:
-
-			virtual ~EscapeSequence() throw() { ;; }
-
-			virtual void Parse(CharSource & charSource, CharBuffer & result) = 0;
-
-			class Char;
-	};
-
-	class EscapeSequence::Char : public EscapeSequence
-	{
-		public:
-
-			explicit Char(char outputChar)
-				: outputChar_(outputChar) { ;; }
-
-			virtual ~Char() throw() { ;; }
-
-			virtual void Parse(CharSource & charSource, CharBuffer & result)
-			{
-				result.Append(outputChar_);
-				charSource.Advance();
-			}
-
-		private:
-
-			char outputChar_;
-	};
-
-	template <class Subclass>
-	class EscapeSequenceSet
-	{
-		public:
-
-			static const EscapeSequenceSet & Instance()
-			{
-				static Subclass instance;
-				return instance;
-			}
-
-			void Parse(CharSource & charSource, CharBuffer & result) const
-			{
-				EscapeSequence * seq = sequences_[charSource.GetChar()];
-				if (seq == 0)
-				{
-					throw Parser::Error(charSource.GetCursor(), "Invalid escape sequence");
-				}
-
-				seq->Parse(charSource, result);
-			}
-
-		protected:
-
-			EscapeSequenceSet()
-				: sequences_()
-			{
-				;;
-			}
-
-			void Add(char c, std::auto_ptr<EscapeSequence> seq)
-			{
-				sequences_.Set(c, seq);
-			}
-
-			void Add(char from, char to)
-			{
-				Add(from, std::auto_ptr<EscapeSequence>(new EscapeSequence::Char(to)));
-			}
-
-		private:
-
-			AutoPtrMap<char, EscapeSequence> sequences_;
-	};
-}
-
 class MyStringParser : public XTL::StringLiteralParser
 {
 	public:
@@ -3153,22 +3073,29 @@ class MyStringParser : public XTL::StringLiteralParser
 			;;
 		}
 
+		virtual ~MyStringParser() throw()
+		{
+			;;
+		}
+
 	protected:
 
-		class ES : public XTL::EscapeSequenceSet<ES>
+		class ES : public XTL::StringLiteralParser::EscapeSequenceSet<ES>
 		{
 			public:
 
 				ES()
-					: XTL::EscapeSequenceSet<ES>()
+					: XTL::StringLiteralParser::EscapeSequenceSet<ES>()
 				{
+					Add('"', '"');
+					Add('\\', '\\');
 					Add('r', '\r');
 					Add('n', '\n');
 					Add('t', '\t');
 				}
 		};
 
-		void ParseEscapeSequence(XTL::CharBuffer & result)
+		virtual void ParseEscapeSequence(XTL::CharBuffer & result)
 		{
 			ES::Instance().Parse(GetCharSource(), result);
 		}
@@ -3176,13 +3103,20 @@ class MyStringParser : public XTL::StringLiteralParser
 
 int main(int argc, const char * argv[])
 {
-	const std::string s0 = "\"ab\\rz\\ncd\"";
+	const std::string s0 = "\"ab\\rz\\\\ncd\"";
 
 	XTL::CharSource::ConstCharPtr cs(s0.data(), s0.size());
 	MyStringParser msp(cs);
 
+	try
+	{
+		printf("%s\n", msp.Parse().c_str());
+	}
+	catch (const XTL::Parser::Error & e)
+	{
+		printf("%s (row=%u col=%u)\n", e.What(), e.Cursor().Row(), e.Cursor().Column());
+	}
 
-	printf("%s\n", msp.Parse().c_str());
 	return 0;
 
 	IntegerBuilder ib;

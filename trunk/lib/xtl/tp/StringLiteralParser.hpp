@@ -2,6 +2,7 @@
 #define XTL__STRING_LITERAL_PARSER_HPP__ 1
 
 #include "../CharBuffer.hpp"
+#include "../utils/AutoPtrMap.hpp"
 #include "Parser.hpp"
 
 namespace XTL
@@ -23,69 +24,97 @@ namespace XTL
 				;;
 			}
 
-			const std::string Parse()
-			{
-				// Assert( NeedChar() == boundingChar_ )
-
-				Mark();
-
-				CharBuffer result;
-
-				Advance();
-				Mark();
-
-				while (true)
-				{
-					if (AtEnd())
-					{
-						Unmark();
-						ThrowError(ReleaseCursor(), "Unclosed string literal");
-					}
-
-					char c = GetChar();
-					if (c == boundingChar_)
-					{
-						break;
-					}
-					else if (c == escapeSequenceChar_)
-					{
-						ReleaseString(result);
-
-						Advance();
-
-						try
-						{
-							ParseEscapeSequence(result);
-						}
-						catch (const Error & e)
-						{
-							Unmark();
-							throw;
-						}
-
-						Mark();
-					}
-					else
-					{
-						Advance();
-					}
-				}
-
-				ReleaseString(result);
-				Advance();
-
-				Unmark();
-
-				return result.ToString();
-			}
+			const std::string Parse();
 
 			virtual void ParseEscapeSequence(CharBuffer & buffer) = 0;
+
+			class EscapeSequence
+			{
+				public:
+
+					virtual ~EscapeSequence() throw() { ;; }
+
+					virtual void Parse(CharSource & charSource, CharBuffer & result) = 0;
+
+					class Char;
+			};
+
+			template <class Subclass>
+			class EscapeSequenceSet
+			{
+				public:
+
+					static const EscapeSequenceSet & Instance()
+					{
+						static Subclass instance;
+						return instance;
+					}
+
+					void Parse(CharSource & charSource, CharBuffer & result) const
+					{
+						EscapeSequence * seq = sequences_[charSource.GetChar()];
+						if (seq == 0)
+						{
+							throw Parser::Error(charSource.GetCursor(), "Invalid escape sequence");
+						}
+
+						seq->Parse(charSource, result);
+					}
+
+				protected:
+
+					EscapeSequenceSet()
+						: sequences_()
+					{
+						;;
+					}
+
+					void Add(char c, std::auto_ptr<EscapeSequence> seq);
+
+					void Add(char from, char to);
+
+				private:
+
+					AutoPtrMap<char, EscapeSequence> sequences_;
+			};
 
 		private:
 
 			const char boundingChar_;
 			const char escapeSequenceChar_;
 	};
+
+	class StringLiteralParser::EscapeSequence::Char : public StringLiteralParser::EscapeSequence
+	{
+		public:
+
+			explicit Char(char outputChar)
+				: outputChar_(outputChar) { ;; }
+
+			virtual ~Char() throw() { ;; }
+
+			virtual void Parse(CharSource & charSource, CharBuffer & result)
+			{
+				result.Append(outputChar_);
+				charSource.Advance();
+			}
+
+		private:
+
+			char outputChar_;
+	};
+
+	template <class Subclass>
+	void StringLiteralParser::EscapeSequenceSet<Subclass>::Add(char c, std::auto_ptr<EscapeSequence> seq)
+	{
+		sequences_.Set(c, seq);
+	}
+
+	template <class Subclass>
+	void StringLiteralParser::EscapeSequenceSet<Subclass>::Add(char from, char to)
+	{
+		Add(from, std::auto_ptr<EscapeSequence>(new EscapeSequence::Char(to)));
+	}
 }
 
 #endif

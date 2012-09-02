@@ -43,6 +43,16 @@ namespace XTL
 						;;
 					}
 
+					const TextCursor & Cursor() const throw()
+					{
+						return cursor_;
+					}
+
+					const char * What() const throw()
+					{
+						return what_.c_str();
+					}
+
 				private:
 
 					const TextCursor  cursor_;
