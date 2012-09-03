@@ -17,6 +17,10 @@ namespace XTL
 		return (classifier_[c] & classBits_) != 0;
 	}
 
+	const CharClass CharClass::LETTER = Parser::CreateCommonClass(
+		Parser::CHAR_LETTER
+	);
+
 	const CharClass CharClass::DECIMAL = Parser::CreateCommonClass(
 		Parser::CHAR_DECIMAL
 	);

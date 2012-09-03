@@ -2411,397 +2411,77 @@ enum
 +---------+---------+------------+---------+---------+---------+---------+---------+---------+
 */
 
-#include <xtl/tp/Parser.hpp>
-
 namespace XTL
 {
-	class NumberParser : public Parser
+	template <typename T>
+	class IntegerBuilder
 	{
 		public:
 
-			explicit NumberParser(CharSource & charSource)
-				: Parser(charSource),
-				  numberBuilder_()
+			typedef typename TypeTraits<T>::Signed   Signed;
+			typedef typename TypeTraits<T>::Unsigned Unsigned;
+
+			IntegerBuilder()
+				: value_(0),
+				  negative_(false)
 			{
 				;;
 			}
 
-			class Number
+			void SetZero()
 			{
-				public:
+				value_ = 0;
+				negative_ = false;
+			}
 
-					void OnIntegerDigit(int digit)
-					{
-						value.u = 10 * value.u + digit;
-					}
-
-				private:
-
-					union Value
-					{
-						unsigned long long int u;
-						long long int i;
-						double d;
-
-						Value()
-							: u(0)
-						{
-							;;
-						}
-					};
-
-					Value value;
-			};
-
-		protected:
-
-			class NumberBuilder
+			void SetNegative()
 			{
-				public:
-
-					void SetZero()
-					{
-					}
-
-					void SetNegative()
-					{
-					}
-
-					void SetFloat()
-					{
-					}
-
-					void SetNegativeExponent()
-					{
-					}
-
-					void OnIntegerDigit(int digit)
-					{
-						;;
-					}
-
-					void OnOctalDigit(int digit)
-					{
-					}
-
-					void OnBinaryDigit(int digit)
-					{
-						;;
-					}
-
-					void OnFractionalDigit(int digit)
-					{
-						;;
-					}
-
-					void OnExponentDigit(int digit)
-					{
-						;;
-					}
-			};
-
-			void ParseNumber()
-			{
-				// Assert(NotAtEnd() && GetChar() =~ ["-", "0".."9"])
-
-				numberBuilder_.SetZero();
-
-				char c = GetChar();
-
-				if (c == '0')
+				if (!negative_)
 				{
-					Advance();
-					if (AtEnd())
+					if (value_ > MAX_SIGNED)
 					{
-						return;
+						throw std::runtime_error("Overflow");
 					}
-
-					c = GetChar();
-					switch (c)
-					{
-						case 'b':
-							ParseBinary(); break;
-
-						case 'x':
-							ParseHexadecimal(); break;
-
-						case '.':
-							ParseFractional(); break;
-
-						case 'e':
-						case 'E':
-							ParseExponent(); break;
-
-						default:
-							if (CharClass::DECIMAL.Contains(c))
-							{
-								// ParseOctal();
-							}
-					}
-
-					return;
-				}
-
-				if (c == '-')
-				{
-					numberBuilder_.SetNegative();
-					Advance();
-					if (AtEnd() || !CharClass::DECIMAL.Contains(GetChar()))
-					{
-						throw std::runtime_error("");
-					}
-				}
-
-				// Assert( CHAR_CLASS_DIGIT.Contains(NeedChar()) )
-				do
-				{
-					numberBuilder_.OnIntegerDigit(GetChar() - '0');
-
-					Advance();
-					if (AtEnd())
-					{
-						return;
-					}
-				}
-				while (CharClass::DECIMAL.Contains(GetChar()));
-
-				if (GetChar() == '.')
-				{
-					ParseFractional();
+					negative_ = true;
 				}
 			}
 
-/*
-				if (c == '0')
+			static const XTL::UINT_32 MAX_UNSIGNED = TypeTraits<Unsigned>::MaxValue;
+			static const XTL::UINT_32 MAX_SIGNED   = MAX_UNSIGNED / 2 + 1;
+
+			void AppendIntegerDigit(unsigned int digit)
+			{
+				if (CanAppendIntegerDigit(digit))
 				{
-					else
-					{
-					}
+					value_ *= 10;
+					value_ += digit;
 				}
 				else
 				{
-					bool negative = false;
-					if (c == '-')
-					{
-						negative = true;
-					}
+					throw std::runtime_error("Overflow");
 				}
-*/
-
-			void ParseBinary()
-			{
-				// Assert( NeedChar() == 'b' )
-
-				Advance();
-				if (AtEnd())
-				{
-					throw std::runtime_error("");
-				}
-
-				char c = GetChar();
-				if (!CharClass::BINARY.Contains(c))
-				{
-					throw std::runtime_error("");
-				}
-
-				do
-				{
-					numberBuilder_.OnBinaryDigit(c - '0');
-					Advance();
-					if (AtEnd())
-					{
-						return;
-					}
-					c = GetChar();
-				}
-				while (CharClass::BINARY.Contains(c));
-
-				if (CharClass::DECIMAL.Contains(c))
-				{
-					throw std::runtime_error("");
-				}
-			}
-
-			void ParseOctal()
-			{
-				// Assert( CharClass::DECIMAL.Contains(NeedChar()) )
-
-				char c = GetChar();
-				if (!CharClass::OCTAL.Contains(c))
-				{
-					throw std::runtime_error("");
-				}
-
-				do
-				{
-					numberBuilder_.OnOctalDigit(c - '0');
-					Advance();
-					if (AtEnd())
-					{
-						return;
-					}
-					c = GetChar();
-				}
-				while (CharClass::OCTAL.Contains(c));
-
-				if (CharClass::DECIMAL.Contains(c))
-				{
-					throw std::runtime_error("");
-				}
-			}
-
-			void ParseHexadecimal()
-			{
 			}
 
 		private:
 
-			void ParseFractional()
+			bool CanAppendIntegerDigit(unsigned int digit)
 			{
-				// Assert( NeedChar() == '.' )
-
-				numberBuilder_.SetFloat();
-				Advance();
-				if (AtEnd() || !CharClass::DECIMAL.Contains(GetChar()))
+				if (negative_)
 				{
-					throw std::runtime_error("");
+					return value_ < MAX_SIGNED / 10 || (value_ == MAX_SIGNED / 10 && digit <= MAX_SIGNED % 10);
 				}
-
-				// Assert( CHAR_CLASS_DIGIT.Contains(NeedChar()) )
-				do
+				else
 				{
-					numberBuilder_.OnFractionalDigit(GetChar() - '0');
-
-					Advance();
-					if (AtEnd())
-					{
-						return;
-					}
-				}
-				while (CharClass::DECIMAL.Contains(GetChar()));
-
-				char c = GetChar();
-				if (c == 'e' || c == 'E')
-				{
-					ParseExponent();
+					return value_ < MAX_UNSIGNED / 10 || (value_ == MAX_UNSIGNED / 10 && digit <= MAX_UNSIGNED % 10);
 				}
 			}
 
-			void ParseExponent()
-			{
-				// Assert( NeedChar() == 'e' || NeedChar() == 'E' )
-				Advance();
-				if (AtEnd())
-				{
-					throw std::runtime_error("");
-				}
-
-				char c = GetChar();
-				if (c == '+')
-				{
-					Advance();
-					if (AtEnd())
-					{
-						throw std::runtime_error("");
-					}
-					c = GetChar();
-				}
-				else if (c == '-')
-				{
-					numberBuilder_.SetNegativeExponent();
-					Advance();
-					if (AtEnd())
-					{
-						throw std::runtime_error("");
-					}
-					c = GetChar();
-				}
-
-				if (!CharClass::DECIMAL.Contains(c))
-				{
-					throw std::runtime_error("");
-				}
-
-				do
-				{
-					numberBuilder_.OnExponentDigit(c - '0');
-					Advance();
-					if (AtEnd())
-					{
-						throw std::runtime_error("");
-					}
-					c = GetChar();
-				}
-				while (CharClass::DECIMAL.Contains(c));
-			}
-
-			NumberBuilder numberBuilder_;
+			Unsigned value_;
+			bool     negative_;
 	};
 }
 
-
-class IntegerBuilder
-{
-	public:
-
-		IntegerBuilder()
-			: value_(0),
-			  negative_(false)
-		{
-			;;
-		}
-
-		void SetZero()
-		{
-			value_ = 0;
-			negative_ = false;
-		}
-
-		void SetNegative()
-		{
-			if (!negative_)
-			{
-				if (value_ > MAX_SIGNED)
-				{
-					throw std::runtime_error("Overflow");
-				}
-				negative_ = true;
-			}
-		}
-
-		static const XTL::UINT_32 MAX_UNSIGNED = 4294967295u;
-		static const XTL::UINT_32 MAX_SIGNED   = 2147483648u;
-
-		void AppendIntegerDigit(unsigned int digit)
-		{
-			if (CanAppendIntegerDigit(digit))
-			{
-				value_ *= 10;
-				value_ += digit;
-			}
-			else
-			{
-				throw std::runtime_error("Overflow");
-			}
-		}
-
-	private:
-
-		bool CanAppendIntegerDigit(unsigned int digit)
-		{
-			if (negative_)
-			{
-				return value_ < MAX_SIGNED / 10 || (value_ == MAX_SIGNED / 10 && digit <= MAX_SIGNED % 10);
-			}
-			else
-			{
-				return value_ < MAX_UNSIGNED / 10 || (value_ == MAX_UNSIGNED / 10 && digit <= MAX_UNSIGNED % 10);
-			}
-		}
-
-		XTL::UINT_32 value_;
-		bool         negative_;
-};
+#include <xtl/tp/Parser.hpp>
 
 namespace XTL
 {
@@ -3119,7 +2799,7 @@ int main(int argc, const char * argv[])
 
 	return 0;
 
-	IntegerBuilder ib;
+	XTL::IntegerBuilder<int> ib;
 
 	ib.AppendIntegerDigit(4);
 	ib.AppendIntegerDigit(2);

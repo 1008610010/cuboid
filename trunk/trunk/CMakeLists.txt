@@ -82,16 +82,16 @@ TARGET_LINK_LIBRARIES (
 )
 
 
-ADD_EXECUTABLE (
-	mysql_test
-		tests/mysql_test.cpp
-)
+#ADD_EXECUTABLE (
+#	mysql_test
+#		tests/mysql_test.cpp
+#)
 
-TARGET_LINK_LIBRARIES (
-	mysql_test
-		xtl
-		xtl-mysql
-)
+#TARGET_LINK_LIBRARIES (
+#	mysql_test
+#		xtl
+#		xtl-mysql
+#)
 
 
 ADD_EXECUTABLE (
