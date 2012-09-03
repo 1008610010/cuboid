@@ -33,6 +33,11 @@ namespace XTL
 		return *ptr_;
 	}
 
+	unsigned int CharSource::ConstCharPtr::GetCharIndex() const
+	{
+		return ptr_ - begin_;
+	}
+
 	void CharSource::ConstCharPtr::Advance()
 	{
 		++ptr_;

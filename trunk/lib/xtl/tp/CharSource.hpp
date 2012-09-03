@@ -29,6 +29,8 @@ namespace XTL
 
 			virtual char GetChar() const = 0;
 
+			virtual unsigned int GetCharIndex() const = 0;
+
 			virtual void Advance() = 0;
 
 			virtual unsigned int Mark() = 0;
@@ -44,6 +46,9 @@ namespace XTL
 			virtual const TextCursor GetCursor() const = 0;
 
 			virtual const TextCursor ReleaseCursor() = 0;
+
+			// TODO:
+			// virtual void RestorePosition() = 0;
 
 			class ConstCharPtr;
 	};
@@ -61,6 +66,8 @@ namespace XTL
 			virtual bool AtEnd() const;
 
 			virtual char GetChar() const;
+
+			virtual unsigned int GetCharIndex() const;
 
 			virtual void Advance();
 
