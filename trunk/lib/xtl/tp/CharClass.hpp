@@ -22,6 +22,7 @@ namespace XTL
 
 			bool Contains(char c) const;
 
+			static const CharClass LETTER;
 			static const CharClass DECIMAL;
 			static const CharClass HEXADECIMAL;
 			static const CharClass OCTAL;
