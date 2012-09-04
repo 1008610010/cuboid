@@ -147,6 +147,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/tp/CharClass.hpp
 %{_prefix}/include/xtl/tp/CharClassifier.hpp
 %{_prefix}/include/xtl/tp/CharSource.hpp
+%{_prefix}/include/xtl/tp/NumberLiteralParser.hpp
 %{_prefix}/include/xtl/tp/Parser.hpp
 %{_prefix}/include/xtl/tp/StringLiteralParser.hpp
 %{_prefix}/include/xtl/tp/TextCharSource.hpp
@@ -157,6 +158,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/utils/AutoPtrMap.hpp
 %{_prefix}/include/xtl/utils/AutoPtrStack.hpp
 %{_prefix}/include/xtl/utils/AutoPtrVector.hpp
+%{_prefix}/include/xtl/utils/Base64.hpp
 %{_prefix}/include/xtl/utils/BitUtils.hpp
 %{_prefix}/include/xtl/utils/Chronometer.hpp
 %{_prefix}/include/xtl/utils/Date.hpp
