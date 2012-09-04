@@ -75,6 +75,27 @@ namespace XTL
 
 			std::vector<char> chars_;
 	};
+
+	inline bool operator== (const CharBuffer & charBuffer, const std::string & s)
+	{
+		return charBuffer.Size() == s.size() &&
+		       ::memcmp(s.data(), charBuffer.Data(), charBuffer.Size()) == 0;
+	}
+
+	inline bool operator== (const std::string & s, const CharBuffer & charBuffer)
+	{
+		return charBuffer == s;
+	}
+
+	inline bool operator!= (const CharBuffer & charBuffer, const std::string & s)
+	{
+		return !(charBuffer == s);
+	}
+
+	inline bool operator!= (const std::string & s, const CharBuffer & charBuffer)
+	{
+		return charBuffer != s;
+	}
 }
 
 #endif
