@@ -28,6 +28,16 @@ namespace XTL
 		}
 	}
 
+	bool VariantPtr::IsScalar() const
+	{
+		return ptr_ != 0 && ptr_->IsScalar();
+	}
+
+	bool VariantPtr::IsArray() const
+	{
+		return ptr_ != 0 && ptr_->IsArray();
+	}
+
 	long long int VariantPtr::ToLongLongInt()
 	{
 		Variant::LongLongInt * newPtr = ptr_->ToLongLongInt();

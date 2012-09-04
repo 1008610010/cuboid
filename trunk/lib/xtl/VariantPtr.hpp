@@ -58,6 +58,10 @@ namespace XTL
 			Variant & operator*  ()       { return *ptr_; }
 			Variant & operator*  () const { return *ptr_; }
 
+			bool IsScalar() const;
+
+			bool IsArray() const;
+
 			long long int ToLongLongInt();
 
 			const std::string & ToString();
