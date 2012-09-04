@@ -16,40 +16,13 @@ namespace XTL
 				;;
 			}
 
-			class Number
-			{
-				public:
-
-					void OnIntegerDigit(int digit)
-					{
-						value.u = 10 * value.u + digit;
-					}
-
-				private:
-
-					union Value
-					{
-						unsigned long long int u;
-						long long int i;
-						double d;
-
-						Value()
-							: u(0)
-						{
-							;;
-						}
-					};
-
-					Value value;
-			};
-
 		protected:
 
 			class NumberBuilder
 			{
 				public:
 
-					void Reset()
+					void Clear()
 					{
 					}
 
@@ -77,7 +50,7 @@ namespace XTL
 
 					void OnExponentDigit(int digit)
 					{
-						;;
+						exponent_.AppendDecimal(digit);
 					}
 
 					void OnHexadecimalDigit(int digit)
@@ -92,243 +65,34 @@ namespace XTL
 					{
 						;;
 					}
+
+				private:
+
+					bool isInteger_;
+					IntegerBuilder<long long int> integer_;
+					IntegerBuilder<long long int> exponent_;
 			};
 
-			void Parse()
-			{
-				// Assert(NotAtEnd() && GetChar() =~ ["-", "0".."9"])
-
-				numberBuilder_.Reset();
-
-				char c = GetChar();
-
-				if (c == '0')
-				{
-					Advance();
-					if (AtEnd())
-					{
-						return;
-					}
-
-					c = GetChar();
-					switch (c)
-					{
-						case 'b':
-							ParseBinary(); break;
-
-						case 'x':
-							ParseHexadecimal(); break;
-
-						case '.':
-							ParseFractional(); break;
-
-						case 'e':
-						case 'E':
-							ParseExponent(); break;
-
-						default:
-							if (CharClass::DECIMAL.Contains(c))
-							{
-								ParseOctal();
-							}
-					}
-
-					return;
-				}
-
-				if (c == '-')
-				{
-					numberBuilder_.SetNegative();
-					Advance();
-					if (AtEnd() || NotInClass(CharClass::DECIMAL))
-					{
-						ThrowError("Decimal digit expected");
-					}
-				}
-
-				// Assert( NotAtEnd() && InClass(CharClass::DECIMAL) )
-				do
-				{
-					numberBuilder_.OnIntegerDigit(GetChar() - '0');
-
-					Advance();
-					if (AtEnd())
-					{
-						return;
-					}
-				}
-				while (InClass(CharClass::DECIMAL));
-
-				if (GetChar() == '.')
-				{
-					ParseFractional();
-				}
-			}
-
-			void ParseBinary()
-			{
-				// Assert( NeedChar() == 'b' )
-
-				Advance();
-				if (AtEnd())
-				{
-					ThrowError("Binary digit expected");
-				}
-
-				char c = GetChar();
-				if (!CharClass::BINARY.Contains(c))
-				{
-					ThrowError("Binary digit expected");
-				}
-
-				do
-				{
-					numberBuilder_.OnBinaryDigit(c - '0');
-					Advance();
-					if (AtEnd())
-					{
-						return;
-					}
-					c = GetChar();
-				}
-				while (CharClass::BINARY.Contains(c));
-
-				if (CharClass::DECIMAL.Contains(c))
-				{
-					ThrowError("Binary digit expected");
-				}
-			}
-
-			void ParseOctal()
-			{
-				// Assert( CharClass::DECIMAL.Contains(NeedChar()) )
-
-				char c = GetChar();
-				if (!CharClass::OCTAL.Contains(c))
-				{
-					ThrowError("Octal digit expected");
-				}
-
-				do
-				{
-					numberBuilder_.OnOctalDigit(c - '0');
-					Advance();
-					if (AtEnd())
-					{
-						return;
-					}
-					c = GetChar();
-				}
-				while (CharClass::OCTAL.Contains(c));
-
-				if (CharClass::DECIMAL.Contains(c))
-				{
-					ThrowError("Octal digit expected");
-				}
-			}
-
-			void ParseHexadecimal()
-			{
-				// Assert( NeedChar() == 'x' )
-
-				char c = GetChar();
-				if (!CharClass::HEXADECIMAL.Contains(c))
-				{
-					ThrowError("Hexadecimal digit expected");
-				}
-
-				do
-				{
-					numberBuilder_.OnHexadecimalDigit(HexToInt(c));
-					Advance();
-					if (AtEnd())
-					{
-						return;
-					}
-					c = GetChar();
-				}
-				while (CharClass::HEXADECIMAL.Contains(c));
-
-				if (CharClass::LETTER.Contains(c))
-				{
-					ThrowError("Hexadecimal digit expected");
-				}
-			}
+			void Parse();
 
 		private:
 
-			int HexToInt(char c)
+			static int HexToInt(char c)
 			{
 				if (c >= 'a' && c <= 'f') return (c - 'a') + 10;
 				if (c >= 'A' && c <= 'F') return (c - 'A') + 10;
 				return c - '0';
 			}
 
-			void ParseFractional()
-			{
-				// Assert( NeedChar() == '.' )
+			void ParseBinary();
 
-				numberBuilder_.SetFloat();
-				Advance();
-				if (AtEnd() || NotInClass(CharClass::DECIMAL))
-				{
-					ThrowError("Decimal digit expected");
-				}
+			void ParseOctal();
 
-				do
-				{
-					numberBuilder_.OnFractionalDigit(GetChar() - '0');
+			void ParseHexadecimal();
 
-					Advance();
-					if (AtEnd())
-					{
-						return;
-					}
-				}
-				while (InClass(CharClass::DECIMAL));
+			void ParseFractional();
 
-				char c = GetChar();
-				if (c == 'e' || c == 'E')
-				{
-					ParseExponent();
-				}
-			}
-
-			void ParseExponent()
-			{
-				// Assert( NeedChar() == 'e' || NeedChar() == 'E' )
-
-				Advance();
-				if (AtEnd())
-				{
-					ThrowError("Decimal digit expected");
-				}
-
-				switch (GetChar())
-				{
-					case '-':
-						numberBuilder_.SetNegativeExponent();
-					case '+':
-						Advance();
-						if (AtEnd())
-						{
-							ThrowError("Decimal digit expected");
-						}
-						break;
-				}
-
-				if (NotInClass(CharClass::DECIMAL))
-				{
-					ThrowError("Decimal digit expected");
-				}
-
-				do
-				{
-					numberBuilder_.OnExponentDigit(GetChar() - '0');
-					Advance();
-				}
-				while (NotAtEnd() && InClass(CharClass::DECIMAL));
-			}
+			void ParseExponent();
 
 			NumberBuilder numberBuilder_;
 	};

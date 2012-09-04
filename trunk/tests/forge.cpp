@@ -2421,6 +2421,9 @@ namespace XTL
 			typedef typename TypeTraits<T>::Signed   Signed;
 			typedef typename TypeTraits<T>::Unsigned Unsigned;
 
+			static const Unsigned MAX_UNSIGNED = TypeTraits<Unsigned>::MaxValue;
+			static const Unsigned MAX_SIGNED   = MAX_UNSIGNED / 2 + 1;
+
 			IntegerBuilder()
 				: value_(0),
 				  negative_(false)
@@ -2428,7 +2431,22 @@ namespace XTL
 				;;
 			}
 
-			void SetZero()
+			Signed ToSigned() const
+			{
+				return negative_ ? -value_ : value_;
+			}
+
+			Unsigned ToUnsigned() const
+			{
+				return value_;
+			}
+
+			bool IsNegative() const
+			{
+				return negative_;
+			}
+
+			void Clear()
 			{
 				value_ = 0;
 				negative_ = false;
@@ -2442,29 +2460,54 @@ namespace XTL
 					{
 						throw std::runtime_error("Overflow");
 					}
+
 					negative_ = true;
 				}
 			}
 
-			static const XTL::UINT_32 MAX_UNSIGNED = TypeTraits<Unsigned>::MaxValue;
-			static const XTL::UINT_32 MAX_SIGNED   = MAX_UNSIGNED / 2 + 1;
-
-			void AppendIntegerDigit(unsigned int digit)
+			void AppendDecimal(unsigned int digit)
 			{
-				if (CanAppendIntegerDigit(digit))
-				{
-					value_ *= 10;
-					value_ += digit;
-				}
-				else
+				if (!CanAppendDecimal(digit))
 				{
 					throw std::runtime_error("Overflow");
 				}
+
+				value_ = 10 * value_ + digit;
+			}
+
+			void AppendBinary(unsigned int digit)
+			{
+				if (!CanAppendBinary(digit))
+				{
+					throw std::runtime_error("Overflow");
+				}
+
+				value_ = (value_ << 1) + digit;
+			}
+
+			void AppendOctal(unsigned int digit)
+			{
+				if (!CanAppendOctal(digit))
+				{
+					throw std::runtime_error("Overflow");
+				}
+
+				value_ = (value_ << 3) + digit;
+			}
+
+			void AppendHexadecimal(unsigned int digit)
+			{
+				if (!CanAppendHexadecimal(digit))
+				{
+					throw std::runtime_error("Overflow");
+				}
+
+				value_ = (value_ << 4) + digit;
 			}
 
 		private:
 
-			bool CanAppendIntegerDigit(unsigned int digit)
+			bool CanAppendDecimal(unsigned int digit) const
 			{
 				if (negative_)
 				{
@@ -2474,6 +2517,21 @@ namespace XTL
 				{
 					return value_ < MAX_UNSIGNED / 10 || (value_ == MAX_UNSIGNED / 10 && digit <= MAX_UNSIGNED % 10);
 				}
+			}
+
+			bool CanAppendBinary(unsigned int digit) const
+			{
+				return value_ <= (MAX_UNSIGNED >> 1) + 1;
+			}
+
+			bool CanAppendOctal(unsigned int digit) const
+			{
+				return value_ <= (MAX_UNSIGNED >> 3) + 1;
+			}
+
+			bool CanAppendHexadecimal(unsigned int digit) const
+			{
+				return value_ <= (MAX_UNSIGNED >> 4) + 1;
 			}
 
 			Unsigned value_;
@@ -2783,35 +2841,19 @@ class MyStringParser : public XTL::StringLiteralParser
 
 int main(int argc, const char * argv[])
 {
-	const std::string s0 = "\"ab\\rz\\\\ncd\"";
-
-	XTL::CharSource::ConstCharPtr cs(s0.data(), s0.size());
-	MyStringParser msp(cs);
-
-	try
-	{
-		printf("%s\n", msp.Parse().c_str());
-	}
-	catch (const XTL::Parser::Error & e)
-	{
-		printf("%s (row=%u col=%u)\n", e.What(), e.Cursor().Row(), e.Cursor().Column());
-	}
-
-	return 0;
-
 	XTL::IntegerBuilder<int> ib;
 
-	ib.AppendIntegerDigit(4);
-	ib.AppendIntegerDigit(2);
-	ib.AppendIntegerDigit(9);
-	ib.AppendIntegerDigit(4);
-	ib.AppendIntegerDigit(9);
-	ib.AppendIntegerDigit(6);
-	ib.AppendIntegerDigit(7);
-	ib.AppendIntegerDigit(2);
-	ib.AppendIntegerDigit(9);
-	ib.AppendIntegerDigit(5);
-	ib.SetNegative();
+	ib.AppendDecimal(4);
+	ib.AppendDecimal(2);
+	ib.AppendDecimal(9);
+	ib.AppendDecimal(4);
+	ib.AppendDecimal(9);
+	ib.AppendDecimal(6);
+	ib.AppendDecimal(7);
+	ib.AppendDecimal(2);
+	ib.AppendDecimal(9);
+	ib.AppendDecimal(5);
+	//ib.SetNegative();
 
 	return 0;
 

@@ -86,6 +86,7 @@ SET (
 		xtl/tp/CharClass.cpp
 		xtl/tp/CharClassifier.cpp
 		xtl/tp/CharSource.cpp
+		xtl/tp/NumberParser.cpp
 		xtl/tp/Parser.cpp
 		xtl/tp/StringLiteralParser.cpp
 		xtl/tp/TextCharSource.cpp
