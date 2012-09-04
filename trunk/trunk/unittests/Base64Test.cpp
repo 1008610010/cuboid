@@ -77,6 +77,22 @@ void Base64Test::Test1()
 		TestDecode(TEST_PAIRS[i].encoded, TEST_PAIRS[i].source);
 	}
 
+	try
+	{
+		XTL::CharBuffer bufferDecoded;
+		XTL::Base64::Decode("1234567", bufferDecoded);
+		CPPUNIT_FAIL("Successfully decoded invalid string");
+	}
+	catch (...) { ;; }
+
+	try
+	{
+		XTL::CharBuffer bufferDecoded;
+		XTL::Base64::Decode("1234#678", bufferDecoded);
+		CPPUNIT_FAIL("Successfully decoded invalid string");
+	}
+	catch (...) { ;; }
+
 	{
 		const char * LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 		std::string allCharsEncoded;
