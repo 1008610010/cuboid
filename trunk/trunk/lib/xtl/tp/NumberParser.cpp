@@ -133,7 +133,6 @@ namespace XTL
 	{
 		// Assert( NeedChar() == 'x' )
 
-		char c = GetChar();
 		Advance();
 		if (AtEnd() || NotInClass(CharClass::HEXADECIMAL))
 		{
