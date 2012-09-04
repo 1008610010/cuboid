@@ -72,6 +72,7 @@ SET (
 		xtl/plain/StructPrototype.cpp
 		xtl/plain/StructPrototypeBuilder.cpp
 
+		xtl/utils/Base64.cpp
 		xtl/utils/BitUtils.cpp
 		xtl/utils/Chronometer.cpp
 		xtl/utils/Date.cpp
@@ -86,7 +87,7 @@ SET (
 		xtl/tp/CharClass.cpp
 		xtl/tp/CharClassifier.cpp
 		xtl/tp/CharSource.cpp
-		xtl/tp/NumberParser.cpp
+		xtl/tp/NumberLiteralParser.cpp
 		xtl/tp/Parser.cpp
 		xtl/tp/StringLiteralParser.cpp
 		xtl/tp/TextCharSource.cpp

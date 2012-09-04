@@ -1,6 +1,8 @@
 #ifndef XTL__CHAR_CLASSIFIER_HPP__
 #define XTL__CHAR_CLASSIFIER_HPP__ 1
 
+#include <vector>
+
 #include "../Types.hpp"
 #include "CharClass.hpp"
 
@@ -32,12 +34,16 @@ namespace XTL
 
 		private:
 
+			CharClassifier(const CharClassifier &);
+			CharClassifier & operator= (const CharClassifier &);
+
 			CharClassBits & operator[] (char c)
 			{
 				return charBits_[static_cast<unsigned char>(c)];
 			}
 
-			CharClassBits charBits_[CHARS_COUNT];
+			// CharClassBits charBits_[CHARS_COUNT];
+			std::vector<CharClassBits> charBits_;
 	};
 /*
 	template <typename T>

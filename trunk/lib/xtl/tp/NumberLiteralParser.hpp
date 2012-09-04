@@ -1,5 +1,5 @@
-#ifndef XTL__NUMBER_PARSER_HPP__
-#define XTL__NUMBER_PARSER_HPP__ 1
+#ifndef XTL__NUMBER_LITERAL_PARSER_HPP__
+#define XTL__NUMBER_LITERAL_PARSER_HPP__ 1
 
 #include "../TypeTraits.hpp"
 #include "Parser.hpp"
@@ -131,11 +131,11 @@ namespace XTL
 			bool     negative_;
 	};
 
-	class NumberParser : public Parser
+	class NumberLiteralParser : public Parser
 	{
 		public:
 
-			explicit NumberParser(CharSource & charSource)
+			explicit NumberLiteralParser(CharSource & charSource)
 				: Parser(charSource),
 				  numberBuilder_()
 			{

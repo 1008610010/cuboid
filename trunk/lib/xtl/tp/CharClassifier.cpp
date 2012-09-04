@@ -7,8 +7,9 @@
 namespace XTL
 {
 	CharClassifier::CharClassifier()
+		: charBits_(CHARS_COUNT, 0)
 	{
-		::memset(charBits_, '\0', CHARS_COUNT * sizeof(charBits_[0]));
+		// ::memset(charBits_, '\0', CHARS_COUNT * sizeof(charBits_[0]));
 	}
 
 	CharClassifier & CharClassifier::Add(CharClassBits bits, char c)

@@ -2672,7 +2672,7 @@ namespace XTL
 #include <xtl/CharBuffer.hpp>
 
 #include <xtl/tp/StringLiteralParser.hpp>
-#include <xtl/tp/NumberParser.hpp>
+#include <xtl/tp/NumberLiteralParser.hpp>
 
 class MyStringParser : public XTL::StringLiteralParser
 {
@@ -2714,6 +2714,48 @@ class MyStringParser : public XTL::StringLiteralParser
 
 int main(int argc, const char * argv[])
 {
+	for (unsigned int i = 0; i < 256; ++i)
+	{
+		printf("\\x%02x", i);
+	}
+
+	printf("\n");
+	return 0;
+
+	const char C[] = {
+		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+		'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+		'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+		'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+		'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+		'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+		'w', 'x', 'y', 'z', '0', '1', '2', '3',
+		'4', '5', '6', '7', '8', '9', '-', '_'
+	};
+
+	std::map<char, int> cs;
+	for (unsigned int i = 0; i < sizeof(C); ++i)
+	{
+		cs[C[i]] = i;
+	}
+
+	for (unsigned int i = 0; i < 128; ++i)
+	{
+		int value = -1;
+		if (cs.count(i) > 0)
+		{
+			value = cs[i];
+		}
+
+		printf("%d, ", value);
+		if ((i + 1) % 16 == 0)
+		{
+			printf("\n");
+		}
+	}
+
+	return 0;
+
 	XTL::IntegerBuilder<int> ib;
 
 	ib.AppendDecimal(4);

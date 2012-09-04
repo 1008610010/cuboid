@@ -1,8 +1,8 @@
-#include "NumberParser.hpp"
+#include "NumberLiteralParser.hpp"
 
 namespace XTL
 {
-	void NumberParser::Parse()
+	void NumberLiteralParser::Parse()
 	{
 		// Assert( NotAtEnd() && InClass(CharClass::NUMBER_HEAD) )
 
@@ -76,7 +76,7 @@ namespace XTL
 		}
 	}
 
-	void NumberParser::ParseBinary()
+	void NumberLiteralParser::ParseBinary()
 	{
 		// Assert( NeedChar() == 'b' )
 
@@ -103,7 +103,7 @@ namespace XTL
 		}
 	}
 
-	void NumberParser::ParseOctal()
+	void NumberLiteralParser::ParseOctal()
 	{
 		// Assert( CharClass::DECIMAL.Contains(NeedChar()) )
 
@@ -129,7 +129,7 @@ namespace XTL
 		}
 	}
 
-	void NumberParser::ParseHexadecimal()
+	void NumberLiteralParser::ParseHexadecimal()
 	{
 		// Assert( NeedChar() == 'x' )
 
@@ -156,7 +156,7 @@ namespace XTL
 		}
 	}
 
-	void NumberParser::ParseFractional()
+	void NumberLiteralParser::ParseFractional()
 	{
 		// Assert( NeedChar() == '.' )
 
@@ -186,7 +186,7 @@ namespace XTL
 		}
 	}
 
-	void NumberParser::ParseExponent()
+	void NumberLiteralParser::ParseExponent()
 	{
 		// Assert( NeedChar() == 'e' || NeedChar() == 'E' )
 
@@ -221,6 +221,4 @@ namespace XTL
 		}
 		while (NotAtEnd() && InClass(CharClass::DECIMAL));
 	}
-
 }
-
