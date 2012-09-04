@@ -175,23 +175,23 @@ SET (
 		xtl/mysql/QueryResultRow.cpp
 )
 
-#ADD_LIBRARY (
-#	xtl-mysql SHARED
-#		${XTL_MYSQL_SOURCES}
-#)
+ADD_LIBRARY (
+	xtl-mysql SHARED
+		${XTL_MYSQL_SOURCES}
+)
 
-#TARGET_LINK_LIBRARIES (
-#	xtl-mysql
-#		xtl
-#		${MYSQL_CLIENT_LIBRARY}
-#)
+TARGET_LINK_LIBRARIES (
+	xtl-mysql
+		xtl
+		${MYSQL_CLIENT_LIBRARY}
+)
 
 
 
 INSTALL (
 	TARGETS
 		xtl
-#		xtl-mysql
+		xtl-mysql
 		xtl-pgsql
 	DESTINATION
 		lib
