@@ -2,50 +2,42 @@
 
 namespace XTL
 {
-	void NumberLiteralParser::Parse()
+	const Number NumberLiteralParser::Parse()
 	{
 		// Assert( NotAtEnd() && InClass(CharClass::NUMBER_HEAD) )
 
-		numberBuilder_.Clear();
-
 		char c = GetChar();
+
+		NumberBuilder numberBuilder;
 
 		if (c == '0')
 		{
 			Advance();
 			if (AtEnd())
 			{
-				return;
+				return Number(static_cast<INT_64>(0));
 			}
 
-			c = GetChar();
-			switch (c)
+			switch (GetChar())
 			{
-				case 'b':
-					ParseBinary(); break;
-
-				case 'x':
-					ParseHexadecimal(); break;
-
-				case '.':
-					ParseFractional(); break;
+				case 'b': return ParseBinary();
+				case 'x': return ParseHexadecimal();
+				case '.': return ParseFractional(numberBuilder);
 
 				case 'e':
-				case 'E':
-					ParseExponent(); break;
-
-				default:
-					if (CharClass::DECIMAL.Contains(c))
-					{
-						ParseOctal();
-					}
+				case 'E': return ParseExponent(numberBuilder);
 			}
 
-			return;
+			if (InClass(CharClass::DECIMAL))
+			{
+				return ParseOctal();
+			}
+
+			return numberBuilder.Release();
 		}
 		else if (c == '-')
 		{
-			numberBuilder_.SetNegative();
+			numberBuilder.SetNegative();
 			Advance();
 			if (AtEnd() || NotInClass(CharClass::DECIMAL))
 			{
@@ -56,29 +48,34 @@ namespace XTL
 		// Assert( NotAtEnd() && InClass(CharClass::DECIMAL) )
 		do
 		{
-			numberBuilder_.OnIntegerDigit(GetChar() - '0');
+			numberBuilder.OnIntegerDigit(GetChar() - '0');
 
 			Advance();
 			if (AtEnd())
 			{
-				return;
+				return numberBuilder.Release();
 			}
 		}
 		while (InClass(CharClass::DECIMAL));
 
 		if (GetChar() == '.')
 		{
-			ParseFractional();
+			return ParseFractional(numberBuilder);
 		}
 		else if (GetChar() == 'e' || GetChar() == 'E')
 		{
-			ParseExponent();
+			return ParseExponent(numberBuilder);
 		}
+
+		return numberBuilder.Release();
 	}
 
-	void NumberLiteralParser::ParseBinary()
+	const Number NumberLiteralParser::ParseBinary()
 	{
 		// Assert( NeedChar() == 'b' )
+
+		// TODO: replace with IntegerBuilder class
+		NumberBuilder numberBuilder;
 
 		Advance();
 		if (AtEnd() || NotInClass(CharClass::BINARY))
@@ -88,11 +85,11 @@ namespace XTL
 
 		do
 		{
-			numberBuilder_.OnBinaryDigit(GetChar() - '0');
+			numberBuilder.OnBinaryDigit(GetChar() - '0');
 			Advance();
 			if (AtEnd())
 			{
-				return;
+				return numberBuilder.Release();
 			}
 		}
 		while (InClass(CharClass::BINARY));
@@ -101,11 +98,15 @@ namespace XTL
 		{
 			ThrowError("Binary digit expected");
 		}
+
+		return numberBuilder.Release();
 	}
 
-	void NumberLiteralParser::ParseOctal()
+	const Number NumberLiteralParser::ParseOctal()
 	{
 		// Assert( CharClass::DECIMAL.Contains(NeedChar()) )
+
+		NumberBuilder numberBuilder;
 
 		if (NotInClass(CharClass::OCTAL))
 		{
@@ -114,11 +115,11 @@ namespace XTL
 
 		do
 		{
-			numberBuilder_.OnOctalDigit(GetChar() - '0');
+			numberBuilder.OnOctalDigit(GetChar() - '0');
 			Advance();
 			if (AtEnd())
 			{
-				return;
+				return numberBuilder.Release();
 			}
 		}
 		while (InClass(CharClass::OCTAL));
@@ -127,11 +128,15 @@ namespace XTL
 		{
 			ThrowError("Octal digit expected");
 		}
+
+		return numberBuilder.Release();
 	}
 
-	void NumberLiteralParser::ParseHexadecimal()
+	const Number NumberLiteralParser::ParseHexadecimal()
 	{
 		// Assert( NeedChar() == 'x' )
+
+		NumberBuilder numberBuilder;
 
 		Advance();
 		if (AtEnd() || NotInClass(CharClass::HEXADECIMAL))
@@ -141,11 +146,11 @@ namespace XTL
 
 		do
 		{
-			numberBuilder_.OnHexadecimalDigit(HexToInt(GetChar()));
+			numberBuilder.OnHexadecimalDigit(HexToInt(GetChar()));
 			Advance();
 			if (AtEnd())
 			{
-				return;
+				return numberBuilder.Release();
 			}
 		}
 		while (InClass(CharClass::HEXADECIMAL));
@@ -154,13 +159,15 @@ namespace XTL
 		{
 			ThrowError("Hexadecimal digit expected");
 		}
+
+		return numberBuilder.Release();
 	}
 
-	void NumberLiteralParser::ParseFractional()
+	const Number NumberLiteralParser::ParseFractional(NumberBuilder & numberBuilder)
 	{
 		// Assert( NeedChar() == '.' )
 
-		numberBuilder_.SetFloat();
+		numberBuilder.SetFloat();
 		Advance();
 		if (AtEnd() || NotInClass(CharClass::DECIMAL))
 		{
@@ -169,12 +176,12 @@ namespace XTL
 
 		do
 		{
-			numberBuilder_.OnFractionalDigit(GetChar() - '0');
+			numberBuilder.OnFractionalDigit(GetChar() - '0');
 
 			Advance();
 			if (AtEnd())
 			{
-				return;
+				return numberBuilder.Release();
 			}
 		}
 		while (InClass(CharClass::DECIMAL));
@@ -182,14 +189,17 @@ namespace XTL
 		char c = GetChar();
 		if (c == 'e' || c == 'E')
 		{
-			ParseExponent();
+			return ParseExponent(numberBuilder);
 		}
+
+		return numberBuilder.Release();
 	}
 
-	void NumberLiteralParser::ParseExponent()
+	const Number NumberLiteralParser::ParseExponent(NumberBuilder & numberBuilder)
 	{
 		// Assert( NeedChar() == 'e' || NeedChar() == 'E' )
 
+		numberBuilder.SetFloat();
 		Advance();
 		if (AtEnd())
 		{
@@ -199,7 +209,7 @@ namespace XTL
 		switch (GetChar())
 		{
 			case '-':
-				numberBuilder_.SetNegativeExponent();
+				numberBuilder.SetNegativeExponent();
 			case '+':
 				Advance();
 				if (AtEnd())
@@ -216,9 +226,11 @@ namespace XTL
 
 		do
 		{
-			numberBuilder_.OnExponentDigit(GetChar() - '0');
+			numberBuilder.OnExponentDigit(GetChar() - '0');
 			Advance();
 		}
 		while (NotAtEnd() && InClass(CharClass::DECIMAL));
+
+		return numberBuilder.Release();
 	}
 }

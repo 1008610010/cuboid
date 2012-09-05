@@ -2714,6 +2714,22 @@ class MyStringParser : public XTL::StringLiteralParser
 
 int main(int argc, const char * argv[])
 {
+	// const std::string s = "18446744073709551615";
+	// const std::string s = "18446744073709551616";
+	// const std::string s = "-9223372036854775808";
+	// const std::string s = "-9223372036854775809";
+	// const std::string s = "-0.0000000123e8";
+	// const std::string s = "0b1010";
+	// const std::string s = "0775";
+	const std::string s = "0xffFF";
+	XTL::CharSource::ConstCharPtr charSource(s.data(), s.size());
+
+	XTL::NumberLiteralParser nlp(charSource);
+	XTL::Number n = nlp.Parse();
+	n.DebugPrint();
+	return 0;
+
+	/*
 	XTL::IntegerBuilder ib;
 
 	// const char * const s = "18446744073709551616";
@@ -2723,7 +2739,7 @@ int main(int argc, const char * argv[])
 	{
 		ib.AppendDecimal(*p - '0');
 	}
-
+	*/
 	return 0;
 
 
