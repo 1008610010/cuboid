@@ -162,8 +162,14 @@ TARGET_LINK_LIBRARIES (
 
 FIND_LIBRARY (
 	MYSQL_CLIENT_LIBRARY
-		NAMES mysqlclient
-		PATHS /opt/lib /usr/lib /usr/local/lib /usr/lib64/mysql
+		NAMES 
+			mysqlclient
+		PATHS
+			/opt/lib
+			/usr/lib
+			/usr/local/lib
+			/usr/lib64/mysql
+			/usr/lib/i386-linux-gnu
 		DOC "Path where the MySQL client library can be found"
 )
 
