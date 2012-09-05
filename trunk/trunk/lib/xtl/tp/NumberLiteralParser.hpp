@@ -2,6 +2,7 @@
 #define XTL__NUMBER_LITERAL_PARSER_HPP__ 1
 
 #include <math.h>
+#include <stdio.h>
 
 #include "../TypeTraits.hpp"
 #include "Parser.hpp"
@@ -14,37 +15,77 @@ namespace XTL
 
 			enum Type
 			{
-				UNKNOWN  = 0,
-				SIGNED   = 1,
-				UNSIGNED = 2,
-				FLOAT    = 3
+				SIGNED_INTEGER   = 0,
+				UNSIGNED_INTEGER = 1,
+				FLOAT            = 2
 			};
 
 			Number()
-				: type_(UNKNOWN)
+				: value_(static_cast<INT_64>(0)),
+				  type_(SIGNED_INTEGER)
 			{
 				;;
 			}
 
 			explicit Number(INT_64 value)
-				: type_(SIGNED),
-				  value_(value)
+				: value_(value),
+				  type_(SIGNED_INTEGER)
 			{
 				;;
 			}
 
 			explicit Number(UINT_64 value)
-				: type_(UNSIGNED),
-				  value_(value)
+				: value_(value),
+				  type_(UNSIGNED_INTEGER)
 			{
 				;;
 			}
 
 			explicit Number(double value)
-				: type_(FLOAT),
-				  value_(value)
+				: value_(value),
+				  type_(FLOAT)
 			{
 				;;
+			}
+
+			Type GetType() const
+			{
+				return type_;
+			}
+
+			bool IsInteger() const
+			{
+				return type_ != FLOAT;
+			}
+
+			bool IsFloat() const
+			{
+				return type_ == FLOAT;
+			}
+
+			INT_64 ToSignedInteger() const
+			{
+				return value_.i;
+			}
+
+			UINT_64 ToUnsignedInteger() const
+			{
+				return value_.u;
+			}
+
+			double ToFloat() const
+			{
+				return value_.f;
+			}
+
+			void DebugPrint()
+			{
+				switch (GetType())
+				{
+					case SIGNED_INTEGER:   printf("signed %lld\n", static_cast<long long int>(ToSignedInteger())); break;
+					case UNSIGNED_INTEGER: printf("unsigned %llu\n", static_cast<unsigned long long int>(ToUnsignedInteger())); break;
+					case FLOAT:            printf("float %g\n", ToFloat()); break;
+				}
 			}
 
 		private:
@@ -62,8 +103,8 @@ namespace XTL
 				explicit Value(double f_) : f(f_) { ;; }
 			};
 
-			Type  type_;
 			Value value_;
+			Type  type_;
 	};
 
 	class IntegerBuilder
@@ -72,9 +113,6 @@ namespace XTL
 
 			class OverflowError {};
 
-			static const UINT_64 MAX_UNSIGNED = TypeTraits<UINT_64>::MaxValue;
-			static const UINT_64 MAX_SIGNED   = MAX_UNSIGNED / 2 + 1;
-
 			IntegerBuilder()
 				: value_(0),
 				  negative_(false)
@@ -82,147 +120,167 @@ namespace XTL
 				;;
 			}
 
-			bool IsSigned() const
-			{
-				return negative_ || value_ < MAX_SIGNED;
-			}
-
-			INT_64 ToSigned() const
-			{
-				return negative_ ? -value_ : value_;
-			}
-
-			UINT_64 ToUnsigned() const
-			{
-				return value_;
-			}
-
-			void Clear()
-			{
-				value_ = 0;
-				negative_ = false;
-			}
-
-			void SetNegative()
-			{
-				if (!negative_)
-				{
-					if (value_ > MAX_SIGNED)
-					{
-						throw OverflowError();
-					}
-
-					negative_ = true;
-				}
-			}
-
-			void AppendDecimal(unsigned int digit)
-			{
-				if (!CanAppendDecimal(digit))
-				{
-					throw OverflowError();
-				}
-
-				value_ = 10 * value_ + digit;
-			}
-
-			void AppendBinary(unsigned int digit)
-			{
-				if (!CanAppendBinary(digit))
-				{
-					throw OverflowError();
-				}
-
-				value_ = (value_ << 1) + digit;
-			}
-
-			void AppendOctal(unsigned int digit)
-			{
-				if (!CanAppendOctal(digit))
-				{
-					throw OverflowError();
-				}
-
-				value_ = (value_ << 3) + digit;
-			}
-
-			void AppendHexadecimal(unsigned int digit)
-			{
-				if (!CanAppendHexadecimal(digit))
-				{
-					throw OverflowError();
-				}
-
-				value_ = (value_ << 4) + digit;
-			}
-
 		private:
-
-			bool CanAppendDecimal(unsigned int digit) const
-			{
-				if (negative_)
-				{
-					return value_ < MAX_SIGNED / 10 || (value_ == MAX_SIGNED / 10 && digit <= MAX_SIGNED % 10);
-				}
-				else
-				{
-					return value_ < MAX_UNSIGNED / 10 || (value_ == MAX_UNSIGNED / 10 && digit <= MAX_UNSIGNED % 10);
-				}
-			}
-
-			bool CanAppendBinary(unsigned int digit) const
-			{
-				return value_ <= (MAX_UNSIGNED >> 1) + 1;
-			}
-
-			bool CanAppendOctal(unsigned int digit) const
-			{
-				return value_ <= (MAX_UNSIGNED >> 3) + 1;
-			}
-
-			bool CanAppendHexadecimal(unsigned int digit) const
-			{
-				return value_ <= (MAX_UNSIGNED >> 4) + 1;
-			}
 
 			UINT_64 value_;
 			bool    negative_;
 	};
 
-	template <typename FloatType_>
-	class FloatBuilder
+	class NumberBuilder
 	{
 		public:
 
-			typedef FloatType_ FloatType;
+			class OverflowError {};
 
-			FloatBuilder()
-				: value_(0),
-				  exponent_(0)
+			static const UINT_64 MAX_UNSIGNED = TypeTraits<UINT_64>::MaxValue;
+			static const UINT_64 MAX_SIGNED   = MAX_UNSIGNED / 2 + 1;
+			static const INT_32  MAX_EXPONENT_VALUE = 1000000;
+
+			NumberBuilder()
+				: i_(0),
+				  f_(0.0),
+				  exponent_(0),
+				  exponentDelta_(0),
+				  isNegative_(false),
+				  isNegativeExponent_(false),
+				  isFloat_(false)
 			{
 				;;
 			}
 
-			void AppendInteger(int digit)
+			const Number Release() const
 			{
-				value_ = value_ * 10 + digit;
+				if (isFloat_)
+				{
+					INT_64 e = (isNegativeExponent_ ? -exponent_ : exponent_) + exponentDelta_;
+					return Number((isNegative_ ? -f_ : f_) * ::pow(10.0, static_cast<double>(e)));
+				}
+				else if (isNegative_)
+				{
+					return Number(- static_cast<INT_64>(i_));
+				}
+				else
+				{
+					return Number(i_);
+				}
 			}
 
-			void AppendFractional(int digit)
+			void SetNegative()
 			{
-				AppendInteger(digit);
-				--exponent_;
+				if (isNegative_)
+				{
+					return;
+				}
+
+				isNegative_ = true;
+
+				if (!isFloat_ && i_ > MAX_SIGNED)
+				{
+					// TODO: check config AUTOCAST_TO_FLOAT
+					// throw OverflowError();
+					SetFloat();
+				}
 			}
 
-			FloatType ToFloat() const
+			bool CanAppendIntegerDigit(unsigned int digit) const
 			{
-				return value_ * ::pow(10.0, exponent_);
+				if (isNegative_)
+				{
+					return i_ < MAX_SIGNED / 10 || (i_ == MAX_SIGNED / 10 && digit <= MAX_SIGNED % 10);
+				}
+				else
+				{
+					return i_ < MAX_UNSIGNED / 10 || (i_ == MAX_UNSIGNED / 10 && digit <= MAX_UNSIGNED % 10);
+				}
+			}
+
+			void OnIntegerDigit(unsigned int digit)
+			{
+				if (!isFloat_)
+				{
+					if (CanAppendIntegerDigit(digit))
+					{
+						i_ = 10 * i_ + digit;
+						return;
+					}
+
+					SetFloat();
+				}
+
+				f_ = 10 * f_ + digit;
+			}
+
+			void OnFractionalDigit(int digit)
+			{
+				SetFloat();
+				f_ = 10 * f_ + digit;
+				--exponentDelta_;
+			}
+
+			void SetNegativeExponent()
+			{
+				isNegativeExponent_ = true;
+			}
+
+			void OnExponentDigit(int digit)
+			{
+				if (exponent_ < MAX_EXPONENT_VALUE)
+				{
+					exponent_ = 10 * exponent_ + digit;
+				}
+			}
+
+			/*
+			 * Create IntegerBuilder class and move next methods there.
+			 */
+			void OnHexadecimalDigit(unsigned int digit)
+			{
+				if (i_ > (MAX_UNSIGNED >> 4) + 1)
+				{
+					throw OverflowError();
+				}
+
+				i_ = (i_ << 4) + digit;
+			}
+
+			void OnOctalDigit(unsigned int digit)
+			{
+				if (i_ > (MAX_UNSIGNED >> 3) + 1)
+				{
+					throw OverflowError();
+				}
+
+				i_ = (i_ << 3) + digit;
+			}
+
+			void OnBinaryDigit(unsigned int digit)
+			{
+				if (i_ > (MAX_UNSIGNED >> 1) + 1)
+				{
+					throw OverflowError();
+				}
+
+				i_ = (i_ << 1) + digit;
+			}
+
+			void SetFloat()
+			{
+				if (!isFloat_)
+				{
+					f_ = static_cast<double>(i_);
+					isFloat_ = true;
+				}
 			}
 
 		private:
 
-			FloatType value_;
-			int exponent_;
+			UINT_64 i_;
+			double  f_;
+			INT_32  exponent_;
+			INT_32  exponentDelta_;
+			bool    isNegative_;
+			bool    isNegativeExponent_;
+			bool    isFloat_;
 	};
 
 	class NumberLiteralParser : public Parser
@@ -230,70 +288,12 @@ namespace XTL
 		public:
 
 			explicit NumberLiteralParser(CharSource & charSource)
-				: Parser(charSource),
-				  numberBuilder_()
+				: Parser(charSource)
 			{
 				;;
 			}
 
-		protected:
-
-			class NumberBuilder
-			{
-				public:
-
-					void Clear()
-					{
-					}
-
-					void SetNegative()
-					{
-					}
-
-					void SetFloat()
-					{
-					}
-
-					void SetNegativeExponent()
-					{
-					}
-
-					void OnIntegerDigit(int digit)
-					{
-						;;
-					}
-
-					void OnFractionalDigit(int digit)
-					{
-						;;
-					}
-
-					void OnExponentDigit(int digit)
-					{
-						exponent_.AppendDecimal(digit);
-					}
-
-					void OnHexadecimalDigit(int digit)
-					{
-					}
-
-					void OnOctalDigit(int digit)
-					{
-					}
-
-					void OnBinaryDigit(int digit)
-					{
-						;;
-					}
-
-				private:
-
-					bool isInteger_;
-					IntegerBuilder integer_;
-					IntegerBuilder exponent_;
-			};
-
-			void Parse();
+			const Number Parse();
 
 		private:
 
@@ -304,17 +304,15 @@ namespace XTL
 				return c - '0';
 			}
 
-			void ParseBinary();
+			const Number ParseBinary();
 
-			void ParseOctal();
+			const Number ParseOctal();
 
-			void ParseHexadecimal();
+			const Number ParseHexadecimal();
 
-			void ParseFractional();
+			const Number ParseFractional(NumberBuilder & numberBuilder);
 
-			void ParseExponent();
-
-			NumberBuilder numberBuilder_;
+			const Number ParseExponent(NumberBuilder & numberBuilder);
 	};
 }
 
