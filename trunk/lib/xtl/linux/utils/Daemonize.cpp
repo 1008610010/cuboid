@@ -45,12 +45,11 @@ namespace XTL
 		   directory from being locked; hence not being able to remove it. */
 		if (::chdir("/") < 0)
 		{
-			printf("5\n");
 			exit(EXIT_FAILURE);
 		}
 
 		/* Redirect standard files to /dev/null */
-		FILE * dummy;
+		// FILE * dummy;
 		// dummy = ::freopen( "/dev/null", "r", stdin);
 		// dummy = ::freopen( "/dev/null", "w", stdout);
 		// dummy = ::freopen( "/dev/null", "w", stderr);

@@ -1,21 +1,79 @@
 #ifndef XTL__NUMBER_LITERAL_PARSER_HPP__
 #define XTL__NUMBER_LITERAL_PARSER_HPP__ 1
 
+#include <math.h>
+
 #include "../TypeTraits.hpp"
 #include "Parser.hpp"
 
 namespace XTL
 {
-	template <typename T>
+	class Number
+	{
+		public:
+
+			enum Type
+			{
+				UNKNOWN  = 0,
+				SIGNED   = 1,
+				UNSIGNED = 2,
+				FLOAT    = 3
+			};
+
+			Number()
+				: type_(UNKNOWN)
+			{
+				;;
+			}
+
+			explicit Number(INT_64 value)
+				: type_(SIGNED),
+				  value_(value)
+			{
+				;;
+			}
+
+			explicit Number(UINT_64 value)
+				: type_(UNSIGNED),
+				  value_(value)
+			{
+				;;
+			}
+
+			explicit Number(double value)
+				: type_(FLOAT),
+				  value_(value)
+			{
+				;;
+			}
+
+		private:
+
+			union Value
+			{
+				INT_64  i;
+				UINT_64 u;
+				double  f;
+
+				Value() : i(0) { ;; }
+
+				explicit Value(INT_64 i_) : i(i_) { ;; }
+				explicit Value(UINT_64 u_) : u(u_) { ;; }
+				explicit Value(double f_) : f(f_) { ;; }
+			};
+
+			Type  type_;
+			Value value_;
+	};
+
 	class IntegerBuilder
 	{
 		public:
 
-			typedef typename TypeTraits<T>::Signed   Signed;
-			typedef typename TypeTraits<T>::Unsigned Unsigned;
+			class OverflowError {};
 
-			static const Unsigned MAX_UNSIGNED = TypeTraits<Unsigned>::MaxValue;
-			static const Unsigned MAX_SIGNED   = MAX_UNSIGNED / 2 + 1;
+			static const UINT_64 MAX_UNSIGNED = TypeTraits<UINT_64>::MaxValue;
+			static const UINT_64 MAX_SIGNED   = MAX_UNSIGNED / 2 + 1;
 
 			IntegerBuilder()
 				: value_(0),
@@ -24,19 +82,19 @@ namespace XTL
 				;;
 			}
 
-			Signed ToSigned() const
+			bool IsSigned() const
+			{
+				return negative_ || value_ < MAX_SIGNED;
+			}
+
+			INT_64 ToSigned() const
 			{
 				return negative_ ? -value_ : value_;
 			}
 
-			Unsigned ToUnsigned() const
+			UINT_64 ToUnsigned() const
 			{
 				return value_;
-			}
-
-			bool IsNegative() const
-			{
-				return negative_;
 			}
 
 			void Clear()
@@ -51,7 +109,7 @@ namespace XTL
 				{
 					if (value_ > MAX_SIGNED)
 					{
-						throw std::runtime_error("Overflow");
+						throw OverflowError();
 					}
 
 					negative_ = true;
@@ -62,7 +120,7 @@ namespace XTL
 			{
 				if (!CanAppendDecimal(digit))
 				{
-					throw std::runtime_error("Overflow");
+					throw OverflowError();
 				}
 
 				value_ = 10 * value_ + digit;
@@ -72,7 +130,7 @@ namespace XTL
 			{
 				if (!CanAppendBinary(digit))
 				{
-					throw std::runtime_error("Overflow");
+					throw OverflowError();
 				}
 
 				value_ = (value_ << 1) + digit;
@@ -82,7 +140,7 @@ namespace XTL
 			{
 				if (!CanAppendOctal(digit))
 				{
-					throw std::runtime_error("Overflow");
+					throw OverflowError();
 				}
 
 				value_ = (value_ << 3) + digit;
@@ -92,7 +150,7 @@ namespace XTL
 			{
 				if (!CanAppendHexadecimal(digit))
 				{
-					throw std::runtime_error("Overflow");
+					throw OverflowError();
 				}
 
 				value_ = (value_ << 4) + digit;
@@ -127,8 +185,44 @@ namespace XTL
 				return value_ <= (MAX_UNSIGNED >> 4) + 1;
 			}
 
-			Unsigned value_;
-			bool     negative_;
+			UINT_64 value_;
+			bool    negative_;
+	};
+
+	template <typename FloatType_>
+	class FloatBuilder
+	{
+		public:
+
+			typedef FloatType_ FloatType;
+
+			FloatBuilder()
+				: value_(0),
+				  exponent_(0)
+			{
+				;;
+			}
+
+			void AppendInteger(int digit)
+			{
+				value_ = value_ * 10 + digit;
+			}
+
+			void AppendFractional(int digit)
+			{
+				AppendInteger(digit);
+				--exponent_;
+			}
+
+			FloatType ToFloat() const
+			{
+				return value_ * ::pow(10.0, exponent_);
+			}
+
+		private:
+
+			FloatType value_;
+			int exponent_;
 	};
 
 	class NumberLiteralParser : public Parser
@@ -195,8 +289,8 @@ namespace XTL
 				private:
 
 					bool isInteger_;
-					IntegerBuilder<long long int> integer_;
-					IntegerBuilder<long long int> exponent_;
+					IntegerBuilder integer_;
+					IntegerBuilder exponent_;
 			};
 
 			void Parse();
