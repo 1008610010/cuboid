@@ -15,7 +15,7 @@ namespace XTL
 			Advance();
 			if (AtEnd())
 			{
-				return Number(static_cast<INT_64>(0));
+				return Number::ZERO();
 			}
 
 			switch (GetChar())
@@ -74,8 +74,7 @@ namespace XTL
 	{
 		// Assert( NeedChar() == 'b' )
 
-		// TODO: replace with IntegerBuilder class
-		NumberBuilder numberBuilder;
+		IntegerBuilder integerBuilder;
 
 		Advance();
 		if (AtEnd() || NotInClass(CharClass::BINARY))
@@ -83,60 +82,76 @@ namespace XTL
 			ThrowError("Binary digit expected");
 		}
 
-		do
+		try
 		{
-			numberBuilder.OnBinaryDigit(GetChar() - '0');
-			Advance();
-			if (AtEnd())
+			do
 			{
-				return numberBuilder.Release();
+				integerBuilder.OnBinaryDigit(GetChar() - '0');
+
+				Advance();
+				if (AtEnd())
+				{
+					return integerBuilder.Release();
+				}
 			}
+			while (InClass(CharClass::BINARY));
 		}
-		while (InClass(CharClass::BINARY));
+		catch (const IntegerBuilder::OverflowError &)
+		{
+			ThrowError("Binary number is too big");
+		}
 
 		if (InClass(CharClass::DECIMAL))
 		{
 			ThrowError("Binary digit expected");
 		}
 
-		return numberBuilder.Release();
+		return integerBuilder.Release();
 	}
 
 	const Number NumberLiteralParser::ParseOctal()
 	{
 		// Assert( CharClass::DECIMAL.Contains(NeedChar()) )
 
-		NumberBuilder numberBuilder;
+		IntegerBuilder integerBuilder;
 
 		if (NotInClass(CharClass::OCTAL))
 		{
 			ThrowError("Octal digit expected");
 		}
 
-		do
+		try
 		{
-			numberBuilder.OnOctalDigit(GetChar() - '0');
-			Advance();
-			if (AtEnd())
+			do
 			{
-				return numberBuilder.Release();
+				integerBuilder.OnOctalDigit(GetChar() - '0');
+
+				Advance();
+				if (AtEnd())
+				{
+					return integerBuilder.Release();
+				}
 			}
+			while (InClass(CharClass::OCTAL));
 		}
-		while (InClass(CharClass::OCTAL));
+		catch (const IntegerBuilder::OverflowError &)
+		{
+			ThrowError("Octal number is too big");
+		}
 
 		if (InClass(CharClass::DECIMAL))
 		{
 			ThrowError("Octal digit expected");
 		}
 
-		return numberBuilder.Release();
+		return integerBuilder.Release();
 	}
 
 	const Number NumberLiteralParser::ParseHexadecimal()
 	{
 		// Assert( NeedChar() == 'x' )
 
-		NumberBuilder numberBuilder;
+		IntegerBuilder integerBuilder;
 
 		Advance();
 		if (AtEnd() || NotInClass(CharClass::HEXADECIMAL))
@@ -144,23 +159,31 @@ namespace XTL
 			ThrowError("Hexadecimal digit expected");
 		}
 
-		do
+		try
 		{
-			numberBuilder.OnHexadecimalDigit(HexToInt(GetChar()));
-			Advance();
-			if (AtEnd())
+			do
 			{
-				return numberBuilder.Release();
+				integerBuilder.OnHexadecimalDigit(HexToInt(GetChar()));
+
+				Advance();
+				if (AtEnd())
+				{
+					return integerBuilder.Release();
+				}
 			}
+			while (InClass(CharClass::HEXADECIMAL));
 		}
-		while (InClass(CharClass::HEXADECIMAL));
+		catch (const IntegerBuilder::OverflowError &)
+		{
+			ThrowError("Hexadecimal number is too big");
+		}
 
 		if (InClass(CharClass::LETTER))
 		{
 			ThrowError("Hexadecimal digit expected");
 		}
 
-		return numberBuilder.Release();
+		return integerBuilder.Release();
 	}
 
 	const Number NumberLiteralParser::ParseFractional(NumberBuilder & numberBuilder)
