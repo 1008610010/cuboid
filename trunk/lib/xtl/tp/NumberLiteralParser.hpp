@@ -20,13 +20,6 @@ namespace XTL
 				FLOAT            = 2
 			};
 
-			Number()
-				: value_(static_cast<INT_64>(0)),
-				  type_(SIGNED_INTEGER)
-			{
-				;;
-			}
-
 			explicit Number(INT_64 value)
 				: value_(value),
 				  type_(SIGNED_INTEGER)
@@ -46,6 +39,13 @@ namespace XTL
 				  type_(FLOAT)
 			{
 				;;
+			}
+
+			static const Number ZERO()
+			{
+				static const Number instance(static_cast<INT_64>(0));
+
+				return instance;
 			}
 
 			Type GetType() const
@@ -113,17 +113,101 @@ namespace XTL
 
 			class OverflowError {};
 
+			static const UINT_64 MAX_UNSIGNED = TypeTraits<UINT_64>::MaxValue;
+			static const UINT_64 MAX_SIGNED   = MAX_UNSIGNED / 2 + 1;
+
 			IntegerBuilder()
 				: value_(0),
-				  negative_(false)
+				  isNegative_(false)
 			{
 				;;
 			}
 
+			const Number Release() const
+			{
+				if (isNegative_)
+				{
+					return Number(- static_cast<INT_64>(value_));
+				}
+				else
+				{
+					return Number(value_);
+				}
+			}
+
+			void SetNegative()
+			{
+				if (isNegative_)
+				{
+					return;
+				}
+
+				if (value_ > MAX_SIGNED)
+				{
+					throw OverflowError();
+				}
+
+				isNegative_ = true;
+			}
+
+			void OnDecimalDigit(unsigned int digit)
+			{
+				if (CanAppendIntegerDigit(digit))
+				{
+					value_ = 10 * value_ + digit;
+				}
+				else
+				{
+					throw OverflowError();
+				}
+			}
+
+			void OnBinaryDigit(unsigned int digit)
+			{
+				if (value_ > (MAX_UNSIGNED >> 1) + 1)
+				{
+					throw OverflowError();
+				}
+
+				value_ = (value_ << 1) + digit;
+			}
+
+			void OnOctalDigit(unsigned int digit)
+			{
+				if (value_ > (MAX_UNSIGNED >> 3) + 1)
+				{
+					throw OverflowError();
+				}
+
+				value_ = (value_ << 3) + digit;
+			}
+
+			void OnHexadecimalDigit(unsigned int digit)
+			{
+				if (value_ > (MAX_UNSIGNED >> 4) + 1)
+				{
+					throw OverflowError();
+				}
+
+				value_ = (value_ << 4) + digit;
+			}
+
 		private:
 
+			bool CanAppendIntegerDigit(unsigned int digit) const
+			{
+				if (isNegative_)
+				{
+					return value_ < MAX_SIGNED / 10 || (value_ == MAX_SIGNED / 10 && digit <= MAX_SIGNED % 10);
+				}
+				else
+				{
+					return value_ < MAX_UNSIGNED / 10 || (value_ == MAX_UNSIGNED / 10 && digit <= MAX_UNSIGNED % 10);
+				}
+			}
+
 			UINT_64 value_;
-			bool    negative_;
+			bool    isNegative_;
 	};
 
 	class NumberBuilder
@@ -230,39 +314,6 @@ namespace XTL
 				}
 			}
 
-			/*
-			 * Create IntegerBuilder class and move next methods there.
-			 */
-			void OnHexadecimalDigit(unsigned int digit)
-			{
-				if (i_ > (MAX_UNSIGNED >> 4) + 1)
-				{
-					throw OverflowError();
-				}
-
-				i_ = (i_ << 4) + digit;
-			}
-
-			void OnOctalDigit(unsigned int digit)
-			{
-				if (i_ > (MAX_UNSIGNED >> 3) + 1)
-				{
-					throw OverflowError();
-				}
-
-				i_ = (i_ << 3) + digit;
-			}
-
-			void OnBinaryDigit(unsigned int digit)
-			{
-				if (i_ > (MAX_UNSIGNED >> 1) + 1)
-				{
-					throw OverflowError();
-				}
-
-				i_ = (i_ << 1) + digit;
-			}
-
 			void SetFloat()
 			{
 				if (!isFloat_)
@@ -283,6 +334,13 @@ namespace XTL
 			bool    isFloat_;
 	};
 
+	/*
+	 * Config:
+	 *   ALLOW_FOLLOWING_LETTERS
+	 *   ALLOW_BINARY
+	 *   ALLOW_OCTAL
+	 *   ALLOW_HEXADECIMAL
+	*/
 	class NumberLiteralParser : public Parser
 	{
 		public:
