@@ -20,9 +20,9 @@ namespace XTL
 
 			virtual void Write(const void * buffer, unsigned int size);
 
-			const std::string & FileName() const;
+			const std::string & FileName() const throw();
 
-			FileSize Position() const;
+			FileSize Position() const throw();
 
 			void Commit();
 

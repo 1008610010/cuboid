@@ -1,4 +1,7 @@
 #include "Date.hpp"
+
+#include <stdexcept>
+
 #include "Algorithm.hpp"
 #include "../Exception.hpp"
 #include "../FormatString.hpp"
@@ -170,7 +173,7 @@ namespace XTL
 
 		year_ += count;
 		day_ = Min(day_, DaysInMonth(year_, month_));
-	
+
 		return *this;
 	}
 
@@ -287,6 +290,20 @@ namespace XTL
 		year_ = 400 * y400 + 100 * y100 + 4 * y4 + y1 + 1;
 
 		FromDayOfYear(year_, d, month_, day_);
+	}
+
+	const Date Date::Today()
+	{
+		time_t ts = time(0);
+		struct tm t;
+		if (::gmtime_r(&ts, &t) != 0)
+		{
+			return Date(t.tm_year + 1900, t.tm_mon + 1, t.tm_mday);
+		}
+		else
+		{
+			throw std::runtime_error("gmtime_r() error");
+		}
 	}
 }
 

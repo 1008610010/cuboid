@@ -61,6 +61,11 @@ namespace XTL
 		return inputStream_.AvailableSize() + buffer_.AvailableSize();
 	}
 
+	const std::string & FileInputStreamBuffered::FilePath() const throw()
+	{
+		return inputStream_.FilePath();
+	}
+
 
 
 	FileInputStreamBuffered::Buffer::Buffer(unsigned int capacity)

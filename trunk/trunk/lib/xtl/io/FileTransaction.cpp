@@ -21,12 +21,12 @@ namespace XTL
 		outputStream_.Write(buffer, size);
 	}
 
-	const std::string & FileTransaction::FileName() const
+	const std::string & FileTransaction::FileName() const throw()
 	{
 		return filePath_;
 	}
 
-	FileSize FileTransaction::Position() const
+	FileSize FileTransaction::Position() const throw()
 	{
 		return outputStream_.Position();
 	}

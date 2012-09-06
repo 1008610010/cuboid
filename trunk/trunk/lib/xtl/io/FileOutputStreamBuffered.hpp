@@ -19,7 +19,12 @@ namespace XTL
 
 			virtual void Write(const void * buffer, unsigned int size);
 
-			FileSize Position() const;
+			FileSize Position() const throw();
+
+			const std::string & FilePath() const throw()
+			{
+				return outputStream_.FilePath();
+			}
 
 			void Flush();
 

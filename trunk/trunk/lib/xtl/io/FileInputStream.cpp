@@ -30,8 +30,7 @@ namespace XTL
 		unsigned int wasRead = file_.Read(buffer, size);
 		if (wasRead != size)
 		{
-			// TODO: replace this with IOException or smth else
-			throw std::runtime_error("Read error");
+			throw ReadError();
 		}
 
 		position_ += size;
@@ -60,6 +59,11 @@ namespace XTL
 	FileSize FileInputStream::Position() const
 	{
 		return position_;
+	}
+
+	const std::string & FileInputStream::FilePath() const throw()
+	{
+		return file_.Path();
 	}
 }
 

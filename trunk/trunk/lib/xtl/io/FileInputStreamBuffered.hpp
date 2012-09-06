@@ -27,6 +27,8 @@ namespace XTL
 
 			FileSize AvailableSize() const;
 
+			const std::string & FilePath() const throw();
+
 		private:
 
 			class Buffer
