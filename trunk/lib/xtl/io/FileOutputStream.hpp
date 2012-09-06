@@ -30,6 +30,11 @@ namespace XTL
 				return position_;
 			}
 
+			const std::string & FilePath() const
+			{
+				return file_.Path();
+			}
+
 		private:
 
 			FileOutputStream(const FileOutputStream &);

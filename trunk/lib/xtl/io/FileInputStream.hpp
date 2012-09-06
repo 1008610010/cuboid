@@ -29,6 +29,8 @@ namespace XTL
 
 			virtual FileSize Position() const;
 
+			const std::string & FilePath() const throw();
+
 		private:
 
 			FileInputStream(const FileInputStream &);

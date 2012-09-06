@@ -92,6 +92,8 @@ namespace XTL
 
 			void FromDayIndex(int dayIndex);
 
+			static const Date Today();
+
 		private:
 
 			int year_;

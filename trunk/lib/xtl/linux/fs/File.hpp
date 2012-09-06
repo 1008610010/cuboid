@@ -163,7 +163,7 @@ namespace XTL
 				return state_;
 			}
 
-			const std::string Path() const
+			const std::string & Path() const
 			{
 				return filePath_;
 			}

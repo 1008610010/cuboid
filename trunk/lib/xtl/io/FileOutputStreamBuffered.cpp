@@ -40,7 +40,7 @@ namespace XTL
 		position_ += size;
 	}
 
-	FileSize FileOutputStreamBuffered::Position() const
+	FileSize FileOutputStreamBuffered::Position() const throw()
 	{
 		return outputStream_.Position() + buffer_.Size();
 	}

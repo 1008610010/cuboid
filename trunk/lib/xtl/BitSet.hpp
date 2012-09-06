@@ -38,6 +38,11 @@ namespace XTL
 				return CAPACITY;
 			}
 
+			void Clear()
+			{
+				bits_ = 0;
+			}
+
 			void Add(unsigned int bit)
 			{
 				bits_ |= OnlyOneBit<T>(bit);
@@ -151,7 +156,6 @@ namespace XTL
 					const BitSet & set_;
 					int current_;
 			};
-
 
 		protected:
 

@@ -17,6 +17,13 @@ namespace XTL
 		 */
 		static void Rename(const std::string & oldPath, const std::string & newPath);
 
+		/**
+		 * Обертка для системного вызова unlink.
+		 * @return true - если файл успешно удален, false - файл не существует.
+		 * @throw UnixError - Системная ошибка.
+		 */
+		static bool Unlink(const std::string & filePath);
+
 		static const std::string GetCurrentDirectory();
 
 		static const std::string NormalizeFilePath(const std::string & filePath);

@@ -26,6 +26,23 @@ namespace XTL
 		}
 	}
 
+	bool FileUtils::Unlink(const std::string & filePath)
+	{
+		if (::unlink(filePath.c_str()) == 0)
+		{
+			return true;
+		}
+
+		if (errno == ENOENT)
+		{
+			return false;
+		}
+		else
+		{
+			throw UnixError();
+		}
+	}
+
 	const std::string FileUtils::GetCurrentDirectory()
 	{
 		static const unsigned int MIN_BUFFER_SIZE = 256;

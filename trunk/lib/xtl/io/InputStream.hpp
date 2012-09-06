@@ -9,6 +9,8 @@ namespace XTL
 	{
 		public:
 
+			class ReadError {};
+
 			virtual ~InputStream() throw() { ;; }
 
 			virtual void Read(void * buffer, unsigned int size) = 0;

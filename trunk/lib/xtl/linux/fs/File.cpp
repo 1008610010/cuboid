@@ -196,19 +196,7 @@ namespace XTL
 	{
 		Close();
 
-		if (::unlink(filePath_.c_str()) == 0)
-		{
-			return true;
-		}
-
-		if (errno == ENOENT)
-		{
-			return false;
-		}
-		else
-		{
-			throw UnixError();
-		}
+		return FileUtils::Unlink(filePath_);
 	}
 
 	unsigned int File::Read(void * buffer, unsigned int size)
