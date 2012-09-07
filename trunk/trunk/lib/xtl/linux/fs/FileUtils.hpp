@@ -24,6 +24,18 @@ namespace XTL
 		 */
 		static bool Unlink(const std::string & filePath);
 
+		/**
+		 * @throw UnixError::AlreadyExists - если символическая ссылка уже существует.
+		 * @throw UnixError - Системная ошибка.
+		 */
+		static void CreateSymlink(const std::string & linkPath, const std::string & destination);
+
+		/**
+		 * Создать символическую ссылку. Перезаписать, если она уже существует.
+		 * @throw UnixError - Системная ошибка.
+		 */
+		static void RecreateSymlink(const std::string & linkPath, const std::string & destination);
+
 		static const std::string GetCurrentDirectory();
 
 		static const std::string NormalizeFilePath(const std::string & filePath);
