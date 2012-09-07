@@ -83,6 +83,11 @@ namespace XTL
 		return GetCursor(PopPtr());
 	}
 
+	void CharSource::ConstCharPtr::RestorePosition()
+	{
+		ptr_ = PopPtr();
+	}
+
 	const char * CharSource::ConstCharPtr::PopPtr()
 	{
 		if (marked_.empty())
