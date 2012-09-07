@@ -47,8 +47,7 @@ namespace XTL
 
 			virtual const TextCursor ReleaseCursor() = 0;
 
-			// TODO:
-			// virtual void RestorePosition() = 0;
+			virtual void RestorePosition() = 0;
 
 			class ConstCharPtr;
 	};
@@ -84,6 +83,8 @@ namespace XTL
 			virtual const TextCursor GetCursor() const;
 
 			virtual const TextCursor ReleaseCursor();
+
+			virtual void RestorePosition();
 
 		private:
 

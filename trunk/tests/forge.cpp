@@ -2712,6 +2712,16 @@ class MyStringParser : public XTL::StringLiteralParser
 		}
 };
 
+namespace XTL
+{
+	class DictionaryStateMachine
+	{
+		public:
+
+		private:
+	};
+}
+
 int main(int argc, const char * argv[])
 {
 	// const std::string s = "18446744073709551615";
