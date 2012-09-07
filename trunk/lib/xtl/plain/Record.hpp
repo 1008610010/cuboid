@@ -30,6 +30,11 @@
 	XTL::TYPE & NAME() { return *reinterpret_cast<XTL::TYPE *>(static_cast<char *>(this->Data()) + _field_offset_##NAME()); } \
 	void NAME(XTL::TYPE value) { *reinterpret_cast<XTL::TYPE *>(static_cast<char *>(this->Data()) + _field_offset_##NAME()) = value; }
 
+#define XTL_PLAIN_FIELD_UINT_32 (IDX, NAME)  FIELD(IDX, XTL::UINT_32, NAME)
+#define XTL_PLAIN_FIELD_INT_32  (IDX, NAME)  FIELD(IDX, XTL::INT_32,  NAME)
+#define XTL_PLAIN_FIELD_UINT_64 (IDX, NAME)  FIELD(IDX, XTL::UINT_64, NAME)
+#define XTL_PLAIN_FIELD_INT_64  (IDX, NAME)  FIELD(IDX, XTL::INT_64,  NAME)
+
 template <typename T>
 class RecordType : public XTL::PLAIN::RecordBase<T>
 {
@@ -60,9 +65,9 @@ class FriendPair : public RecordType<FriendPair>
 {
 	public:
 
-		PROTOTYPE("FriendPair")
-		FIELD( 1, UINT_32, user_id   )
-		FIELD( 2, UINT_64, friend_id )
+		XTL_PLAIN_PROTOTYPE("FriendPair")
+		XTL_PLAIN_FIELD( 1, UINT_32, user_id   )
+		XTL_PLAIN_FIELD( 2, UINT_64, friend_id )
 };
 
 	...

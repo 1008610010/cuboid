@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "FilePath.hpp"
+#include "../../FormatString.hpp"
 #include "../UnixError.hpp"
 
 namespace XTL
@@ -40,6 +41,62 @@ namespace XTL
 		else
 		{
 			throw UnixError();
+		}
+	}
+
+	void FileUtils::CreateSymlink(const std::string & linkPath, const std::string & destination)
+	{
+		if (::symlink(destination.c_str(), linkPath.c_str()) != 0)
+		{
+			if (errno == EEXIST)
+			{
+				throw UnixError::AlreadyExists();
+			}
+			else
+			{
+				throw UnixError();
+			}
+		}
+	}
+
+	void FileUtils::RecreateSymlink(const std::string & linkPath, const std::string & destination)
+	{
+		try
+		{
+			CreateSymlink(linkPath, destination);
+			return;
+		}
+		catch (const XTL::UnixError::AlreadyExists & e)
+		{
+			;;
+		}
+
+		unsigned int i = 1;
+		while (true)
+		{
+			const std::string tempLinkPath = XTL::FormatString("%s.tmp.%u", linkPath, i);
+
+			try
+			{
+				CreateSymlink(tempLinkPath, destination);
+			}
+			catch (const XTL::UnixError::AlreadyExists & e)
+			{
+				++i;
+				continue;
+			}
+
+			try
+			{
+				FileUtils::Rename(tempLinkPath, linkPath);
+			}
+			catch (const XTL::UnixError & e)
+			{
+				FileUtils::Unlink(tempLinkPath);
+				throw e;
+			}
+
+			break;
 		}
 	}
 
