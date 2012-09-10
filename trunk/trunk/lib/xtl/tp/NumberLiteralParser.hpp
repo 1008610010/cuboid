@@ -6,14 +6,50 @@
 
 namespace XTL
 {
-	/*
-	 * Config:
-	 *   ALLOW_FOLLOWING_LETTERS
-	 *   ALLOW_BINARY
-	 *   ALLOW_OCTAL
-	 *   ALLOW_HEXADECIMAL
-	*/
-	class NumberLiteralParser : public Parser
+	class NumberLiteralParser : protected Parser
+	{
+		public:
+
+			explicit NumberLiteralParser(CharSource & charSource)
+				: Parser(charSource)
+			{
+				;;
+			}
+
+			virtual ~NumberLiteralParser() throw() { ;; }
+
+			virtual const Number Parse() = 0;
+
+		protected:
+
+			static int HexToInt(char c)
+			{
+				if (c >= 'a' && c <= 'f') return (c - 'a') + 10;
+				if (c >= 'A' && c <= 'F') return (c - 'A') + 10;
+				return c - '0';
+			}
+	};
+
+	class IntegerLiteralParser : public NumberLiteralParser
+	{
+		public:
+
+			explicit IntegerLiteralParser(CharSource & charSource);
+
+			virtual ~IntegerLiteralParser() throw() { ;; }
+
+			virtual const Number Parse();
+
+		protected:
+
+			const Number ParseBinary();
+
+			const Number ParseOctal();
+
+			const Number ParseHexadecimal();
+	};
+
+	class FloatLiteralParser : public IntegerLiteralParser
 	{
 		public:
 
@@ -42,24 +78,13 @@ namespace XTL
 				}
 			};
 
-			explicit NumberLiteralParser(CharSource & charSource);
+			explicit FloatLiteralParser(CharSource & charSource);
 
-			const Number Parse();
+			virtual ~FloatLiteralParser() throw() { ;; }
+
+			virtual const Number Parse();
 
 		private:
-
-			static int HexToInt(char c)
-			{
-				if (c >= 'a' && c <= 'f') return (c - 'a') + 10;
-				if (c >= 'A' && c <= 'F') return (c - 'A') + 10;
-				return c - '0';
-			}
-
-			const Number ParseBinary();
-
-			const Number ParseOctal();
-
-			const Number ParseHexadecimal();
 
 			const Number ParseFractional(NumberBuilder & numberBuilder);
 
