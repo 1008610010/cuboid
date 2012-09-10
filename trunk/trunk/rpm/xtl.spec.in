@@ -147,6 +147,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/tp/CharClass.hpp
 %{_prefix}/include/xtl/tp/CharClassifier.hpp
 %{_prefix}/include/xtl/tp/CharSource.hpp
+%{_prefix}/include/xtl/tp/NumberBuilder.hpp
 %{_prefix}/include/xtl/tp/NumberLiteralParser.hpp
 %{_prefix}/include/xtl/tp/Parser.hpp
 %{_prefix}/include/xtl/tp/StringLiteralParser.hpp
