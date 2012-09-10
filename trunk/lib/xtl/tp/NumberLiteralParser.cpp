@@ -2,6 +2,13 @@
 
 namespace XTL
 {
+	NumberLiteralParser::NumberLiteralParser(CharSource & charSource)
+		: Parser(charSource),
+		  config_(0)
+	{
+		;;
+	}
+
 	const Number NumberLiteralParser::Parse()
 	{
 		// Assert( NotAtEnd() && InClass(CharClass::NUMBER_HEAD) )
@@ -20,20 +27,22 @@ namespace XTL
 
 			switch (GetChar())
 			{
-				case 'b': return ParseBinary();
-				case 'x': return ParseHexadecimal();
-				case '.': return ParseFractional(numberBuilder);
-
-				case 'e':
-				case 'E': return ParseExponent(numberBuilder);
+				case '.' : return ParseFractional(numberBuilder);
+				case 'e' :
+				case 'E' : return ParseExponent(numberBuilder);
+				case 'b' : return config_.parse_binary ? ParseBinary() : Number::ZERO();
+				case 'x' : return config_.parse_hexadecimal ? ParseHexadecimal() : Number::ZERO();
 			}
 
-			if (InClass(CharClass::DECIMAL))
+			if (NotInClass(CharClass::DECIMAL))
+			{
+				return Number::ZERO();
+			}
+
+			if (config_.parse_octal)
 			{
 				return ParseOctal();
 			}
-
-			return numberBuilder.Release();
 		}
 		else if (c == '-')
 		{
@@ -194,6 +203,10 @@ namespace XTL
 		Advance();
 		if (AtEnd() || NotInClass(CharClass::DECIMAL))
 		{
+			if (config_.allow_trailing_point)
+			{
+				return numberBuilder.Release();
+			}
 			ThrowError("Decimal digit expected");
 		}
 

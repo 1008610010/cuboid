@@ -87,6 +87,7 @@ SET (
 		xtl/tp/CharClass.cpp
 		xtl/tp/CharClassifier.cpp
 		xtl/tp/CharSource.cpp
+		xtl/tp/NumberBuilder.cpp
 		xtl/tp/NumberLiteralParser.cpp
 		xtl/tp/Parser.cpp
 		xtl/tp/StringLiteralParser.cpp
@@ -162,7 +163,7 @@ TARGET_LINK_LIBRARIES (
 
 FIND_LIBRARY (
 	MYSQL_CLIENT_LIBRARY
-		NAMES 
+		NAMES
 			mysqlclient
 		PATHS
 			/opt/lib
