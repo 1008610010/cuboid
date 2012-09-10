@@ -21,7 +21,7 @@ class OperatorActionsSingleton : public XTL::SyntaxAnalyzer::OperatorActions
 		{
 			;;
 		}
-		
+
 	protected:
 
 		OperatorActionsSingleton() { ;; }
@@ -106,7 +106,7 @@ class BinaryOperator : public XTL::Expression::Operator
 class InputOperator : public XTL::Expression::Operator
 {
 	public:
-	
+
 		virtual ~InputOperator() throw()
 		{
 			;;
@@ -426,8 +426,6 @@ struct Test : public B {};
 
 int main(int argc, const char * argv[])
 {
-
-
 	std::auto_ptr<XTL::Expression::Node> node;
 
 	const std::string s = "(x+y)*(a+b)";
