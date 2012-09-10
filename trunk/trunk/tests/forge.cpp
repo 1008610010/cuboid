@@ -2722,6 +2722,16 @@ namespace XTL
 	};
 }
 
+void DebugPrint(const XTL::Number & n)
+{
+	switch (n.GetType())
+	{
+		case XTL::Number::SIGNED_INTEGER:   printf("signed %lld\n", static_cast<long long int>(n.ToSignedInteger())); break;
+		case XTL::Number::UNSIGNED_INTEGER: printf("unsigned %llu\n", static_cast<unsigned long long int>(n.ToUnsignedInteger())); break;
+		case XTL::Number::FLOAT:            printf("float %g\n", n.ToFloat()); break;
+	}
+}
+
 int main(int argc, const char * argv[])
 {
 	// const std::string s = "18446744073709551615";
@@ -2736,7 +2746,7 @@ int main(int argc, const char * argv[])
 
 	XTL::NumberLiteralParser nlp(charSource);
 	XTL::Number n = nlp.Parse();
-	n.DebugPrint();
+	DebugPrint(n);
 	return 0;
 
 	/*
