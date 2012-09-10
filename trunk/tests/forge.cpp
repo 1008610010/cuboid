@@ -2160,6 +2160,8 @@ class TokenHandler
 {
 	public:
 
+		virtual ~TokenHandler() throw() { ;; }
+
 		virtual void Execute(std::stack<const Lexema *> lexemaStack, const Token & token) = 0;
 };
 
@@ -2412,29 +2414,246 @@ enum
 */
 
 #include <xtl/tp/Parser.hpp>
+#include <xtl/tp/NumberLiteralParser.hpp>
+#include <xtl/tp/StringLiteralParser.hpp>
+#include <xtl/Variant.hpp>
+#include <xtl/VariantScalar.hpp>
+#include <xtl/VariantPtr.hpp>
 
 namespace XTL
 {
-	class IniFileParser : public Parser
+	class IniConfig
 	{
 		public:
 
-			class Error
+			class SectionDoesNotExist
 			{
 				public:
 
-					explicit Error(const std::string & what)
-						: what_(what) { ;; }
+					explicit SectionDoesNotExist(const std::string & sectionName)
+						: sectionName_(sectionName)
+					{
+						;;
+					}
 
-					const char * What() const { return what_.c_str(); }
+					const std::string & SectionName() const
+					{
+						return sectionName_;
+					}
 
 				private:
 
-					const std::string what_;
+					const std::string sectionName_;
 			};
 
-			IniFileParser(CharSource & charSource)
+			class KeyDoesNotExist
+			{
+				public:
+
+					explicit KeyDoesNotExist(const std::string & sectionName, const std::string & key)
+						: sectionName_(sectionName),
+						  key_(key)
+					{
+						;;
+					}
+
+					const std::string & SectionName() const
+					{
+						return sectionName_;
+					}
+
+					const std::string & Key() const
+					{
+						return key_;
+					}
+
+				private:
+
+					const std::string sectionName_;
+					const std::string key_;
+			};
+
+			class Section
+			{
+				public:
+
+					explicit Section(const std::string & sectionName)
+						: sectionName_(sectionName),
+						  pairs_()
+					{
+						;;
+					}
+
+					bool Exists(const std::string & key)
+					{
+						return pairs_.count(key) > 0;
+					}
+
+					void Set(const std::string & key, const VariantPtr & value)
+					{
+						pairs_[key] = value;
+					}
+
+					VariantPtr Get(const std::string & key) const
+					{
+						std::map<std::string, VariantPtr>::const_iterator itr = pairs_.find(key);
+
+						if (itr == pairs_.end())
+						{
+							throw KeyDoesNotExist(sectionName_, key);
+						}
+
+						return itr->second;
+					}
+
+					const std::string GetString(const std::string & key, const std::string & defaultValue) const
+					{
+						std::map<std::string, VariantPtr>::iterator itr = pairs_.find(key);
+
+						if (itr == pairs_.end())
+						{
+							return defaultValue;
+						}
+
+						return itr->second.ToString();
+					}
+
+					const long long int GetLongLongInt(const std::string & key, const long long int & defaultValue) const
+					{
+						std::map<std::string, VariantPtr>::iterator itr = pairs_.find(key);
+
+						if (itr == pairs_.end())
+						{
+							return defaultValue;
+						}
+
+						return itr->second.ToLongLongInt();
+					}
+
+				private:
+
+					const std::string sectionName_;
+					mutable std::map<std::string, VariantPtr> pairs_;
+			};
+
+			void Set(const std::string & sectionName, const std::string & key, VariantPtr value)
+			{
+				CreateSection(sectionName)->Set(key, value);
+			}
+
+			const Section & GetSection(const std::string & sectionName) const
+			{
+				Section * section = sections_[sectionName];
+
+				if (section == 0)
+				{
+					throw SectionDoesNotExist(sectionName);
+				}
+
+				return *section;
+			}
+
+		protected:
+
+			static const Section * EmptySection()
+			{
+				static const Section instance("__empty__");
+				return &instance;
+			}
+
+			Section * CreateSection(const std::string & sectionName)
+			{
+				Section * section = sections_[sectionName];
+				if (section == 0)
+				{
+					std::auto_ptr<Section> newSection(new Section(sectionName));
+					section = newSection.get();
+					sections_.Set(sectionName, newSection);
+				}
+
+				return section;
+			}
+
+		private:
+
+			AutoPtrMap<std::string, Section> sections_;
+	};
+
+	class IniConfigParser : public Parser
+	{
+		public:
+
+			class SingleQuotedStringParser : public XTL::StringLiteralParser
+			{
+				public:
+
+					explicit SingleQuotedStringParser(XTL::CharSource & charSource)
+						: StringLiteralParser(charSource, '\'', '\\')
+					{
+						;;
+					}
+
+					virtual ~SingleQuotedStringParser() throw() { ;; }
+
+				protected:
+
+					class ES : public StringLiteralParser::EscapeSequenceSet<ES>
+					{
+						public:
+
+							ES()
+								: XTL::StringLiteralParser::EscapeSequenceSet<ES>()
+							{
+								Add('\'', '\'');
+								Add('\\', '\\');
+							}
+					};
+
+					virtual void ParseEscapeSequence(XTL::CharBuffer & result)
+					{
+						ES::Instance().Parse(GetCharSource(), result);
+					}
+			};
+
+			class DoubleQuotedStringParser : public XTL::StringLiteralParser
+			{
+				public:
+
+					explicit DoubleQuotedStringParser(XTL::CharSource & charSource)
+						: XTL::StringLiteralParser(charSource, '"', '\\')
+					{
+						;;
+					}
+
+					virtual ~DoubleQuotedStringParser() throw() { ;; }
+
+				protected:
+
+					class ES : public XTL::StringLiteralParser::EscapeSequenceSet<ES>
+					{
+						public:
+
+							ES()
+								: XTL::StringLiteralParser::EscapeSequenceSet<ES>()
+							{
+								Add('"', '"');
+								Add('\\', '\\');
+								Add('r', '\r');
+								Add('n', '\n');
+								Add('t', '\t');
+							}
+					};
+
+					virtual void ParseEscapeSequence(XTL::CharBuffer & result)
+					{
+						ES::Instance().Parse(GetCharSource(), result);
+					}
+			};
+
+
+			IniConfigParser(CharSource & charSource, IniConfig & config)
 				: Parser(charSource),
+				  config_(config),
 				  currentSection_()
 			{
 				while (NotAtEnd())
@@ -2445,7 +2664,8 @@ namespace XTL
 
 			void ParseLine()
 			{
-				if (SkipSpacesAtEnd())
+				SkipLinearSpaces();
+				if (AtEnd())
 				{
 					return;
 				}
@@ -2455,132 +2675,64 @@ namespace XTL
 				{
 					ReadSection();
 				}
+				else if (CharClass::IDENTIFIER_HEAD.Contains(c))
+				{
+					ReadKeyValue();
+				}
 				/*
 				else if (c == '{')
 				{
 					ReadCommand();
 				}
 				*/
-				else if (c == ';' || c == '#')
+
+				SkipLinearSpaces();
+				if (AtEnd())
+				{
+					return;
+				}
+
+				if (GetChar() == ';' || GetChar() == '#')
 				{
 					SkipComments();
 				}
-				else if (CharClass::IDENTIFIER_HEAD.Contains(c))
-				{
-					ReadKeyValue();
-				}
 
-				while (NotAtEnd() && InClass(CharClass::NEW_LINE))
-				{
-					Advance();
-				}
+				SkipNewLine();
 			}
 
 		private:
 
-			bool SkipSpacesAtEnd()
+			void SkipLinearSpaces()
 			{
 				while (NotAtEnd() && InClass(CharClass::LINEAR_SPACE))
 				{
 					Advance();
 				}
-
-				return AtEnd() || InClass(CharClass::NEW_LINE);
 			}
 
-			/*
-			 * ... '[' \s* [A-Za-z_][A-Za-z0-9_]* \s* ']' ...
-			 *   ---^                                     ^---
-			 */
-			void ReadSection()
+			void SkipNewLine()
 			{
-				// Assert( NeedChar() == '[' )
-
-				Advance();
-
-				if (SkipSpacesAtEnd())
+				if (AtEnd())
 				{
-					throw Error("Invalid section");
+					return;
 				}
 
-				if (NotInClass(CharClass::IDENTIFIER_HEAD))
-				{
-					throw Error("Invalid section");
-				}
-
-				currentSection_ = ReadIdentifier();
-
-				if (SkipSpacesAtEnd())
-				{
-					throw Error("Invalid section");
-				}
-
-				if (GetChar() != ']')
-				{
-					throw Error("Invalid section: character ']' expected");
-				}
-
-				Advance();
-			}
-
-			void ReadKeyValue()
-			{
-				// Assert( CharClass.IDENTIFIER_HEAD.Contains(NeedChar()) )
-
-				const std::string key = ReadIdentifier();
-
-				bool wasSpace = false;
-				if (NotAtEnd() && InClass(CharClass::LINEAR_SPACE))
-				{
-					wasSpace = true;
-					Advance();
-				}
-
-				if (SkipSpacesAtEnd())
-				{
-					throw Error("Value expected");
-				}
-
-				char c = GetChar();
-				if (c == ':' || c == '=')
+				if (GetChar() == '\r')
 				{
 					Advance();
-					if (SkipSpacesAtEnd())
+					if (AtEnd())
 					{
-						throw Error("Value expected");
+						return;
 					}
 				}
-				else if (!wasSpace)
-				{
-					throw Error("Key-value divider expected (':', '=' or SPACE)");
-				}
 
-				ReadValue();
-			}
-
-			/*
-			 * " ( [^\\"] | '\\' [rnt\\"]  )* "
-			 * ' ( [^\\'] | '\\' [\\'] )* '
-			 * -? [0-9]+ ( '.' [0-9]+ )? ( [eE] [+-] [0-9]+ )
-			 * '0' ( ('x' [0-9A-Fa-f]+) | ('b' [0-1]+) | ([0-7]*) )
-			 */
-			void ReadValue()
-			{
-				// Assert( NotAtEnd() && NotInClass(CharClass::LINEAR_SPACE) )
-
-				char c = GetChar();
-
-				if (c == '"')
+				if (GetChar() == '\n')
 				{
+					Advance();
 				}
-				else if (c == '\'')
+				else
 				{
-				}
-				else if (CharClass::NUMBER_HEAD.Contains(c))
-				{
-				}
-				else if (CharClass::IDENTIFIER_HEAD.Contains(c))
-				{
+					ThrowError("New line expected");
 				}
 			}
 
@@ -2599,6 +2751,120 @@ namespace XTL
 				return ReleaseString();
 			}
 
+			/*
+			 * ... '[' \s* [A-Za-z_][A-Za-z0-9_]* \s* ']' ...
+			 *   ---^                                     ^---
+			 */
+			void ReadSection()
+			{
+				// Assert( NeedChar() == '[' )
+
+				try
+				{
+					Advance();
+					SkipLinearSpaces();
+					if (!CharClass::IDENTIFIER_HEAD.Contains(NeedChar()))
+					{
+						ThrowError("Section name was expected");
+					}
+					currentSection_ == ReadIdentifier();
+					SkipLinearSpaces();
+					if (NeedChar() != ']')
+					{
+						ThrowError("Closing square bracket was expected");
+					}
+					Advance();
+				}
+				catch (const EndOfFile &)
+				{
+					ThrowError("Unexpected end of file");
+				}
+			}
+
+			void ReadKeyValue()
+			{
+				// Assert( CharClass.IDENTIFIER_HEAD.Contains(NeedChar()) )
+
+				const std::string key = ReadIdentifier();
+
+				bool wasSpace = false;
+				if (NotAtEnd() && InClass(CharClass::LINEAR_SPACE))
+				{
+					wasSpace = true;
+					Advance();
+					SkipLinearSpaces();
+				}
+
+				try
+				{
+					char c = NeedChar();
+					if (c == ':' || c == '=')
+					{
+						Advance();
+						SkipLinearSpaces();
+					}
+					else if (!wasSpace)
+					{
+						ThrowError("Key-value divider was expected (':', '=' or SPACE)");
+					}
+				}
+				catch (const EndOfFile &)
+				{
+					ThrowError("Value expected");
+				}
+
+				if (AtEnd())
+				{
+					ThrowError("Value expected");
+				}
+
+				config_.Set(currentSection_, key, ReadValue());
+			}
+
+			/*
+			 * " ( [^\\"] | '\\' [rnt\\"]  )* "
+			 * ' ( [^\\'] | '\\' [\\'] )* '
+			 * -? [0-9]+ ( '.' [0-9]+ )? ( [eE] [+-] [0-9]+ )
+			 * '0' ( ('x' [0-9A-Fa-f]+) | ('b' [0-1]+) | ([0-7]*) )
+			 */
+			VariantPtr ReadValue()
+			{
+				// Assert( NotAtEnd() && NotInClass(CharClass::LINEAR_SPACE) )
+
+				char c = GetChar();
+
+				if (c == '\'')
+				{
+					return VariantPtr(new Variant::String(SingleQuotedStringParser(GetCharSource()).Parse()));
+				}
+				else if (c == '"')
+				{
+					return VariantPtr(new Variant::String(DoubleQuotedStringParser(GetCharSource()).Parse()));
+				}
+				else if (CharClass::NUMBER_HEAD.Contains(c))
+				{
+					const Number n = FloatLiteralParser(GetCharSource()).Parse();
+
+					if (n.IsFloat())
+					{
+						return VariantPtr(new Variant::Double(n.ToFloat()));
+					}
+					else
+					{
+						return VariantPtr(new Variant::LongLongInt(n.ToSignedInteger()));
+					}
+				}
+				else
+				{
+					ThrowError("Value was expected");
+				}
+				/*
+				else if (CharClass::IDENTIFIER_HEAD.Contains(c))
+				{
+				}
+				*/
+			}
+
 			void SkipComments()
 			{
 				// Assert( NeedChar() == ';' || NeedChar() == '#' )
@@ -2610,107 +2876,12 @@ namespace XTL
 				while (NotAtEnd() && GetChar() != '\n');
 			}
 
-			/*
-			 * WARNING: charSource_ is marked, if EOF found
-			 */
-			const std::string ReadStringDoubleQuoted()
-			{
-				// Assert( NeedChar() == '"' )
-				Advance();
-
-				std::string result;
-				Mark();
-
-				try
-				{
-					char c = NeedChar();
-
-					while (c != '"')
-					{
-						if (c == '\\')
-						{
-							result.append(ReleaseString());
-
-							Advance();
-							c = NeedChar();
-							switch (c)
-							{
-								case 't'  : result.append(1, '\t'); break;
-								case 'r'  : result.append(1, '\r'); break;
-								case 'n'  : result.append(1, '\n'); break;
-								case '"'  : result.append(1, '"');  break;
-								case '\\' : result.append(1, '\\'); break;
-								default   : throw std::runtime_error("Unknown escape sequence");
-							}
-
-							Advance();
-							Mark();
-						}
-						else
-						{
-							Advance();
-						}
-
-						c = NeedChar();
-					}
-				}
-				catch (const EndOfFile &)
-				{
-					throw std::runtime_error("Parse string error");
-				}
-
-				result.append(ReleaseString());
-				Advance();
-
-				return result;
-			}
-
-			std::string currentSection_;
+			IniConfig   & config_;
+			std::string   currentSection_;
 	};
 }
 
 #include <xtl/CharBuffer.hpp>
-
-#include <xtl/tp/StringLiteralParser.hpp>
-#include <xtl/tp/NumberLiteralParser.hpp>
-
-class MyStringParser : public XTL::StringLiteralParser
-{
-	public:
-
-		explicit MyStringParser(XTL::CharSource & charSource)
-			: XTL::StringLiteralParser(charSource, '"', '\\')
-		{
-			;;
-		}
-
-		virtual ~MyStringParser() throw()
-		{
-			;;
-		}
-
-	protected:
-
-		class ES : public XTL::StringLiteralParser::EscapeSequenceSet<ES>
-		{
-			public:
-
-				ES()
-					: XTL::StringLiteralParser::EscapeSequenceSet<ES>()
-				{
-					Add('"', '"');
-					Add('\\', '\\');
-					Add('r', '\r');
-					Add('n', '\n');
-					Add('t', '\t');
-				}
-		};
-
-		virtual void ParseEscapeSequence(XTL::CharBuffer & result)
-		{
-			ES::Instance().Parse(GetCharSource(), result);
-		}
-};
 
 namespace XTL
 {
@@ -2744,7 +2915,7 @@ int main(int argc, const char * argv[])
 	const std::string s = "0xffFF";
 	XTL::CharSource::ConstCharPtr charSource(s.data(), s.size());
 
-	XTL::NumberLiteralParser nlp(charSource);
+	XTL::FloatLiteralParser nlp(charSource);
 	XTL::Number n = nlp.Parse();
 	DebugPrint(n);
 	return 0;
