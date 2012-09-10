@@ -2903,6 +2903,70 @@ void DebugPrint(const XTL::Number & n)
 	}
 }
 
+/*
+ * {$var}
+ * {$outer.inner.inner2}
+ * {{LOOP var_array AS LOOP_VAR}}...{{/LOOP}}
+ * {{IF var}}...{{ELSEIF}}...{{ELSE}}...{{/IF}}
+ */
+
+class TemplateNode
+{
+	public:
+
+		virtual ~TemplateNode() throw() { ;; }
+
+	private:
+
+		class Text;
+		class Variable;
+};
+
+class TemplateNode::Text : public TemplateNode
+{
+	public:
+
+		explicit Text(const std::string & text)
+			: text_(text)
+		{
+			;;
+		}
+
+		virtual ~Text() throw()
+		{
+			;;
+		}
+
+	private:
+
+		const std::string text_;
+};
+
+class TemplateNode::Variable : public TemplateNode
+{
+	public:
+
+		virtual ~Variable() throw() { ;; }
+
+	private:
+
+		const std::string name_;
+};
+
+class Template
+{
+	public:
+
+		void Parse()
+		{
+
+		}
+
+	private:
+
+
+};
+
 int main(int argc, const char * argv[])
 {
 	// const std::string s = "18446744073709551615";
