@@ -1,19 +1,19 @@
 #include "UnixSocketClient.hpp"
 
-#include "../net/UnixSocket.hpp"
+#include "../net/UnixClientSocket.hpp"
 
 namespace XTL
 {
 	UnixSocketClient::UnixSocketClient(const std::string & unixSocketPath)
 		: serverAddress_(unixSocketPath),
-		  socket_(UnixSocket::Create(true))
+		  clientSocket_(UnixClientSocket::Create(true))
 	{
 		;;
 	}
 
 	void UnixSocketClient::Connect()
 	{
-		socket_.Connect(serverAddress_);
+		clientSocket_.Connect(serverAddress_);
 	}
 
 	void UnixSocketClient::Send(const void * buffer, unsigned int size)
@@ -23,7 +23,7 @@ namespace XTL
 			return;
 		}
 
-		socket_.Send(buffer, size);
+		clientSocket_.Send(buffer, size);
 	}
 }
 

@@ -16,17 +16,17 @@ namespace XTL
 	{
 		public:
 
-			class UnixSocket
+			class UnixSocketHolder
 			{
 				public:
 
-					explicit UnixSocket(const std::string & unixSocketPath)
+					explicit UnixSocketHolder(const std::string & unixSocketPath)
 						: socketAddress_(unixSocketPath)
 					{
 						;;
 					}
 
-					~UnixSocket() throw()
+					~UnixSocketHolder() throw()
 					{
 						try
 						{
@@ -64,7 +64,7 @@ namespace XTL
 
 		private:
 
-			AutoPtrVector<UnixSocket> unixSockets_;
+			AutoPtrVector<UnixSocketHolder> unixSockets_;
 	};
 }
 
