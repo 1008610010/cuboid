@@ -34,6 +34,19 @@ namespace XTL
 
 					virtual void OnDataReceived(const void * buffer, unsigned int size) = 0;
 
+					/*
+					 * TODO:
+					 *   Create abstract class ClientSendData:
+					 *
+					 *   public:
+					 *
+					 *       void Send(std::auto_ptr<ClientSendData> data);
+					 *
+					 *   private:
+					 *
+					 *       AutoPtrQueue<ClientSendData> sendDataQueue_;
+					 */
+
 				protected:
 
 					void Disconnect();

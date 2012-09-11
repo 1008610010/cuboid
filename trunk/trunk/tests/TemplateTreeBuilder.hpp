@@ -98,7 +98,7 @@ namespace XTL
 			static void DebugPrintIndent(unsigned int indent, const char * s)
 			{
 				DebugPrintIndent(indent);
-				printf(s);
+				printf("%s", s);
 			}
 
 		private:
@@ -314,7 +314,7 @@ namespace XTL
 			{
 				if (text.size() > 0)
 				{
-					printf("TEXT: length=%u\n", text.size());
+					printf("TEXT: length=%u\n", (unsigned int) text.size());
 
 					TemplateNode * lastNode = currentList_->LastNode();
 					if (lastNode == 0 || lastNode->GetType() != TemplateNode::TEXT)
