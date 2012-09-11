@@ -39,6 +39,8 @@ ADD_SUBDIRECTORY (lib)
 ADD_EXECUTABLE (
 	forge
 		tests/forge.cpp
+		tests/TemplateParser.cpp
+		tests/TemplateTreeBuilder.cpp
 )
 
 TARGET_LINK_LIBRARIES (

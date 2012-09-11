@@ -10,13 +10,13 @@
 namespace XC3
 {
 	StatsWriterServer::StatsWriterServer(const std::string & unixSocketPath, const std::string & outputDir)
-		: XTL::UnixSocketServer(unixSocketPath),
+		: XTL::UnixSocketServer(),
 		  outputDir_(outputDir),
 		  outputFileName_(),
 		  outputFileTime_(0),
 		  outputStream_()
 	{
-		;;
+		Listen(unixSocketPath, true);
 	}
 
 	StatsWriterServer::~StatsWriterServer() throw()

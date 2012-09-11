@@ -8,6 +8,16 @@
 
 namespace XTL
 {
+	void ServerSocket::SetReuseAddr(bool value)
+	{
+		int on = (value ? 1 : 0);
+
+		if (::setsockopt(Desc(), SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) != 0)
+		{
+			throw UnixError();
+		}
+	}
+
 	void ServerSocket::Bind(const SocketAddress & address)
 	{
 		if (::bind(Desc(), address.SockAddr(), address.Size()) == 0)

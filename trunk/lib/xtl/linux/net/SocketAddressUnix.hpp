@@ -23,6 +23,8 @@ namespace XTL
 
 			virtual int Size() const;
 
+			const std::string Path() const;
+
 			void Unlink();
 
 		private:

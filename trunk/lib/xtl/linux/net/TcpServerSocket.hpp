@@ -3,7 +3,6 @@
 
 #include "ServerSocket.hpp"
 #include "TcpClientSocket.hpp"
-#include "SocketAddressInet.hpp"
 
 namespace XTL
 {
@@ -13,9 +12,11 @@ namespace XTL
 	{
 		public:
 
-			static TcpServerSocket Create(bool blocking)
+			static TcpServerSocket Create(bool blocking, bool reuseAddr = false)
 			{
-				return TcpSocket::Create(blocking);
+				TcpServerSocket socket = TcpSocket::Create(blocking);
+				socket.SetReuseAddr(reuseAddr);
+				return socket;
 			}
 
 			TcpServerSocket()
