@@ -119,6 +119,11 @@ namespace XTL
 			 */
 			void SkipCharClass(const CharClass & charClass);
 
+			/**
+			 * Precondition: NotAtEnd() && CharClass::IDENTIFIER_HEAD.Contains(GetChar())
+			 */
+			const std::string ReadIdentifier();
+
 			void ThrowError(const TextCursor & cursor, const char * what)
 			{
 				throw Error(cursor, what);
@@ -157,21 +162,6 @@ namespace XTL
 
 			CharSource & charSource_;
 
-/*
-			const std::string ReadIdentifier(const CharClass & headClass = IDENTIFIER_HEAD, const CharClass & tailClass = IDENTIFIER_TAIL)
-			{
-				if (headClass.Contains()IsInClass(headClass))
-				{
-					Mark();
-					Advance();
-					SkipCharClass(tailClass);
-
-					return ReleaseString();
-				}
-
-				return std::string();
-			}
-*/
 		protected:
 
 			class CommonCharClassifier : public CharClassifier
