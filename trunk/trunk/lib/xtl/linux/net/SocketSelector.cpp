@@ -92,7 +92,7 @@ namespace XTL
 	SocketSelector::Timeout::Timeout(double secs)
 		: t_(0)
 	{
-		Init(static_cast<int>(floor(secs)), static_cast<int>(1000000.0 * (secs - floor(secs))));
+		Init(static_cast<int>(::floor(secs)), static_cast<int>(1000000.0 * (secs - ::floor(secs))));
 	}
 
 	SocketSelector::Timeout::Timeout(const Timeout & other)

@@ -24,13 +24,15 @@ namespace XTL
 				;;
 			}
 
+			void SetReuseAddr(bool value);
+
+			ClientSocket Accept();
+
 		protected:
 
 			void Bind(const SocketAddress & address);
 
 			void Listen(int backlog);
-
-			ClientSocket Accept();
 	};
 }
 

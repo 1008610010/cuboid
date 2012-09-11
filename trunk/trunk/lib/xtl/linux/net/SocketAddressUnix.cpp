@@ -50,6 +50,11 @@ namespace XTL
 		return ::strlen(address_.sun_path) + sizeof(address_.sun_family);
 	}
 
+	const std::string SocketAddressUnix::Path() const
+	{
+		return std::string(address_.sun_path);
+	}
+
 	void SocketAddressUnix::Unlink()
 	{
 		if (address_.sun_path[0] != '\0')

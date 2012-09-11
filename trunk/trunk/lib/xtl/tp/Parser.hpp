@@ -119,6 +119,32 @@ namespace XTL
 			 */
 			void SkipCharClass(const CharClass & charClass);
 
+			bool ReadChar(char c)
+			{
+				if (AtEnd() || GetChar() != c)
+				{
+					return false;
+				}
+
+				Advance();
+				return true;
+			}
+
+			bool ReadString(const char * s)
+			{
+				for (; *s != '\0'; ++s)
+				{
+					if (AtEnd() || GetChar() != *s)
+					{
+						return false;
+					}
+
+					Advance();
+				}
+
+				return true;
+			}
+
 			/**
 			 * Precondition: NotAtEnd() && CharClass::IDENTIFIER_HEAD.Contains(GetChar())
 			 */

@@ -11,11 +11,6 @@ namespace XTL
 {
 	namespace
 	{
-		float Frac(float f)
-		{
-			return f - static_cast<int>(f);
-		}
-
 		class UmaskHolder
 		{
 			public:
@@ -37,28 +32,36 @@ namespace XTL
 		};
 	}
 
-	UnixSocketServer::UnixSocketServer(const std::string & unixSocketPath, int listenBacklog, float selectTimeout)
-		: terminated_(0),
-		  unixSocketPath_(unixSocketPath),
-		  serverAddress_(unixSocketPath),
-		  serverSocket_(UnixSocket::Create(false)),
-		  socketSelector_(),
-		  selectTimeout_(static_cast<int>(selectTimeout), static_cast<int>(1000000 * Frac(selectTimeout))),
-		  clients_()
+	UnixSocketServer::UnixSocketServer(double selectTimeout)
+		: SocketServer(selectTimeout),
+		  unixSockets_()
+	{
+		;;
+	}
+
+	UnixSocketServer::~UnixSocketServer() throw()
+	{
+		;;
+	}
+
+	void UnixSocketServer::Listen(const std::string & unixSocketPath, bool recreate, int listenBacklog)
 	{
 		UmaskHolder umaskHolder;
 
+		std::auto_ptr<UnixSocket> unixSocket(new UnixSocket(unixSocketPath));
+
+		UnixServerSocket serverSocket(UnixServerSocket::Create(false));
+
 		try
 		{
-
-			serverSocket_.Bind(serverAddress_);
+			serverSocket.Bind(unixSocket->Address());
 		}
 		catch (const UnixError & e)
 		{
-			if (e.Code() == EADDRINUSE)
+			if (recreate && e.Code() == EADDRINUSE)
 			{
-				serverAddress_.Unlink();
-				serverSocket_.Bind(serverAddress_);
+				unixSocket->Unlink();
+				serverSocket.Bind(unixSocket->Address());
 			}
 			else
 			{
@@ -67,91 +70,9 @@ namespace XTL
 			}
 		}
 
-		serverSocket_.Listen(listenBacklog);
+		serverSocket.Listen(listenBacklog);
 
-		socketSelector_.Insert(serverSocket_, true, false);
-	}
-
-	UnixSocketServer::~UnixSocketServer() throw()
-	{
-		try
-		{
-			serverAddress_.Unlink();
-		}
-		catch (const UnixError & e)
-		{
-			fprintf(stderr, "Could not unlink unix socket '%s': %s\n", unixSocketPath_.c_str(), e.What().c_str());
-		}
-	}
-
-	void UnixSocketServer::Run()
-	{
-		while (!terminated_)
-		{
-			Iterate();
-		}
-
-		OnTerminated();
-	}
-
-	void UnixSocketServer::Iterate()
-	{
-		SocketSelector::SelectResult selectResult;
-
-		socketSelector_.Select(selectResult, selectTimeout_);
-
-		if (selectResult.SelectedCount() == 0)
-		{
-			return;
-		}
-
-		if (selectResult.IsReadable(serverSocket_))
-		{
-			UnixClientSocket clientSocket = serverSocket_.Accept();
-
-			if (!clientSocket.IsNull())
-			{
-				std::auto_ptr<Client> client(new Client(clientSocket));
-				std::auto_ptr<ClientHandler> clientHandler(CreateClientHandler(*client));
-				client->SetHandler(clientHandler);
-
-				// TODO: select client for writing, if it has non-empty sendBuffer
-				socketSelector_.Insert(clientSocket, true, false);
-
-				clients_.Set(clientSocket, client);
-			}
-		}
-
-		const SocketSet readable = selectResult.ReadableSet();
-
-		std::vector<UnixClientSocket> disconnected;
-
-		const AutoPtrMap<UnixClientSocket, Client>::Iterator end = clients_.End();
-		for (AutoPtrMap<UnixClientSocket, Client>::Iterator itr = clients_.Begin(); itr != end; ++itr)
-		{
-			if (readable.Contains(itr.Key()))
-			{
-				try
-				{
-					itr->Receive();
-				}
-				catch (const ClientDisconnected & e)
-				{
-					disconnected.push_back(e.Socket());
-				}
-			}
-
-			if (terminated_)
-			{
-				return;
-			}
-		}
-
-		for (std::vector<UnixClientSocket>::iterator itr = disconnected.begin(); itr != disconnected.end(); ++itr)
-		{
-			socketSelector_.Delete(*itr);
-			clients_.Erase(*itr);
-		}
+		AddListeningSocket(serverSocket);
+		unixSockets_.PushBack(unixSocket);
 	}
 }
-
