@@ -13,27 +13,11 @@ namespace XTL
 			static const int DEFAULT_LISTEN_BACKLOG = 5;
 			static const int DEFAULT_SELECT_TIMEOUT = 1;
 
-			explicit TcpSocketServer(double selectTimeout = DEFAULT_SELECT_TIMEOUT)
-				: SocketServer(selectTimeout)
-			{
-				;;
-			}
+			explicit TcpSocketServer(double selectTimeout = DEFAULT_SELECT_TIMEOUT);
 
-			void Listen(unsigned int listenPort, int listenBacklog = DEFAULT_LISTEN_BACKLOG)
-			{
-				SocketAddressInet serverAddress(listenPort);
+			virtual ~TcpSocketServer() throw();
 
-				TcpServerSocket serverSocket(TcpServerSocket::Create(false, true));
-				serverSocket.Bind(serverAddress);
-				serverSocket.Listen(listenBacklog);
-
-				AddListeningSocket(serverSocket);
-			}
-
-			virtual ~TcpSocketServer() throw()
-			{
-				;;
-			}
+			void Listen(unsigned int listenPort, int listenBacklog = DEFAULT_LISTEN_BACKLOG);
 	};
 }
 
