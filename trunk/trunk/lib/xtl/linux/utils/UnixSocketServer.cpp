@@ -48,7 +48,7 @@ namespace XTL
 	{
 		UmaskHolder umaskHolder;
 
-		std::auto_ptr<UnixSocket> unixSocket(new UnixSocket(unixSocketPath));
+		std::auto_ptr<UnixSocketHolder> unixSocket(new UnixSocketHolder(unixSocketPath));
 
 		UnixServerSocket serverSocket(UnixServerSocket::Create(false));
 

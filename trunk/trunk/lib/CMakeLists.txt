@@ -62,6 +62,7 @@ SET (
 		xtl/linux/utils/Daemonize.cpp
 		xtl/linux/utils/PidFile.cpp
 		xtl/linux/utils/SocketServer.cpp
+		xtl/linux/utils/TcpSocketClient.cpp
 		xtl/linux/utils/TcpSocketServer.cpp
 		xtl/linux/utils/UnixSocketClient.cpp
 		xtl/linux/utils/UnixSocketServer.cpp

@@ -21,7 +21,7 @@ namespace XTL
 		private:
 
 			SocketAddressUnix serverAddress_;
-			UnixClientSocket  socket_;
+			UnixClientSocket  clientSocket_;
 	};
 }
 
