@@ -3009,6 +3009,26 @@ void TerminateProgram(int)
 	}
 }
 
+class TcpClient
+{
+	public:
+
+		TcpClient(const std::string & host, unsigned int port)
+			: socketClient_(host, port)
+		{
+			;;
+		}
+
+		bool Send(double timeout)
+		{
+
+		}
+
+	private:
+
+		TcpSocketClient socketClient_;
+};
+
 int main(int argc, const char * argv[])
 {
 	{
