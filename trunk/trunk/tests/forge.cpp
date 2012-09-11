@@ -2302,6 +2302,11 @@ void ParseRegularExpression(const char * re)
 				{
 					++re;
 				}
+
+				if (inverted)
+				{
+					;;
+				}
 			}
 			if (*re == '\0')
 			{
@@ -2908,67 +2913,446 @@ void DebugPrint(const XTL::Number & n)
  * {$outer.inner.inner2}
  * {{LOOP var_array AS LOOP_VAR}}...{{/LOOP}}
  * {{IF var}}...{{ELSEIF}}...{{ELSE}}...{{/IF}}
+ * {{INCLUDE "Template/File/Path"}}
  */
 
-class TemplateNode
+namespace XTL
 {
-	public:
+	class TemplateNode;
 
-		virtual ~TemplateNode() throw() { ;; }
+	class TemplateNodeList
+	{
+		public:
 
-	private:
+			explicit TemplateNodeList(TemplateNode * parentNode)
+				: parentNode_(parentNode),
+				  items_()
+			{
+				;;
+			}
 
-		class Text;
-		class Variable;
-};
+			TemplateNode * GetParentNode() const
+			{
+				return parentNode_;
+			}
 
-class TemplateNode::Text : public TemplateNode
-{
-	public:
+			bool IsEmpty() const
+			{
+				return items_.IsEmpty();
+			}
 
-		explicit Text(const std::string & text)
-			: text_(text)
+			TemplateNode * LastNode()
+			{
+				return items_.IsEmpty() ? 0 : items_.Back();
+			}
+
+			void Add(std::auto_ptr<TemplateNode> node)
+			{
+				items_.PushBack(node);
+			}
+
+			void DebugPrint(unsigned int indent) const;
+
+		private:
+
+			TemplateNode * const parentNode_;
+			AutoPtrVector<TemplateNode> items_;
+	};
+
+	class TemplateNode
+	{
+		public:
+
+			enum Type
+			{
+				TEXT     = 0,
+				VARIABLE = 1,
+				LOOP     = 2
+			};
+
+			TemplateNode(TemplateNodeList * parentList)
+				: parentList_(parentList)
+			{
+				;;
+			}
+
+			virtual ~TemplateNode() throw() { ;; }
+
+			TemplateNodeList * GetParentList() const
+			{
+				return parentList_;
+			}
+
+			virtual Type GetType() const = 0;
+
+			virtual void DebugPrint(unsigned int indent) const = 0;
+
+			class Text;
+			class Variable;
+			class Loop;
+
+		protected:
+
+			static void DebugPrintIndent(unsigned int indent)
+			{
+				for (; indent > 0; --indent)
+				{
+					printf("    ");
+				}
+			}
+
+		private:
+
+			TemplateNodeList * const parentList_;
+	};
+
+	void TemplateNodeList::DebugPrint(unsigned int indent) const
+	{
+		for (unsigned int i = 0; i < items_.Size(); ++i)
 		{
-			;;
+			items_[i]->DebugPrint(indent);
 		}
+	}
 
-		virtual ~Text() throw()
-		{
-			;;
-		}
+	class TemplateNode::Text : public TemplateNode
+	{
+		public:
 
-	private:
+			Text(TemplateNodeList * parentList, const std::string & text)
+				: TemplateNode(parentList),
+				  text_(text)
+			{
+				;;
+			}
 
-		const std::string text_;
-};
+			virtual ~Text() throw()
+			{
+				;;
+			}
 
-class TemplateNode::Variable : public TemplateNode
-{
-	public:
+			virtual Type GetType() const
+			{
+				return TEXT;
+			}
 
-		virtual ~Variable() throw() { ;; }
+			virtual void DebugPrint(unsigned int indent) const
+			{
+				DebugPrintIndent(indent);
+				printf("TEXT\n");
+			}
 
-	private:
+			void AppendText(const std::string & text)
+			{
+				text_.append(text);
+			}
 
-		const std::string name_;
-};
+		private:
 
-class Template
-{
-	public:
+			std::string text_;
+	};
 
-		void Parse()
-		{
+	class TemplateNode::Variable : public TemplateNode
+	{
+		public:
 
-		}
+			Variable(TemplateNodeList * parentList, const std::string & name)
+				: TemplateNode(parentList),
+				  name_(name)
+			{
+				;;
+			}
 
-	private:
+			virtual ~Variable() throw() { ;; }
+
+			virtual Type GetType() const
+			{
+				return VARIABLE;
+			}
+
+			virtual void DebugPrint(unsigned int indent) const
+			{
+				DebugPrintIndent(indent);
+				printf("VARIABLE\n");
+			}
+
+		private:
+
+			const std::string name_;
+	};
+
+	class TemplateNode::Loop : public TemplateNode
+	{
+		public:
+
+			Loop(TemplateNodeList * parentList)
+				: TemplateNode(parentList),
+				  body_(this)
+			{
+				;;
+			}
+
+			TemplateNodeList * GetBody()
+			{
+				return &body_;
+			}
+
+			virtual Type GetType() const
+			{
+				return LOOP;
+			}
+
+			virtual void DebugPrint(unsigned int indent) const
+			{
+				DebugPrintIndent(indent);
+				printf("LOOP\n");
+				body_.DebugPrint(indent + 1);
+			}
+
+		private:
+
+			TemplateNodeList body_;
+	};
+
+	class TemplateParser : protected Parser
+	{
+		public:
+
+			TemplateParser(CharSource & charSource)
+				: Parser(charSource),
+				  rootList_(new TemplateNodeList(0)),
+				  currentList_(rootList_.get())
+			{
+				;;
+			}
+
+			bool SkipChar(char c)
+			{
+				if (AtEnd() || GetChar() != c)
+				{
+					return false;
+				}
+
+				Advance();
+				return true;
+			}
+
+			bool ReadString(const char * s)
+			{
+				for (; *s != '\0'; ++s)
+				{
+					if (AtEnd() || GetChar() != *s)
+					{
+						return false;
+					}
+
+					Advance();
+				}
+
+				return true;
+			}
+
+			void Parse()
+			{
+				Mark();
+
+				while (NotAtEnd())
+				{
+					if (GetChar() != '{')
+					{
+						Advance();
+						continue;
+					}
+
+					AddText(ReleaseString());
+
+					Mark();
+					Advance();
+
+					if (!SkipChar('{'))
+					{
+						Advance();
+						continue;
+					}
+
+					Unmark();
+
+					SkipWhitespaces();
+
+					if (GetChar() == '$') // {{$VAR}}
+					{
+						Advance();
+						if (AtEnd() || NotInClass(CharClass::IDENTIFIER_HEAD))
+						{
+							ThrowError("Invalid syntax");
+						}
+
+						const std::string variableName = ReadIdentifier();
+
+						if (!ReadString("}}"))
+						{
+							ThrowError("Invalid syntax");
+						}
+
+						Mark();
+					}
+					else
+					{
+						bool closing = false;
+						if (SkipChar('/'))
+						{
+							closing = true;
+						}
+
+						std::string tag = NeedIdentifier();
+						ToLowerCase(tag);
+
+						if (tag == "if")
+						{
+							if (closing)
+							{
+								printf("{{ /if }}\n");
+							}
+							else
+							{
+								// ... {{if ...
+								//       ---^
+								SkipWhitespaces();
+
+								const std::string variableName = NeedIdentifier();
+								printf("{{ if %s }}\n", variableName.c_str());
 
 
-};
+							}
+						}
+						else if (tag == "loop")
+						{
+							if (closing)
+							{
+								printf("{{ /loop }}\n");
+
+								TemplateNode * parentNode = currentList_->GetParentNode();
+								if (parentNode == 0 || parentNode->GetType() != TemplateNode::LOOP)
+								{
+									ThrowError("Syntax error");
+								}
+
+								currentList_ = parentNode->GetParentList();
+							}
+							else
+							{
+								SkipWhitespaces();
+
+								const std::string variableName = NeedIdentifier();
+								printf("{{ loop %s }}\n", variableName.c_str());
+
+								TemplateNode::Loop * newNode = new TemplateNode::Loop(currentList_);
+								currentList_->Add(std::auto_ptr<TemplateNode>(newNode));
+								currentList_ = newNode->GetBody();
+							}
+						}
+						else if (tag == "else")
+						{
+							printf("{{ else }}\n");
+						}
+						else if (tag == "include")
+						{
+							printf("{{ include }}");
+						}
+						else
+						{
+							ThrowError("Invalid syntax");
+						}
+
+						SkipWhitespaces();
+
+						if (!ReadString("}}"))
+						{
+							ThrowError("Invalid syntax");
+						}
+
+						Mark();
+					}
+				}
+
+				AddText(ReleaseString());
+
+				if (currentList_ != rootList_.get())
+				{
+					ThrowError("Invalid syntax");
+				}
+
+				printf("==================================================\n");
+				rootList_->DebugPrint(0);
+			}
+
+		private:
+
+			void AddText(const std::string & text)
+			{
+				if (text.size() > 0)
+				{
+					printf("TEXT: length=%u\n", text.size());
+
+					TemplateNode * lastNode = currentList_->LastNode();
+					if (lastNode == 0 || lastNode->GetType() != TemplateNode::TEXT)
+					{
+						std::auto_ptr<TemplateNode> newNode(new TemplateNode::Text(currentList_, text));
+						currentList_->Add(newNode);
+					}
+					else
+					{
+						static_cast<TemplateNode::Text *>(lastNode)->AppendText(text);
+					}
+
+					/*
+					std::auto_ptr<TemplateNode> newNode(new TemplateNode::Text(currentList_, text));
+					currentList_->Add(newNode);
+					*/
+				}
+			}
+
+			void SkipWhitespaces()
+			{
+				while (NotAtEnd() && InClass(CharClass::WHITESPACE))
+				{
+					Advance();
+				}
+			}
+
+			const std::string NeedIdentifier()
+			{
+				if (AtEnd() || NotInClass(CharClass::IDENTIFIER_HEAD))
+				{
+					ThrowError("Identifier was expected");
+				}
+
+				return ReadIdentifier();
+			}
+
+			std::auto_ptr<TemplateNodeList> rootList_;
+			TemplateNodeList * currentList_;
+	};
+}
 
 int main(int argc, const char * argv[])
 {
+	{
+		const std::string s = "what the fuck ? {{loop a}} { { {{loop x}} 1 {{/loop}} 2 {{/if}}3{{/loop}}";
+		XTL::CharSource::ConstCharPtr charSource(s.data(), s.size());
+
+		try
+		{
+			XTL::TemplateParser parser(charSource);
+			parser.Parse();
+		}
+		catch (const XTL::Parser::Error & e)
+		{
+			fprintf(stderr, "%s\n", e.What());
+		}
+
+		return 0;
+	}
+
 	// const std::string s = "18446744073709551615";
 	// const std::string s = "18446744073709551616";
 	// const std::string s = "-9223372036854775808";

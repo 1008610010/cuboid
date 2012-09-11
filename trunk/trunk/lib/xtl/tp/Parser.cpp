@@ -62,5 +62,20 @@ namespace XTL
 
 		throw EndOfFile();
 	}
+
+	const std::string Parser::ReadIdentifier()
+	{
+		// Assert( NotAtEnd() && CharClass::IDENTIFIER_HEAD.Contains(GetChar()) )
+
+		Mark();
+
+		do
+		{
+			Advance();
+		}
+		while (NotAtEnd() && InClass(CharClass::IDENTIFIER_TAIL));
+
+		return ReleaseString();
+	}
 }
 
