@@ -1,6 +1,7 @@
 #include "SocketServer.hpp"
 
 #include <memory>
+#include <stdexcept>
 
 namespace XTL
 {
@@ -132,6 +133,11 @@ namespace XTL
 
 	void SocketServer::Run()
 	{
+		if (serverSockets_.empty())
+		{
+			throw std::runtime_error("SocketServer::Run(), while no listening sockets");
+		}
+
 		while (!terminated_)
 		{
 			Iterate();
