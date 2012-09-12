@@ -11,6 +11,11 @@ namespace XTL
 		;;
 	}
 
+	void TcpSocketClient::SetBlocking(bool blocking)
+	{
+		clientSocket_.SetBlocking(blocking);
+	}
+
 	void TcpSocketClient::Connect()
 	{
 		clientSocket_.Connect(serverAddress_);

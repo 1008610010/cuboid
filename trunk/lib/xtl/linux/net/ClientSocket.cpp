@@ -15,7 +15,7 @@ namespace XTL
 			return true;
 		}
 
-		if (errno == EINPROGRESS)
+		if (errno == EINPROGRESS || errno == EALREADY)
 		{
 			return false;
 		}

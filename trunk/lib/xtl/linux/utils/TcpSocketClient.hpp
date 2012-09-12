@@ -17,6 +17,8 @@ namespace XTL
 			 */
 			explicit TcpSocketClient(const std::string & host, unsigned int port);
 
+			void SetBlocking(bool blocking);
+
 			void Connect();
 
 			void Send(const void * buffer, unsigned int size);
