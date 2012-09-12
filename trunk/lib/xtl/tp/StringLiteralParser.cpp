@@ -26,6 +26,12 @@ namespace XTL
 			{
 				break;
 			}
+			else if (c == '\n' && !multiline_)
+			{
+				Unmark();
+				Unmark();
+				ThrowError("Multiline string literal");
+			}
 			else if (c == escapeSequenceChar_)
 			{
 				ReleaseString(result);
@@ -51,9 +57,9 @@ namespace XTL
 		}
 
 		ReleaseString(result);
-		Advance();
-
 		Unmark();
+
+		Advance();
 
 		return result.ToString();
 	}

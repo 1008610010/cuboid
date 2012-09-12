@@ -50,6 +50,15 @@ namespace XTL
 			virtual void RestorePosition() = 0;
 
 			class ConstCharPtr;
+
+		protected:
+
+			CharSource() { ;; }
+
+		private:
+
+			CharSource(const CharSource &);
+			CharSource & operator= (const CharSource &);
 	};
 
 	class CharSource::ConstCharPtr : public CharSource
@@ -87,9 +96,6 @@ namespace XTL
 			virtual void RestorePosition();
 
 		private:
-
-			ConstCharPtr(const ConstCharPtr &);
-			ConstCharPtr & operator= (const ConstCharPtr &);
 
 			const char * PopPtr();
 

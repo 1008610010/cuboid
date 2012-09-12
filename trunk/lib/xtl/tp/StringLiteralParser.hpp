@@ -11,10 +11,11 @@ namespace XTL
 	{
 		public:
 
-			StringLiteralParser(CharSource & charSource, char boundingChar, char escapeSequenceChar)
+			StringLiteralParser(CharSource & charSource, char boundingChar, char escapeSequenceChar, bool multiline)
 				: Parser(charSource),
 				  boundingChar_(boundingChar),
-				  escapeSequenceChar_(escapeSequenceChar)
+				  escapeSequenceChar_(escapeSequenceChar),
+				  multiline_(multiline)
 			{
 				;;
 			}
@@ -82,6 +83,7 @@ namespace XTL
 
 			const char boundingChar_;
 			const char escapeSequenceChar_;
+			const bool multiline_;
 	};
 
 	class StringLiteralParser::EscapeSequence::Char : public StringLiteralParser::EscapeSequence

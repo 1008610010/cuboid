@@ -185,6 +185,9 @@ namespace XTL
 
 		private:
 
+			/*
+			 * TODO: convert this shit to object member
+			 */
 			static const KeyComparator_ KEY_COMPARATOR;
 
 			static bool Less(const KeyType & left, const KeyType & right)
@@ -614,7 +617,7 @@ namespace XTL
 						else
 						{
 							/*
-								totalSize > LEAF_CAPACITY => 
+								totalSize > LEAF_CAPACITY =>
 									leftSize  >= [ LEAF_CAPACITY / 2 ]
 									rightSize >= [ LEAF_CAPACITY / 2 ]
 

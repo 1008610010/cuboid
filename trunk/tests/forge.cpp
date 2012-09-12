@@ -1116,64 +1116,7 @@ struct Alignment
 
 #include <xtl/tp/TextCharSource.hpp>
 
-
-class StringEscapeSequenceParser
-{
-	public:
-
-		virtual ~StringEscapeSequenceParser() throw() { ;; }
-
-		virtual char Parse(XTL::TextCharSource & charSource) = 0;
-};
-
-
-#include <xtl/utils/AutoPtrMap.hpp>
-
-class EscapeSequenceParser
-{
-	public:
-
-		class Subparser
-		{
-			public:
-
-				virtual ~Subparser() throw() { ;; }
-
-				virtual void Parse(XTL::TextCharSource & charSource, std::string & result) const = 0;
-		};
-
-		EscapeSequenceParser()
-			: subparsers_()
-		{
-			;;
-		}
-
-		bool Parse(XTL::TextCharSource & charSource, std::string & result) const
-		{
-			Subparser * subparser = subparsers_[charSource.GetChar()];
-			if (subparser != 0)
-			{
-				subparser->Parse(charSource, result);
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-
-	protected:
-
-		void AddSubparser(char key, std::auto_ptr<Subparser> subparser)
-		{
-			subparsers_.Set(key, subparser);
-		}
-
-	private:
-
-		XTL::AutoPtrMap<char, Subparser> subparsers_;
-};
-
+/*
 class JsonEscapeSequenceParser : public EscapeSequenceParser
 {
 	public:
@@ -1250,76 +1193,6 @@ class JsonEscapeSequenceParser : public EscapeSequenceParser
 		}
 };
 
-class StringLiteralParser
-{
-	public:
-
-		StringLiteralParser(char boundingChar, char escapeSequenceChar)
-			: boundingChar_(boundingChar),
-			  escapeSequenceChar_(escapeSequenceChar)
-		{
-			;;
-		}
-
-		virtual ~StringLiteralParser() throw()
-		{
-			;;
-		}
-
-		const std::string Parse(XTL::TextCharSource & charSource) const
-		{
-			// ASSERT(charSource.GetChar() == boundingChar_)
-
-			std::string result;
-
-			charSource.Advance();
-			charSource.Mark();
-
-			char c;
-			while ((c = charSource.GetChar()) != boundingChar_)
-			{
-				if (charSource.AtEnd())
-				{
-					throw std::runtime_error("Error");
-				}
-				else if (c == escapeSequenceChar_)
-				{
-					result.append(charSource.ReleaseString());
-					charSource.Unmark();
-
-					charSource.Advance();
-
-					if (GetEscapeSequenceParser().Parse(charSource, result))
-					{
-						charSource.Mark();
-					}
-					else
-					{
-						throw std::runtime_error(XTL::FormatString("Invalid escape sequence in string literal: %c%c", escapeSequenceChar_, charSource.GetChar()));
-					}
-				}
-				else
-				{
-					charSource.Advance();
-				}
-			}
-
-			result.append(charSource.ReleaseString());
-			charSource.Unmark();
-
-			return result;
-		}
-
-	protected:
-
-		virtual const EscapeSequenceParser & GetEscapeSequenceParser() const = 0;
-
-	private:
-
-		const char boundingChar_;
-		const char escapeSequenceChar_;
-};
-
 class JsonStringLiteralParser : public StringLiteralParser
 {
 	public:
@@ -1344,7 +1217,7 @@ class JsonStringLiteralParser : public StringLiteralParser
 			return instance;
 		}
 };
-
+*/
 
 /*
 namespace XTL
@@ -1858,6 +1731,7 @@ namespace XTL
 }
 */
 #include <set>
+#include <map>
 
 class CharStateMachine
 {
@@ -2593,7 +2467,7 @@ namespace XTL
 				public:
 
 					explicit SingleQuotedStringParser(XTL::CharSource & charSource)
-						: StringLiteralParser(charSource, '\'', '\\')
+						: StringLiteralParser(charSource, '\'', '\\', false)
 					{
 						;;
 					}
@@ -2625,7 +2499,7 @@ namespace XTL
 				public:
 
 					explicit DoubleQuotedStringParser(XTL::CharSource & charSource)
-						: XTL::StringLiteralParser(charSource, '"', '\\')
+						: XTL::StringLiteralParser(charSource, '"', '\\', false)
 					{
 						;;
 					}
@@ -3009,6 +2883,8 @@ void TerminateProgram(int)
 	}
 }
 
+#include <xtl/linux/utils/TcpSocketClient.hpp>
+
 class TcpClient
 {
 	public:
@@ -3021,16 +2897,68 @@ class TcpClient
 
 		bool Send(double timeout)
 		{
-
+			return false;
 		}
 
 	private:
 
-		TcpSocketClient socketClient_;
+		XTL::TcpSocketClient socketClient_;
+};
+
+struct A
+{
+	virtual ~A() throw() { ;; }
+
+	virtual void Do() = 0;
+};
+
+struct B : public A
+{
+	int i;
+
+	B() : i(0) { ;; }
+
+	virtual ~B() throw() { ;; }
+
+	virtual void Do() { ++i; }
+};
+
+template <typename T> struct C : public A
+{
+	virtual ~C() throw() { ;; }
+
+	virtual void Do() { t.Do(); }
+
+	T t;
+};
+
+template <typename T> struct D : public A
+{
+	D() : a(new T()) { ;; }
+
+	virtual ~D() throw() { ;; }
+
+	virtual void Do() { a->Do(); }
+
+	A * a;
 };
 
 int main(int argc, const char * argv[])
 {
+	{
+		// B    - 0.750
+		// C<B> - 0.810
+		// D<B> - 1.285
+
+		std::auto_ptr<A> p(new D<B>());
+		for (unsigned int i = 0; i < 100000000; ++i)
+		{
+			p->Do();
+		}
+		return 0;
+	}
+
+	/*
 	{
 		try
 		{
@@ -3055,6 +2983,7 @@ int main(int argc, const char * argv[])
 
 		return 0;
 	}
+	*/
 
 	{
 		const std::string s = "what the fuck ? {{if z}} {{elseif y}} {{else}}{{/if}} {{loop a}} { { {{loop x}} 1 {{/loop}} 2 3{{/loop}}";
