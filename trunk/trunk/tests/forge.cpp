@@ -2884,26 +2884,83 @@ void TerminateProgram(int)
 }
 
 #include <xtl/linux/utils/TcpSocketClient.hpp>
+#include <xtl/linux/Utils.hpp>
 
-class TcpClient
+namespace XTL
 {
-	public:
 
-		TcpClient(const std::string & host, unsigned int port)
-			: socketClient_(host, port)
-		{
-			;;
-		}
 
-		bool Send(double timeout)
-		{
-			return false;
-		}
+	class TcpClient
+	{
+		public:
 
-	private:
+			TcpClient(const std::string & host, unsigned int port, bool blocking)
+				: clientSocket_(TcpClientSocket::Create(blocking)),
+				  serverAddress_(host, port)
+			{
 
-		XTL::TcpSocketClient socketClient_;
-};
+			}
+
+			bool Connect(unsigned int attemptsCount, double timeout)
+			{
+				if (clientSocket_.Connect(serverAddress_))
+				{
+					return true;
+				}
+
+				while (attemptsCount > 0)
+				{
+					Sleep(timeout);
+
+					if (clientSocket_.Connect(serverAddress_))
+					{
+						return true;
+					}
+
+					--attemptsCount;
+				}
+
+				return false;
+			}
+
+			bool Send(const void * buffer, int size, unsigned int attemptsCount, double timeout)
+			{
+				const char * p = static_cast<const char *>(buffer);
+
+				int wasSent = clientSocket_.Send(p, size);
+				size -= wasSent;
+				p += wasSent;
+
+				if (size == 0)
+				{
+					return true;
+				}
+
+				while (attemptsCount > 0)
+				{
+					Sleep(timeout);
+
+					wasSent = clientSocket_.Send(p, size);
+					size -= wasSent;
+					p += wasSent;
+
+					if (size == 0)
+					{
+						return true;
+					}
+
+					--attemptsCount;
+				}
+
+				return false;
+			}
+
+		private:
+
+			XTL::TcpClientSocket clientSocket_;
+			XTL::SocketAddressInet serverAddress_;
+	};
+}
 
 struct A
 {
@@ -2946,9 +3003,37 @@ template <typename T> struct D : public A
 int main(int argc, const char * argv[])
 {
 	{
-		// B    - 0.750
-		// C<B> - 0.810
-		// D<B> - 1.285
+		XTL::TcpClient client("microsoft.com", 80, false);
+
+		try
+		{
+			bool r = client.Connect(10, 0.1);
+
+			if (!r)
+			{
+				printf("NOT connected\n");
+				return 1;
+			}
+
+			printf("connected\n");
+
+			const std::string data(65536, 'x');// = "GET / HTTP/1.0\r\n\r\n";
+			r = client.Send(data.data(), data.size(), 5, 0.1);
+
+			printf("%s\n", r ? "Sent" : "Send failed!");
+		}
+		catch (const XTL::UnixError & e)
+		{
+			printf("(%u) %s\n", e.Code(), e.What().c_str());
+		}
+
+		return 0;
+	}
+
+	{
+		// B    - 0.750  0.194
+		// C<B> - 0.810  0.196
+		// D<B> - 1.285  0.256
 
 		std::auto_ptr<A> p(new D<B>());
 		for (unsigned int i = 0; i < 100000000; ++i)
