@@ -1,56 +1,89 @@
 #include "TextCharSource.hpp"
 
-#include <stdexcept>
-
 namespace XTL
 {
-	const TextCursor TextCharSource::ConstCharPtr::GetCursor() const
+	TextCharSource::TextCharSource(std::auto_ptr<CharSource> charSource)
+		: charSource_(charSource)
 	{
-		TextCursor result;
-
-		for (const char * p = begin_; p != ptr_; ++p)
-		{
-			if (*p == '\n')
-			{
-				result.NextRow();
-			}
-			else
-			{
-				result.NextColumn();
-			}
-		}
-
-		// TODO: May be cache result for cur_ position?
-		return result;
+		;;
 	}
 
-	unsigned int TextCharSource::ConstCharPtr::Mark()
+	TextCharSource::~TextCharSource() throw()
 	{
-		markedList_.push_back(ptr_);
-		return markedList_.size();
+		;;
 	}
 
-	void TextCharSource::ConstCharPtr::Unmark()
+	bool TextCharSource::NotAtEnd() const
 	{
-		if (markedList_.empty())
-		{
-			throw std::runtime_error("Attempt to Unmark() not marked CharSource");
-		}
-
-		markedList_.pop_back();
+		return charSource_->NotAtEnd();
 	}
 
-	const std::string TextCharSource::ConstCharPtr::ReleaseString()
+	bool TextCharSource::AtEnd() const
 	{
-		if (markedList_.empty())
+		return charSource_->AtEnd();
+	}
+
+	char TextCharSource::GetChar() const
+	{
+		return charSource_->GetChar();
+	}
+
+	unsigned int TextCharSource::GetCharIndex() const
+	{
+		return charSource_->GetCharIndex();
+	}
+
+	void TextCharSource::Advance()
+	{
+		if (charSource_->GetChar() == '\n')
 		{
-			throw std::runtime_error("Attempt to ReleaseString() from not marked CharSource");
+			textCursor_.NextRow();
+		}
+		else
+		{
+			textCursor_.NextColumn();
 		}
 
-		const char * from = markedList_.back();
-		markedList_.pop_back();
+		charSource_->Advance();
+	}
 
-		return std::string(from, ptr_ - from);
+	unsigned int TextCharSource::Mark()
+	{
+		return charSource_->Mark();
+	}
+
+	void TextCharSource::Unmark()
+	{
+		charSource_->Unmark();
+	}
+
+	unsigned int TextCharSource::MarkIndex() const
+	{
+		return charSource_->MarkIndex();
+	}
+
+	const std::string TextCharSource::ReleaseString()
+	{
+		return charSource_->ReleaseString();
+	}
+
+	void TextCharSource::ReleaseString(CharBuffer & buffer)
+	{
+		charSource_->ReleaseString(buffer);
+	}
+
+	const TextCursor TextCharSource::GetCursor() const
+	{
+		return textCursor_;
+	}
+
+	const TextCursor TextCharSource::ReleaseCursor()
+	{
+		return charSource_->ReleaseCursor();
+	}
+
+	void TextCharSource::RestorePosition()
+	{
+		charSource_->RestorePosition();
 	}
 }
-

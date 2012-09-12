@@ -2,9 +2,9 @@
 #define XTL__TEXT_CHAR_SOURCE_HPP__ 1
 
 #include <list>
+#include <memory>
 #include <string>
 
-#include "CharClass.hpp"
 #include "CharSource.hpp"
 
 namespace XTL
@@ -13,74 +13,42 @@ namespace XTL
 	{
 		public:
 
-			static const char NULL_CHAR = '\0';
+			explicit TextCharSource(std::auto_ptr<CharSource> charSource);
 
-			virtual ~TextCharSource() throw()
-			{
-				;;
-			}
+			virtual ~TextCharSource() throw();
 
-			virtual bool NotAtEnd() const
-			{
-				return GetChar() != NULL_CHAR;
-			}
+			virtual bool NotAtEnd() const;
 
-			virtual bool AtEnd() const
-			{
-				return GetChar() == NULL_CHAR;
-			}
+			virtual bool AtEnd() const;
 
-			virtual const TextCursor GetCursor() const = 0;
+			virtual char GetChar() const;
 
-			class ConstCharPtr;
+			virtual unsigned int GetCharIndex() const;
 
-		private:
-
-			TextCursor textCursor_;
-	};
-
-	class TextCharSource::ConstCharPtr : public TextCharSource
-	{
-		public:
-
-			explicit ConstCharPtr(const char * ptr)
-				: begin_(ptr),
-				  ptr_(ptr),
-				  markedList_()
-			{
-				;;
-			}
-
-			virtual ~ConstCharPtr() throw()
-			{
-				;;
-			}
-
-			virtual char GetChar() const
-			{
-				return *ptr_;
-			}
-
-			virtual void Advance()
-			{
-				++ptr_;
-			}
-
-			virtual const TextCursor GetCursor() const;
+			virtual void Advance();
 
 			virtual unsigned int Mark();
 
 			virtual void Unmark();
 
+			virtual unsigned int MarkIndex() const;
+
 			virtual const std::string ReleaseString();
+
+			virtual void ReleaseString(CharBuffer & buffer);
+
+			virtual const TextCursor GetCursor() const;
+
+			// TODO: make SaveCursor() or not?
+			virtual const TextCursor ReleaseCursor();
+
+			virtual void RestorePosition();
 
 		private:
 
-			const char * begin_;
-			const char * ptr_;
-			std::list<const char *> markedList_;
+			std::auto_ptr<CharSource> charSource_;
+			TextCursor textCursor_;
 	};
 }
 
 #endif
-
