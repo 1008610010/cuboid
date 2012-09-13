@@ -6,10 +6,26 @@
 #include <stdexcept>
 #include <string>
 
+#include "../lib/xtl/CharBuffer.hpp"
 #include "../lib/xtl/utils/AutoPtrVector.hpp"
 
 namespace XTL
 {
+	class TemplateContext
+	{
+		public:
+
+			bool GetBoolean(const std::string & varName) const
+			{
+				return false;
+			}
+
+			const std::string GetString(const std::string & varName) const
+			{
+				return "Unimplemented";
+			}
+	};
+
 	class TemplateNode;
 
 	class TemplateNodeList
@@ -42,6 +58,8 @@ namespace XTL
 			{
 				items_.PushBack(node);
 			}
+
+			void Evaluate(const TemplateContext & context, CharBuffer & output) const;
 
 			void DebugPrint(unsigned int indent) const;
 
@@ -77,6 +95,8 @@ namespace XTL
 			}
 
 			virtual Type GetType() const = 0;
+
+			virtual void Evaluate(const TemplateContext & context, CharBuffer & output) const = 0;
 
 			virtual void DebugPrint(unsigned int indent) const = 0;
 
@@ -127,6 +147,11 @@ namespace XTL
 				return TEXT;
 			}
 
+			virtual void Evaluate(const TemplateContext & context, CharBuffer & output) const
+			{
+				output.Append(text_);
+			}
+
 			virtual void DebugPrint(unsigned int indent) const
 			{
 				DebugPrintIndent(indent);
@@ -147,9 +172,9 @@ namespace XTL
 	{
 		public:
 
-			Variable(TemplateNodeList * parentList, const std::string & name)
+			Variable(TemplateNodeList * parentList, const std::string & varName)
 				: TemplateNode(parentList),
-				  name_(name)
+				  varName_(varName)
 			{
 				;;
 			}
@@ -161,6 +186,11 @@ namespace XTL
 				return VARIABLE;
 			}
 
+			virtual void Evaluate(const TemplateContext & context, CharBuffer & output) const
+			{
+				output.Append(context.GetString(varName_));
+			}
+
 			virtual void DebugPrint(unsigned int indent) const
 			{
 				DebugPrintIndent(indent, "VARIABLE\n");
@@ -168,7 +198,7 @@ namespace XTL
 
 		private:
 
-			const std::string name_;
+			const std::string varName_;
 	};
 
 	class TemplateNode::Branching : public TemplateNode
@@ -196,6 +226,19 @@ namespace XTL
 						return &list_;
 					}
 
+					bool Evaluate(const TemplateContext & context, CharBuffer & output) const
+					{
+						if (context.GetBoolean(varName_))
+						{
+							list_.Evaluate(context, output);
+							return true;
+						}
+						else
+						{
+							return false;
+						}
+					}
+
 				private:
 
 					const std::string varName_;
@@ -215,6 +258,22 @@ namespace XTL
 			virtual Type GetType() const
 			{
 				return BRANCHING;
+			}
+
+			virtual void Evaluate(const TemplateContext & context, CharBuffer & output) const
+			{
+				for (unsigned int i = 0; i < branches_.Size(); ++i)
+				{
+					if (branches_[i]->Evaluate(context, output))
+					{
+						return;
+					}
+				}
+
+				if (HasBranchElse())
+				{
+					branchElse_->Evaluate(context, output);
+				}
 			}
 
 			virtual void DebugPrint(unsigned int indent) const
@@ -285,6 +344,10 @@ namespace XTL
 			virtual Type GetType() const
 			{
 				return LOOP;
+			}
+
+			virtual void Evaluate(const TemplateContext & context, CharBuffer & output) const
+			{
 			}
 
 			virtual void DebugPrint(unsigned int indent) const
