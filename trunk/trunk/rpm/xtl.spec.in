@@ -120,6 +120,9 @@ XTL C++ Library development files
 
 %{_prefix}/include/xtl/linux/utils/Daemonize.hpp
 %{_prefix}/include/xtl/linux/utils/PidFile.hpp
+%{_prefix}/include/xtl/linux/utils/SocketServer.hpp
+%{_prefix}/include/xtl/linux/utils/TcpSocketClient.hpp
+%{_prefix}/include/xtl/linux/utils/TcpSocketServer.hpp
 %{_prefix}/include/xtl/linux/utils/UnixSocketClient.hpp
 %{_prefix}/include/xtl/linux/utils/UnixSocketServer.hpp
 
