@@ -2885,11 +2885,10 @@ void TerminateProgram(int)
 
 #include <xtl/linux/utils/TcpSocketClient.hpp>
 #include <xtl/linux/Utils.hpp>
+#include <xtl/linux/net/SocketAddressError.hpp>
 
 namespace XTL
 {
-
-
 	class TcpClient
 	{
 		public:
@@ -3000,13 +2999,28 @@ template <typename T> struct D : public A
 	A * a;
 };
 
+class TemplateParamPool
+{
+	public:
+
+		unsigned int AddLayer()
+		{
+			return layerIndex_;
+		}
+
+	private:
+
+		unsigned int layerIndex_;
+};
+
 int main(int argc, const char * argv[])
 {
+	/*
 	{
-		XTL::TcpClient client("microsoft.com", 80, false);
-
 		try
 		{
+			XTL::TcpClient client("microsoft.com", 80, false);
+
 			bool r = client.Connect(10, 0.1);
 
 			if (!r)
@@ -3022,6 +3036,10 @@ int main(int argc, const char * argv[])
 
 			printf("%s\n", r ? "Sent" : "Send failed!");
 		}
+		catch (XTL::SocketAddressError & e)
+		{
+			printf("Could not resolve address\n");
+		}
 		catch (const XTL::UnixError & e)
 		{
 			printf("(%u) %s\n", e.Code(), e.What().c_str());
@@ -3029,7 +3047,9 @@ int main(int argc, const char * argv[])
 
 		return 0;
 	}
+	*/
 
+	/*
 	{
 		// B    - 0.750  0.194
 		// C<B> - 0.810  0.196
@@ -3042,6 +3062,7 @@ int main(int argc, const char * argv[])
 		}
 		return 0;
 	}
+	*/
 
 	/*
 	{

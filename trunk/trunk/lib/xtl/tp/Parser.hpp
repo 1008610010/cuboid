@@ -119,6 +119,11 @@ namespace XTL
 			 */
 			void SkipCharClass(const CharClass & charClass);
 
+			/**
+			 * Если текущий символ c, то сдвигаем позицию.
+			 * @return true  если текущий символ c
+			 * @return false и противном случае
+			 */
 			bool ReadChar(char c)
 			{
 				if (AtEnd() || GetChar() != c)
