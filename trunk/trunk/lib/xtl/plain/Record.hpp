@@ -148,14 +148,17 @@ namespace PLAIN
 				;;
 			}
 
-			// TODO: void Clear();
+			void Clear()
+			{
+				::memset(Data(), '\0', this->Size());
+			}
 
-			void * Data()
+			void * Data() const
 			{
 				return data_;
 			}
 
-			void * Data() const
+			void * Data()
 			{
 				return data_;
 			}
@@ -205,6 +208,11 @@ namespace PLAIN
 			operator RecordRef ()
 			{
 				return RecordRef(prototype_.Get(), data_);
+			}
+
+			void Clear()
+			{
+				::memset(data_, '\0', prototype_->Size());
 			}
 
 			void Assign(const RecordConstRef & other)
@@ -311,6 +319,11 @@ namespace PLAIN
 						return this;
 					}
 
+					void Clear()
+					{
+						::memset(Data(), '\0', this->Size());
+					}
+
 					virtual void Read(XTL::InputStream & stream)
 					{
 						stream.Read(Data(), this->Size());
@@ -396,10 +409,24 @@ namespace PLAIN
 						return RecordRef(Prototype(), this->data_);
 					}
 
+					Rec & operator= (ConstRef ref)
+					{
+						if (this->data_ != ref->data_)
+						{
+							::memcpy(this->data_, ref->data_, this->Size());
+						}
+
+						return *this;
+					}
+
+					Rec & operator= (const Rec & other)
+					{
+						return operator=((ConstRef) other);
+					}
+
 				private:
 
 					Rec(const Rec &);
-					Rec & operator= (const Rec &);
 
 					PrototypeHolder prototypeHolder_;
 			};
