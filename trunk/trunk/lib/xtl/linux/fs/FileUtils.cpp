@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "FilePath.hpp"
+#include "FileStats.hpp"
 #include "../../FormatString.hpp"
 #include "../UnixError.hpp"
 
@@ -150,7 +151,7 @@ namespace XTL
 		return FilePath(left).Append(right).ToString();
 	}
 
-	bool FileUtils::CreateDirectory(const std::string & directoryPath)
+	bool FileUtils::CreateDirectory(const std::string & directoryPath, AccessMode accessMode)
 	{
 		if (::mkdir(directoryPath.c_str(), 0755) == 0)
 		{
@@ -163,6 +164,49 @@ namespace XTL
 		}
 
 		throw UnixError();
+	}
+
+	bool FileUtils::CreatePath(const FilePath & filePath, AccessMode accessMode)
+	{
+		bool created = false;
+
+		for (FilePath::Iterator itr(filePath); !itr.AtEnd(); itr.Advance())
+		{
+			if (::mkdir(itr.CurrentPath().c_str(), accessMode.Get()) != 0)
+			{
+				if (errno == EEXIST)
+				{
+					if (FileStats(itr.CurrentPath()).IsDirectory())
+					{
+						created = false;
+						continue;
+					}
+				}
+
+				throw UnixError();
+			}
+
+			created = true;
+		}
+
+		return created;
+	}
+
+	bool FileUtils::CreatePath(const std::string & dirPath, AccessMode accessMode)
+	{
+		XTL::FilePath fp(dirPath);
+		fp.ConvertToAbsolute();
+
+		return CreatePath(fp, accessMode);
+	}
+
+	bool FileUtils::CreatePathForFile(const std::string & filePath, AccessMode accessMode)
+	{
+		XTL::FilePath fp(filePath);
+		fp.ConvertToAbsolute();
+		fp.Remove();
+
+		return CreatePath(fp, accessMode);
 	}
 }
 

@@ -5,8 +5,12 @@
 
 #include <string>
 
+#include "../AccessMode.hpp"
+
 namespace XTL
 {
+	class FilePath;
+
 	struct FileUtils
 	{
 		/**
@@ -51,7 +55,28 @@ namespace XTL
 		 * @return false    - Директория уже существует.
 		 * @throw UnixError - Системная ошибка.
 		 */
-		static bool CreateDirectory(const std::string & directoryPath);
+		static bool CreateDirectory(const std::string & directoryPath, AccessMode accessMode = AccessMode::DEFAULT_DIRECTORY);
+
+		/**
+		 * @return true     - Директория успешно создана.
+		 * @return false    - Директория уже существует.
+		 * @throw UnixError - Системная ошибка.
+		 */
+		static bool CreatePath(const FilePath & filePath, AccessMode accessMode = AccessMode::DEFAULT_DIRECTORY);
+
+		/**
+		 * @return true     - Директория успешно создана.
+		 * @return false    - Директория уже существует.
+		 * @throw UnixError - Системная ошибка.
+		 */
+		static bool CreatePath(const std::string & dirPath, AccessMode accessMode = AccessMode::DEFAULT_DIRECTORY);
+
+		/**
+		 * @return true     - Директория успешно создана.
+		 * @return false    - Директория уже существует.
+		 * @throw UnixError - Системная ошибка.
+		 */
+		static bool CreatePathForFile(const std::string & filePath, AccessMode accessMode = AccessMode::DEFAULT_DIRECTORY);
 	};
 }
 
