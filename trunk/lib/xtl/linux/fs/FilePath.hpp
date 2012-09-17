@@ -32,6 +32,12 @@ namespace XTL
 
 			FilePath & Append(const char * filePath);
 
+			const std::string Remove();
+
+			void ConvertToAbsolute();
+
+			void ConvertToAbsolute(const std::string & baseDir);
+
 			class Iterator
 			{
 				public:

@@ -3013,8 +3013,37 @@ class TemplateParamPool
 		unsigned int layerIndex_;
 };
 
+class CharSet
+{
+	public:
+
+
+
+	private:
+
+		std::set<char> chars_;
+};
+
+#include <xtl/linux/fs/FileUtils.hpp>
+
 int main(int argc, const char * argv[])
 {
+	{
+		time_t ts = ::time(0);
+		struct tm * t = ::gmtime(&ts);
+
+		try
+		{
+			XTL::FileUtils::CreatePathForFile(XTL::FormatString("%04d/%02d/%02d/event_file", t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour), 0700);
+		}
+		catch (const XTL::UnixError & e)
+		{
+			fprintf(stderr, "%s\n", e.What().c_str());
+		}
+
+		return 0;
+	}
+
 	/*
 	{
 		try

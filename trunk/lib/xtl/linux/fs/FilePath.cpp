@@ -1,5 +1,6 @@
 #include "FilePath.hpp"
 
+#include "../../Exception.hpp"
 #include "FilePathTokenizer.hpp"
 #include "FileUtils.hpp"
 
@@ -34,7 +35,7 @@ namespace XTL
 
 				virtual void OnPathPart(const std::string & part)
 				{
-				
+
 					target_.AppendPathPart(part);
 				}
 
@@ -116,6 +117,47 @@ namespace XTL
 		FilePathAppender appender(*this);
 		TokenizeFilePath(appender, filePath);
 		return *this;
+	}
+
+	const std::string FilePath::Remove()
+	{
+		if (parts_.empty())
+		{
+			return std::string();
+		}
+
+		const std::string result = parts_.back();
+		parts_.pop_back();
+		return result;
+	}
+
+	void FilePath::ConvertToAbsolute()
+	{
+		if (IsAbsolute())
+		{
+			return;
+		}
+
+		ConvertToAbsolute(FileUtils::GetCurrentDirectory());
+	}
+
+	void FilePath::ConvertToAbsolute(const std::string & baseDir)
+	{
+		if (IsAbsolute())
+		{
+			return;
+		}
+
+		FilePath tempFilePath(baseDir);
+		if (!tempFilePath.IsAbsolute())
+		{
+			throw ILLEGAL_ARGUMENT_ERROR("FilePath::ConvertToAbsolute() - baseDir is not absolute");
+		}
+
+		tempFilePath.Append(*this);
+		std::swap(parts_, tempFilePath.parts_);
+
+		SetAbsolute();
 	}
 
 	void FilePath::SetAbsolute()
