@@ -38,6 +38,7 @@ SET (
 		xtl/VariantStruct.cpp
 
 		xtl/linux/AccessMode.cpp
+		xtl/linux/Signals.cpp
 		xtl/linux/SystemConfig.cpp
 		xtl/linux/UnixError.cpp
 		xtl/linux/UnixUser.cpp
