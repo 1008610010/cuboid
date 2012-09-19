@@ -3,6 +3,8 @@
 #include <memory>
 #include <stdexcept>
 
+#include "../UnixError.hpp"
+
 namespace XTL
 {
 	namespace
@@ -192,6 +194,9 @@ namespace XTL
 		for (std::vector<ClientSocket>::iterator itr = disconnected.begin(); itr != disconnected.end(); ++itr)
 		{
 			socketSelector_.Delete(*itr);
+
+			itr->Close();
+
 			clients_.Erase(*itr);
 		}
 	}
@@ -218,7 +223,10 @@ namespace XTL
 			client->SetHandler(clientHandler);
 
 			// TODO: select client for writing, if it has non-empty sendBuffer
-			socketSelector_.Insert(clientSocket, true, false);
+			if (!socketSelector_.Insert(clientSocket, true, false))
+			{
+				throw std::runtime_error("SocketServer::AcceptClients(), could not insert socket descriptor to fd_set");
+			}
 
 			clients_.Set(clientSocket, client);
 		}
