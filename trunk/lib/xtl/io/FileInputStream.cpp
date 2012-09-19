@@ -49,6 +49,7 @@ namespace XTL
 	void FileInputStream::Seek(FileSize offset)
 	{
 		file_.Seek(offset);
+		position_ = offset;
 	}
 
 	FileSize FileInputStream::Size() const
