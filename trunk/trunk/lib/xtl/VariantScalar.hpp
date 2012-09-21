@@ -6,6 +6,9 @@
 
 namespace XTL
 {
+	// TODO: replace subclasses of Variant:
+	// Variant::Scalar to VariantScalar
+
 	class Variant::Scalar : public Variant
 	{
 		public:

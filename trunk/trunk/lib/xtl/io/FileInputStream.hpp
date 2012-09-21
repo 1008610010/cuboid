@@ -17,6 +17,10 @@ namespace XTL
 
 			virtual ~FileInputStream() throw();
 
+			/**
+			 * @throw XTL::UnixError
+			 * @throw XTL::InputStream::ReadError
+			 */
 			virtual void Read(void * buffer, unsigned int size);
 
 			virtual bool AtEnd() const;

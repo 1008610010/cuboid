@@ -25,6 +25,11 @@ namespace XTL
 						return (result_->d_type & DT_REG) != 0;
 					}
 
+					bool IsDirectory() const
+					{
+						return (result_->d_type & DT_DIR) != 0;
+					}
+
 					const char * Name() const
 					{
 						return result_->d_name;
