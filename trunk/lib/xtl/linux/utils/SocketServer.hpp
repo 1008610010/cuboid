@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "../../utils/AutoPtrMap.hpp"
+#include "../UnixError.hpp"
 #include "../net/ClientSocket.hpp"
 #include "../net/ServerSocket.hpp"
 #include "../net/SocketSelector.hpp"
@@ -30,7 +31,7 @@ namespace XTL
 
 					virtual void OnClientDisconnected() = 0;
 
-					virtual void OnReceiveError() = 0;
+					virtual void OnReceiveError(const XTL::UnixError & e) = 0;
 
 					virtual void OnDataReceived(const void * buffer, unsigned int size) = 0;
 

@@ -78,6 +78,15 @@ namespace XTL
 				{
 					Disconnect();
 				}
+				catch (const XTL::UnixError & e)
+				{
+					if (handler_.get() != 0)
+					{
+						handler_->OnReceiveError(e);
+					}
+
+					Disconnect();
+				}
 			}
 
 		private:

@@ -2822,9 +2822,9 @@ class MyTcpServer : public XTL::TcpSocketServer
 				printf("OnClientDisconnected()\n");
 			}
 
-			virtual void OnReceiveError()
+			virtual void OnReceiveError(const XTL::UnixError & e)
 			{
-				printf("OnReceiveError()\n");
+				printf("OnReceiveError(%s)\n", e.What().c_str());
 			}
 
 			virtual void OnDataReceived(const void * buffer, unsigned int size)
