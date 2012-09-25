@@ -29,22 +29,22 @@ namespace XTL
 		}
 	}
 
-	int ClientSocket::Receive(void * buffer, int size) const
+	ClientSocket::ReceiveResult ClientSocket::Receive(void * buffer, int size) const
 	{
 		int result = ::recv(Desc(), buffer, size, 0);
 
 		if (result > 0)
 		{
-			return result;
+			return ReceiveResult(result);
 		}
 		else if (result == 0)
 		{
-			return -1;
+			return ReceiveResult(-1);
 		}
 
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 		{
-			return 0;
+			return ReceiveResult(0);
 		}
 		else if (errno == EINTR)
 		{

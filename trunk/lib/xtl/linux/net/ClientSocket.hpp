@@ -11,6 +11,31 @@ namespace XTL
 	{
 		public:
 
+			class ReceiveResult
+			{
+				public:
+
+					explicit ReceiveResult(int wasRead)
+						: wasRead_(wasRead)
+					{
+						;;
+					}
+
+					int WasRead() const
+					{
+						return wasRead_;
+					}
+
+					bool IsConnectionClosed() const
+					{
+						return wasRead_ < 0;
+					}
+
+				private:
+
+					const int wasRead_;
+			};
+
 			ClientSocket()
 				: Socket()
 			{
@@ -23,7 +48,7 @@ namespace XTL
 				;;
 			}
 
-			int Receive(void * buffer, int size) const;
+			ReceiveResult Receive(void * buffer, int size) const;
 
 			int Send(const void * buffer, int size) const;
 
