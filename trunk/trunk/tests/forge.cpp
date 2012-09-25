@@ -3316,15 +3316,17 @@ int main(int argc, const char * argv[])
 		while (1)
 		{
 			char buffer[1024];
-			int size = clientSocket.Receive(buffer, sizeof(buffer));
-			if (size < 0)
+
+			const XTL::ClientSocket::ReceiveResult result = clientSocket.Receive(buffer, sizeof(buffer));
+
+			if (result.IsConnectionClosed())
 			{
 				break;
 			}
 
-			if (size != 0)
+			if (result.WasRead())
 			{
-				buffer[size] = '\0';
+				buffer[result.WasRead()] = '\0';
 				printf("%s", buffer);
 				// printf("%d\n", size);
 			}
