@@ -29,22 +29,22 @@ namespace XTL
 		}
 	}
 
-	ClientSocket::ReceiveResult ClientSocket::Receive(void * buffer, int size) const
+	unsigned int ClientSocket::Receive(void * buffer, int size) const
 	{
 		int result = ::recv(Desc(), buffer, size, 0);
 
 		if (result > 0)
 		{
-			return ReceiveResult(result);
+			return result;
 		}
 		else if (result == 0)
 		{
-			return ReceiveResult(-1);
+			throw Disconnected();
 		}
 
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 		{
-			return ReceiveResult(0);
+			return 0;
 		}
 		else if (errno == EINTR)
 		{
@@ -56,11 +56,11 @@ namespace XTL
 		}
 	}
 
-	int ClientSocket::Send(const void * buffer, int size) const
+	unsigned int ClientSocket::Send(const void * buffer, int size) const
 	{
 		int result = ::send(Desc(), buffer, size, MSG_NOSIGNAL);
 
-		if (result != -1)
+		if (result >= 0)
 		{
 			return result;
 		}
