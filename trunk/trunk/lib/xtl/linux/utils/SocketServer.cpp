@@ -65,16 +65,18 @@ namespace XTL
 
 			void Receive()
 			{
-				const ClientSocket::ReceiveResult result = socket_.Receive(buffer_, sizeof(buffer_));
+				try
+				{
+					unsigned int wasRead = socket_.Receive(buffer_, sizeof(buffer_));
 
-				if (result.IsConnectionClosed())
+					if (handler_.get() != 0 && wasRead > 0)
+					{
+						handler_->OnDataReceived(buffer_, wasRead);
+					}
+				}
+				catch (const XTL::ClientSocket::Disconnected & e)
 				{
 					Disconnect();
-				}
-
-				if (handler_.get() != 0 && result.WasRead() > 0)
-				{
-					handler_->OnDataReceived(buffer_, result.WasRead());
 				}
 			}
 

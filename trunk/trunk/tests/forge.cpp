@@ -3313,23 +3313,26 @@ int main(int argc, const char * argv[])
 		const char * const request = "GET / HTTP/1.0\r\nHost: www.ya.ru\r\n\r\n";
 		clientSocket.Send(request, strlen(request));
 		printf("Request was sent\n");
-		while (1)
+
+		try
 		{
-			char buffer[1024];
-
-			const XTL::ClientSocket::ReceiveResult result = clientSocket.Receive(buffer, sizeof(buffer));
-
-			if (result.IsConnectionClosed())
+			while (1)
 			{
-				break;
-			}
+				char buffer[1024];
 
-			if (result.WasRead())
-			{
-				buffer[result.WasRead()] = '\0';
-				printf("%s", buffer);
-				// printf("%d\n", size);
+				unsigned int result = clientSocket.Receive(buffer, sizeof(buffer) - 1);
+
+				if (result > 0)
+				{
+					buffer[result] = '\0';
+					printf("%s", buffer);
+					// printf("%d\n", size);
+				}
 			}
+		}
+		catch (XTL::ClientSocket::Disconnected & e)
+		{
+			;;
 		}
 
 		printf("\n");

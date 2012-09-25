@@ -11,29 +11,8 @@ namespace XTL
 	{
 		public:
 
-			class ReceiveResult
+			class Disconnected
 			{
-				public:
-
-					explicit ReceiveResult(int wasRead)
-						: wasRead_(wasRead)
-					{
-						;;
-					}
-
-					int WasRead() const
-					{
-						return wasRead_;
-					}
-
-					bool IsConnectionClosed() const
-					{
-						return wasRead_ < 0;
-					}
-
-				private:
-
-					const int wasRead_;
 			};
 
 			ClientSocket()
@@ -48,9 +27,18 @@ namespace XTL
 				;;
 			}
 
-			ReceiveResult Receive(void * buffer, int size) const;
+			/**
+			 * @throw XTL::ClientSocket::Disconnected
+			 * @throw XTL::UnixError::Interrupted
+			 * @throw XTL::UnixError
+			 */
+			unsigned int Receive(void * buffer, int size) const;
 
-			int Send(const void * buffer, int size) const;
+			/**
+			 * @throw XTL::UnixError::Interrupted
+			 * @throw XTL::UnixError
+			 */
+			unsigned int Send(const void * buffer, int size) const;
 
 		protected:
 
