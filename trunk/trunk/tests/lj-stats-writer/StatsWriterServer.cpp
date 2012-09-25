@@ -82,9 +82,9 @@ namespace XC3
 					fprintf(stderr, "OnClientDisconnected()\n");
 				}
 
-				virtual void OnReceiveError()
+				virtual void OnReceiveError(const XTL::UnixError & e)
 				{
-					fprintf(stderr, "OnReceiveError()\n");
+					fprintf(stderr, "OnReceiveError(%s)\n", e.What().c_str());
 				}
 
 				virtual void OnDataReceived(const void * buffer, unsigned int size)
