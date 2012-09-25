@@ -18,6 +18,11 @@ namespace XTL
 				;;
 			}
 
+			bool Exists(const char * key)
+			{
+				return structRef_.Get(key) != 0;
+			}
+
 			long long int GetLongLongInt(const char * key, long long int defaultValue)
 			{
 				VariantPtr * ptr = structRef_.Get(key);
