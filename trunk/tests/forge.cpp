@@ -3026,6 +3026,36 @@ class CharSet
 
 #include <xtl/linux/fs/FileUtils.hpp>
 
+class CharStateMachine2
+{
+	public:
+
+		CharStateMachine2()
+			: links_()
+		{
+			;;
+		}
+
+		void AddString(const std::string & s)
+		{
+		}
+
+/*
+		(abc|abcde)(?:de)?
+		abc
+		abcde
+		abcdede
+
+		Match string "abcde":
+			$1 == "abc" или $1 == "abcde" ?
+*/
+
+	private:
+
+		std::map<int, std::map<char, int> > links_;
+		std::set<int> finalStates_;
+};
+
 int main(int argc, const char * argv[])
 {
 	{
