@@ -21,6 +21,8 @@ namespace XTL
 				return mode_;
 			}
 
+			bool IsExecutable() const;
+
 		private:
 
 			const mode_t mode_;
