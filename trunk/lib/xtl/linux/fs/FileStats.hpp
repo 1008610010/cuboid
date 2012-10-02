@@ -6,6 +6,7 @@
 #include <string>
 
 #include "../../Types.hpp"
+#include "../AccessMode.hpp"
 
 namespace XTL
 {
@@ -58,6 +59,8 @@ namespace XTL
 			FileSize Size() const;
 
 			const FileType Type() const;
+
+			const AccessMode Mode() const;
 
 			bool IsRegular() const;
 

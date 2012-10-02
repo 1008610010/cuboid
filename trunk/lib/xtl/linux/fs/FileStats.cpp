@@ -83,6 +83,11 @@ namespace XTL
 		return FileType::FromStats(stats_);
 	}
 
+	const AccessMode FileStats::Mode() const
+	{
+		return AccessMode(stats_.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO));
+	}
+
 	bool FileStats::IsRegular() const
 	{
 		return S_ISREG(stats_.st_mode);
