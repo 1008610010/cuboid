@@ -219,14 +219,14 @@ namespace XTL
 					{
 						left = middle + 1;
 					}
-					else if (middleKey == key)
+					else if (key < middleKey)
 					{
-						found = true;
-						return middle;
+						right = middle;
 					}
 					else
 					{
-						right = middle;
+						found = true;
+						return middle;
 					}
 
 					/*
