@@ -122,7 +122,7 @@ namespace PLAIN
 
 			size_ = newSize;
 		}
-		else // size_ > newSize
+		else // newSize < size_
 		{
 			unsigned int newChunksCount = (newSize - 1) / chunkCapacity_ + 1;
 
