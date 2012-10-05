@@ -3056,8 +3056,21 @@ class CharStateMachine2
 		std::set<int> finalStates_;
 };
 
+#include <xtl/utils/SimpleStringMatcher.hpp>
+
 int main(int argc, const char * argv[])
 {
+	{
+		XTL::SimpleStringMatcher ssm("abc-(%d%d))");
+
+		if (XTL::SimpleStringMatcher::Result result = ssm.Match("abc-23"))
+		{
+			printf("Matched '%s'!\n", result.GetSubmatch("abc-23", 0).c_str());
+		}
+
+		return 0;
+	}
+
 	{
 		time_t ts = ::time(0);
 		struct tm * t = ::gmtime(&ts);
