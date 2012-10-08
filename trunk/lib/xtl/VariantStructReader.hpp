@@ -35,6 +35,12 @@ namespace XTL
 				return ptr != 0 ? ptr->ToString() : defaultValue;
 			}
 
+			bool GetBoolean(const char * key, bool defaultValue)
+			{
+				VariantPtr * ptr = structRef_.Get(key);
+				return ptr != 0 ? ptr->ToLongLongInt() != 0 : defaultValue;
+			}
+
 			VariantPtr * Get(const char * key)
 			{
 				return structRef_.Get(key);

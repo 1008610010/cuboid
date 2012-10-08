@@ -11,42 +11,7 @@
 +{
 +	public:
 +
-+		class ParseError
-+		{
-+			public:
-+
-+				explicit ParseError(const std::string & key)
-+					: key_(key)
-+				{
-+					;;
-+				}
-+
-+			private:
-+
-+				const std::string key_;
-+		};
-+
-+		class UnknownOption : public ParseError
-+		{
-+			public:
-+
-+				explicit UnknownOption(const std::string & key)
-+					: ParseError(key)
-+				{
-+					;;
-+				}
-+		};
-+
-+		class NeedOptionValue : public ParseError
-+		{
-+			public:
-+
-+				explicit NeedOptionValue(const std::string & key)
-+					: ParseError(key)
-+				{
-+					;;
-+				}
-+		};
+
 +
 +		enum Flags
 +		{
@@ -56,66 +21,8 @@
 +			PASSWORD = 0x0004
 +		};
 +
-+		void Parse(int argc, char * argv[])
-+		{
-+			int i = 0;
-+			while (i < argc)
-+			{
-+				char * arg = argv[i];
-+				if (arg[0] == '-')
-+				{
-+					if (arg[1] == '-')
-+					{
-+						char * v = ::strchr(arg + 2, '=');
 +
-+						if (v == 0)
-+						{
-+							OnOption(arg, 0);
-+						}
-+						else
-+						{
-+							OnOption(std::string(arg, v), v + 1);
-+						}
-+
-+						++i;
-+					}
-+					else
-+					{
-+						const ProgramOption * option = FindOption(arg);
-+						if (option == 0)
-+						{
-+							throw UnknownOption(arg);
-+							// TODO: or
-+						}
-+
-+						++i;
-+
-+						if (option->NeedValue())
-+						{
-+							if (i == argc)
-+							{
-+								throw NeedOptionValue(arg);
-+							}
-+
-+							OnOption(arg, argv[i]);
-+							++i;
-+						}
-+						else
-+						{
-+							OnOption(arg, 0);
-+						}
-+					}
-+				}
-+				else
-+				{
-+					++i;
-+				}
-+			}
-+		}
-+
-+		void OnOption(const std::string & key, char * value)
-+		{
-+		}
+
 +
 +	private:
 +
