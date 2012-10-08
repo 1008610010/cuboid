@@ -5,16 +5,9 @@
 #include <stdexcept>
 #include <string>
 
-/*
-struct ProgramOptionDesc
-{
-	const char   * label1;
-	const char   * label2;
-	const char   * value2;
-	const char   * text;
-	unsigned int   flags;
-};
+#include <xtl/StringUtils.hpp>
 
+/*
 class ProgramOptions
 {
 	public:
@@ -72,46 +65,32 @@ class ProgramOptions
 
 #include <xtl/utils/AutoPtrVector.hpp>
 
-class ProgramOption;
-
-class ProgramOptionHandler
+namespace XTL
 {
-	public:
-
-		virtual ~ProgramOptionHandler() throw() { ;; }
-
-		virtual void Execute(const ProgramOption * option, const char * value) = 0;
-};
-
-class ProgramOptionHandler_String
+namespace PO
 {
-	public:
-
-		ProgramOptionHandler_String(std::string & dest)
-			: dest_(dest)
-		{
-			;;
-		}
-
-		virtual ~ProgramOptionHandler_String() throw() { ;; }
-
-		virtual void Execute(const ProgramOption * option, const char * value)
-		{
-			dest_.assign(value);
-		}
-
-	private:
-
-		std::string & dest_;
-};
+	enum ProgramOptionFlags
+	{
+		REQUIRED   = 0x0001,
+		PASSWORD   = 0x0002
+	};
+}
+}
 
 class ProgramOption
 {
 	public:
 
-		ProgramOption(const char * label, const char * text)
+		ProgramOption(const char * label, const char * text, unsigned int flags)
 			: label_(label),
-			  text_(text)
+			  text_(text),
+			  flags_(flags),
+			  exists_(false)
+		{
+			;;
+		}
+
+		virtual ~ProgramOption() throw()
 		{
 			;;
 		}
@@ -123,20 +102,41 @@ class ProgramOption
 
 		bool IsRequired() const
 		{
-			return required_;
+			return (flags_ & XTL::PO::REQUIRED) != 0;
 		}
 
-		bool NeedValue() const
+		bool Exists() const
 		{
-			return false;
+			return exists_;
 		}
+
+		virtual bool NeedValue() const = 0;
+
+		virtual void Set(char * value)
+		{
+			exists_ = true;
+
+			SetValue(value);
+
+			if (value != 0 && (flags_ & XTL::PO::PASSWORD) != 0)
+			{
+				for (char * p = value; *p != '\0'; ++p)
+				{
+					*p = '*';
+				}
+			}
+		}
+
+	protected:
+
+		virtual void SetValue(const char * value) = 0;
 
 	private:
 
 		const char * const label_;
 		const char * const text_;
-		bool required_;
-		unsigned int flags_;
+		const unsigned int flags_;
+		bool               exists_;
 };
 
 class StringSplitter
@@ -184,14 +184,63 @@ class ProgramOptionsPool
 {
 	public:
 
+		class ParseError
+		{
+			public:
+
+				explicit ParseError(const std::string & key)
+					: key_(key)
+				{
+					;;
+				}
+
+			private:
+
+				const std::string key_;
+		};
+
+		class UnknownOption : public ParseError
+		{
+			public:
+
+				explicit UnknownOption(const std::string & key)
+					: ParseError(key)
+				{
+					;;
+				}
+		};
+
+		class NeedOptionValue : public ParseError
+		{
+			public:
+
+				explicit NeedOptionValue(const std::string & key)
+					: ParseError(key)
+				{
+					;;
+				}
+		};
+
+		class NeedNotOptionValue : public ParseError
+		{
+			public:
+
+				explicit NeedNotOptionValue(const std::string & key)
+					: ParseError(key)
+				{
+					;;
+				}
+		};
+
 		ProgramOptionsPool()
 			: optionsList_(),
-			  optionsMap_()
+			  optionsMap_(),
+			  optionsRequired_()
 		{
 			;;
 		}
 
-		ProgramOptionsPool & operator<< (std::auto_ptr<const ProgramOption> option)
+		ProgramOptionsPool & operator<< (std::auto_ptr<ProgramOption> option)
 		{
 			StringSplitter splitter(option->GetLabel(), ',');
 			std::string label;
@@ -208,7 +257,93 @@ class ProgramOptionsPool
 				}
 
 				optionsMap_[label] = option.get();
-				optionsList_.PushBack(option);
+			}
+
+			if (option->IsRequired())
+			{
+				optionsRequired_.push_back(option.get());
+			}
+
+			optionsList_.PushBack(option);
+
+			return *this;
+		}
+
+		void Parse(int argc, char * argv[])
+		{
+			int i = 0;
+			while (i < argc)
+			{
+				char * arg = argv[i];
+				if (arg[0] == '-')
+				{
+					if (arg[1] == '-')
+					{
+						char * v = ::strchr(arg + 2, '=');
+
+						if (v == 0)
+						{
+							OnOption(arg, 0);
+						}
+						else
+						{
+							OnOption(std::string(arg, v), v + 1);
+						}
+
+						++i;
+					}
+					else
+					{
+						ProgramOption * option = FindOption(arg);
+						if (option == 0)
+						{
+							throw UnknownOption(arg);
+							// TODO: or
+						}
+
+						++i;
+
+						if (option->NeedValue())
+						{
+							if (i == argc)
+							{
+								throw NeedOptionValue(arg);
+							}
+
+							OnOption(arg, option, argv[i]);
+							++i;
+						}
+						else
+						{
+							OnOption(arg, option, 0);
+						}
+					}
+				}
+				else
+				{
+					++i;
+				}
+			}
+
+			for (unsigned int i = 0; i < optionsRequired_.size(); )
+			{
+				if (optionsRequired_[i]->Exists())
+				{
+					optionsRequired_.erase(optionsRequired_.begin() + i);
+				}
+				else
+				{
+					++i;
+				}
+			}
+
+			if (!optionsRequired_.empty())
+			{
+				fprintf(stderr, "Missing required parameters:\n");
+				for (unsigned int i = 0; i < optionsRequired_.size(); ++i)
+				{
+					fprintf(stderr, "  %s\n", optionsRequired_[i]->GetLabel());
+				}
 			}
 		}
 
@@ -217,31 +352,174 @@ class ProgramOptionsPool
 		ProgramOptionsPool(const ProgramOptionsPool &);
 		ProgramOptionsPool & operator= (const ProgramOptionsPool &);
 
-		const ProgramOption * FindOption(const std::string & key) const
+		ProgramOption * FindOption(const std::string & key) const
 		{
-			std::map<std::string, const ProgramOption *>::const_iterator itr = optionsMap_.find(key);
+			std::map<std::string, ProgramOption *>::const_iterator itr = optionsMap_.find(key);
 
 			return itr != optionsMap_.end() ? itr->second : 0;
 		}
 
-		XTL::AutoPtrVector<const ProgramOption>      optionsList_;
-		std::map<std::string, const ProgramOption *> optionsMap_;
+		void OnOption(const std::string & key, char * value)
+		{
+			ProgramOption * option = FindOption(key);
 
+			if (option == 0)
+			{
+				throw UnknownOption(key);
+			}
+
+			OnOption(key, option, value);
+		}
+
+		void OnOption(const std::string & key, ProgramOption * option, char * value)
+		{
+			if (!option->NeedValue() && value != 0)
+			{
+				throw NeedNotOptionValue(key);
+			}
+
+			option->Set(value);
+		}
+
+		XTL::AutoPtrVector<ProgramOption>      optionsList_;
+		std::map<std::string, ProgramOption *> optionsMap_;
+		std::vector<const ProgramOption *>     optionsRequired_;
 };
 
 
 
 namespace PO
 {
-/*
-	std::auto_ptr<const ProgramOption> Flag(const char * label1, const char * label2)
+	class ProgramOption_Boolean : public ProgramOption
 	{
-		return std::auto_ptr<const ProgramOption>(new ProgramOption(label1, label2));
+		public:
+
+			ProgramOption_Boolean(const char * label, const char * text, unsigned int flags, bool & ref, bool defaultValue)
+				: ProgramOption(label, text, flags),
+				  ref_(ref)
+			{
+				ref_ = defaultValue;
+			}
+
+			virtual ~ProgramOption_Boolean() throw()
+			{
+				;;
+			}
+
+			virtual bool NeedValue() const
+			{
+				return false;
+			}
+
+			virtual void SetValue(const char * value)
+			{
+				ref_ = true;
+			}
+
+		private:
+
+			bool & ref_;
+	};
+
+	typedef void (*Handler) (const char *);
+
+	class ProgramOption_Handler : public ProgramOption
+	{
+		public:
+
+			explicit ProgramOption_Handler(const char * label, const char * text, unsigned int flags, Handler handler)
+				: ProgramOption(label, text, flags),
+				  handler_(handler)
+			{
+				;;
+			}
+
+			virtual bool NeedValue() const
+			{
+				return false;
+			}
+
+			virtual void SetValue(const char * value)
+			{
+				handler_(value);
+			}
+
+		private:
+
+			Handler handler_;
+	};
+
+	class ProgramOption_String : public ProgramOption
+	{
+		public:
+
+			ProgramOption_String(const char * label, const char * text, unsigned int flags, std::string & ref, const char * defaultValue)
+				: ProgramOption(label, text, flags),
+				  ref_(ref)
+			{
+				ref_ = defaultValue;
+			}
+
+			virtual bool NeedValue() const
+			{
+				return true;
+			}
+
+			virtual void SetValue(const char * value)
+			{
+				ref_.assign(value);
+			}
+
+		private:
+
+			std::string & ref_;
+	};
+
+	template <typename T>
+	class ProgramOption_Integer : public ProgramOption
+	{
+		public:
+
+			ProgramOption_Integer(const char * label, const char * text, unsigned int flags, T & ref, const T & defaultValue)
+				: ProgramOption(label, text, flags),
+				  ref_(ref)
+			{
+				ref_ = defaultValue;
+			}
+
+			virtual bool NeedValue() const
+			{
+				return true;
+			}
+
+			virtual void SetValue(const char * value)
+			{
+				ref_ = XTL::StringToInteger<T>(value);
+			}
+
+		private:
+
+			T & ref_;
+	};
+
+	std::auto_ptr<ProgramOption> Flag(const char * label, const char * text, bool & result)
+	{
+		return std::auto_ptr<ProgramOption>(new ProgramOption_Boolean(label, text, 0, result, false));
 	}
-*/
+
+	std::auto_ptr<ProgramOption> String(const char * label, const char * text, std::string & result, unsigned int flags = 0)
+	{
+		return std::auto_ptr<ProgramOption>(new ProgramOption_String(label, text, flags, result, ""));
+	}
+
+	template <typename T>
+	std::auto_ptr<ProgramOption> Integer(const char * label, const char * text, T & result, unsigned int flags = 0)
+	{
+		return std::auto_ptr<ProgramOption>(new ProgramOption_Integer<T>(label, text, flags, result, 0));
+	}
 
 /*
-	std::auto_ptr<const ProgramOption> FlagMode()
+	std::auto_ptr<ProgramOption> FlagMode()
 	{
 	}
 */
@@ -260,7 +538,6 @@ void SplitString(const char * source, char delimiter, FUNC func)
 	func(std::string(source));
 }
 
-
 void SplitLabels(const char * src)
 {
 	StringSplitter splitter(src, ',');
@@ -276,14 +553,22 @@ int main(int argc, char * argv[])
 	SplitLabels("-f,--flag,--super-flag");
 	ProgramOptionsPool globalPool;
 
-	// PO::Flag("-f,--flag", "Some description of this flag", argFlag)
+	bool argFlag;
+	std::string argString;
+	int argInteger;
+
+	(ProgramOptionsPool()
+		<< PO::Flag    ("-f,--flag",    "Some description of this flag", argFlag)
+		<< PO::String  ("-s",           "String",                        argString, XTL::PO::REQUIRED | XTL::PO::PASSWORD)
+		<< PO::Integer ("-i,--integer", "Integer",                       argInteger, XTL::PO::REQUIRED))
+		.Parse(argc, argv);
 
 /*
-	globalPool
-		<< PO::Flag("f", "flag");
+	if (XTL::PO::EXIT)
+	{
+
+	}
 */
 
-	printf("Ok!\n");
+	getc(stdin);
 }
-
-
