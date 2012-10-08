@@ -91,7 +91,7 @@ namespace XTL
 	{
 		const char         * label1; ///< Метка -label1 [value1].
 		const char         * label2; ///< Метка --label2[=value2].
-		const char         * value2; ///< Шаблон значания для label2.
+		const char         * value2; ///< Шаблон значения для label2.
 		const char         * text;   ///< Текстовое описание аргумента.
 		unsigned long long   flags;  ///< Флаги аргумента.
 
@@ -234,11 +234,11 @@ namespace XTL
 			OptionValueHandler(_Handler handler, bool needValue)
 				: handler_(handler) { ;; }
 
-			virtual bool NeedValue() const 
+			virtual bool NeedValue() const
 			{
 				return needValue_;
 			}
-			
+
 			virtual void Set(const OptionDesc * desc, const char * s)
 			{
 				handler_(desc, s);
