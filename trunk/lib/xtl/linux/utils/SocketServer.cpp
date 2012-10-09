@@ -3,6 +3,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include "../../Exception.hpp"
 #include "../UnixError.hpp"
 
 namespace XTL
@@ -141,7 +142,7 @@ namespace XTL
 	{
 		if (serverSockets_.empty())
 		{
-			throw std::runtime_error("SocketServer::Run(), while no listening sockets");
+			throw ILLEGAL_OPERATION_ERROR("SocketServer::Run(), while no listening sockets");
 		}
 
 		while (!terminated_)
@@ -161,7 +162,14 @@ namespace XTL
 	{
 		SocketSelector::SelectResult selectResult;
 
-		socketSelector_.Select(selectResult, selectTimeout_);
+		try
+		{
+			socketSelector_.Select(selectResult, selectTimeout_);
+		}
+		catch (const XTL::UnixError::Interrupted & e)
+		{
+			return;
+		}
 
 		if (selectResult.SelectedCount() == 0)
 		{
