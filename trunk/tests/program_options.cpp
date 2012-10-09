@@ -67,6 +67,29 @@ class ProgramOptions
 
 namespace XTL
 {
+	class TerminateProgram
+	{
+		public:
+
+			explicit TerminateProgram(int exitCode)
+				: exitCode_(exitCode)
+			{
+				;;
+			}
+
+			int ExitCode() const
+			{
+				return exitCode_;
+			}
+
+		private:
+
+			const int exitCode_;
+	};
+}
+
+namespace XTL
+{
 namespace PO
 {
 	enum ProgramOptionFlags
@@ -180,6 +203,23 @@ class StringSplitter
 		const char delimiter_;
 };
 
+class Error
+{
+	public:
+
+		explicit Error(const char * what)
+			: what_(what) { ;; }
+
+		template <typename T1>
+		Error(const char * format, const T1 & t1)
+			: what_(XTL::FormatString(format, t1)) { ;; }
+
+};
+
+#define DECLARE_ERROR_CLASS(NAME) \
+class NAME
+
+
 class ProgramOptionsPool
 {
 	public:
@@ -197,6 +237,22 @@ class ProgramOptionsPool
 			private:
 
 				const std::string key_;
+		};
+
+		class Error
+		{
+			public:
+
+				explicit Error()
+
+				const char * What() throw()
+				{
+					return what_.c_str();
+				}
+
+			private:
+
+				const std::string what_;
 		};
 
 		class UnknownOption : public ParseError
@@ -373,9 +429,19 @@ class ProgramOptionsPool
 
 		void OnOption(const std::string & key, ProgramOption * option, char * value)
 		{
-			if (!option->NeedValue() && value != 0)
+			if (option->NeedValue())
 			{
-				throw NeedNotOptionValue(key);
+				if (value == 0)
+				{
+					throw Error("Undefined value of argument '" + key + "'");
+				}
+			}
+			else
+			{
+				if (value != 0)
+				{
+					throw Error("Value of argument '" + key + "' is unnecessary");
+				}
 			}
 
 			option->Set(value);
@@ -386,7 +452,17 @@ class ProgramOptionsPool
 		std::vector<const ProgramOption *>     optionsRequired_;
 };
 
-
+namespace XTL
+{
+namespace PO
+{
+	ProgramOptionsPool & ProgramOptions()
+	{
+		static ProgramOptionsPool instance;
+		return instance;
+	}
+}
+}
 
 namespace PO
 {
@@ -525,50 +601,27 @@ namespace PO
 */
 }
 
-template <typename FUNC>
-void SplitString(const char * source, char delimiter, FUNC func)
-{
-	const char * end;
-	while ((end = ::strchr(source, delimiter)) != 0)
-	{
-		func(std::string(source, end - source));
-		source = end + 1;
-	}
-
-	func(std::string(source));
-}
-
-void SplitLabels(const char * src)
-{
-	StringSplitter splitter(src, ',');
-	std::string label;
-	while (splitter.GetNext(label))
-	{
-		printf("[[[ %s\n", label.c_str());
-	}
-}
-
 int main(int argc, char * argv[])
 {
-	SplitLabels("-f,--flag,--super-flag");
-	ProgramOptionsPool globalPool;
-
 	bool argFlag;
 	std::string argString;
 	int argInteger;
 
-	(ProgramOptionsPool()
+	XTL::PO::ProgramOptions()
 		<< PO::Flag    ("-f,--flag",    "Some description of this flag", argFlag)
 		<< PO::String  ("-s",           "String",                        argString, XTL::PO::REQUIRED | XTL::PO::PASSWORD)
-		<< PO::Integer ("-i,--integer", "Integer",                       argInteger, XTL::PO::REQUIRED))
-		.Parse(argc, argv);
+		<< PO::Integer ("-i,--integer", "Integer",                       argInteger, XTL::PO::REQUIRED);
 
-/*
-	if (XTL::PO::EXIT)
+	try
 	{
-
+		XTL::PO::ProgramOptions().Parse(argc, argv);
 	}
-*/
+	catch (const XTL::TerminateProgram & e)
+	{
+		return e.ExitCode();
+	}
 
-	getc(stdin);
+	printf("flag    = %s\n", argFlag ? "ON" : "OFF");
+	printf("string  = %s\n", argString.c_str());
+	printf("integer = %i\n", argInteger);
 }
