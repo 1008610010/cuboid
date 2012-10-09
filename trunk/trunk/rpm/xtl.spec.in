@@ -169,6 +169,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/utils/BitUtils.hpp
 %{_prefix}/include/xtl/utils/Chronometer.hpp
 %{_prefix}/include/xtl/utils/Date.hpp
+%{_prefix}/include/xtl/utils/SimpleStringMatcher.hpp
 %{_prefix}/include/xtl/simple_template/SimpleTemplateWriter.hpp
 
 %package mysql-devel
