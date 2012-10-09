@@ -59,6 +59,42 @@ namespace XTL
 		return result;
 	}
 
+	bool IsInteger(const char * s)
+	{
+		if (s == 0 || *s == '\0')
+		{
+			return false;
+		}
+
+		if (*s == '-')
+		{
+			++s;
+			if (*s == '\0')
+			{
+				return false;
+			}
+		}
+
+		// HERE: *s != '\0'
+		do
+		{
+			if (*s < '0' || *s > '9')
+			{
+				return false;
+			}
+
+			++s;
+		}
+		while (*s != '\0');
+
+		return true;
+	}
+
+	bool IsInteger(const std::string & s)
+	{
+		return IsInteger(s.c_str());
+	}
+
 /*
 	TODO: read 9 digits to UINT_32
 	double FloatToInteger(const char * value)

@@ -16,6 +16,10 @@ namespace XTL
 
 	const std::string UpperCased(const std::string & s);
 
+	bool IsInteger(const char * s);
+
+	bool IsInteger(const std::string & s);
+
 	template <typename T>
 	const char * StringToInteger(const char * src, T & result)
 	{
