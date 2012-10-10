@@ -20,7 +20,11 @@ namespace XTL
 						return result_ == 0;
 					}
 
-					bool IsRegular() const
+					/*
+					 * WARN: На XFS d_type не работает!
+					 * Мож этот метод выпилить к ибиням?
+					 */
+					bool IsRegular1() const
 					{
 						return (result_->d_type & DT_REG) != 0;
 					}
@@ -28,6 +32,11 @@ namespace XTL
 					bool IsDirectory() const
 					{
 						return (result_->d_type & DT_DIR) != 0;
+					}
+
+					bool IsUnknownType() const
+					{
+						return (result_->d_type & DT_UNKNOWN) != 0;
 					}
 
 					const char * Name() const
