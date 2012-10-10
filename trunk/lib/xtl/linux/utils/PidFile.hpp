@@ -12,21 +12,45 @@ namespace XTL
 {
 	class PidFile
 	{
+		private:
+
+			class Mode
+			{
+				public:
+
+					explicit Mode(unsigned int id)
+						: id_(id) { ;; }
+
+					bool operator== (const Mode & other) const
+					{
+						return id_ == other.id_;
+					}
+
+				private:
+
+					const unsigned int id_;
+			};
+
 		public:
 
+			static const Mode REMOVE;
+			static const Mode DO_NOT_REMOVE;
+
 			// @throws XTL::UnixError
-			explicit PidFile(const std::string & fileName);
+			explicit PidFile(const std::string & fileName, Mode mode = REMOVE);
 
 			~PidFile() throw();
+
+			void Remove();
 
 		private:
 
 			PidFile(const PidFile &);
 			PidFile & operator= (const PidFile &);
 
-			const std::string fileName_;
+			std::string fileName_;
+			Mode        mode_;
 	};
-
 }
 
 #endif

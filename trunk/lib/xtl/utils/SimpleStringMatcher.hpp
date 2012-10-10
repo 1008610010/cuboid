@@ -11,6 +11,9 @@ namespace XTL
 {
 	class CharSource;
 
+	/*
+	 * TODO: add properties: minMatchedLength, maxMatchedLength;
+	 */
 	class SimpleStringMatcher
 	{
 		public:

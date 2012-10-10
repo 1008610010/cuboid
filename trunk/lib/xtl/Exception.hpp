@@ -57,6 +57,26 @@ namespace XTL
 
 			virtual ~IllegalOperationError() throw();
 	};
+
+	class TerminateProgram
+	{
+		public:
+
+			explicit TerminateProgram(int exitCode)
+				: exitCode_(exitCode)
+			{
+				;;
+			}
+
+			int ExitCode() const
+			{
+				return exitCode_;
+			}
+
+		private:
+
+			const int exitCode_;
+	};
 }
 
 #endif

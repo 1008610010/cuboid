@@ -48,7 +48,7 @@ namespace XTL
 			Exec(filePath, listener);
 
 			// It will never be executed.
-			throw TerminateProgram();
+			throw ChildExit();
 		}
 		else if (pid < 0)
 		{
@@ -83,18 +83,18 @@ namespace XTL
 			if (pid2 < 0)
 			{
 				listener.OnDoubleForkError(UnixError());
-				throw TerminateProgram();
+				throw ChildExit();
 			}
 			else if (pid2 != 0)
 			{
-				throw TerminateProgram();
+				throw ChildExit();
 			}
 			else
 			{
 				Exec(filePath, listener);
 
 				// It will never be executed.
-				throw TerminateProgram();
+				throw ChildExit();
 			}
 		}
 	}
