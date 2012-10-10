@@ -9,7 +9,7 @@
 
 namespace XTL
 {
-	class TerminateProgram
+	class ChildExit
 	{
 	};
 
@@ -37,7 +37,7 @@ namespace XTL
 
 	/**
 	 * @throw XTL::UnixError выбрасывает родительский процесс в случае ошибки fork() или waitpid().
-	 * @throw XTL::TerminateProgram  выбрасывает дочерний процесс.
+	 * @throw XTL::ChildExit выбрасывает дочерний процесс.
 	 */
 	void DoubleForkExec(const std::string & filePath, const ForkExecListener & listener);
 }

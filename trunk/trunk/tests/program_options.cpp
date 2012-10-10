@@ -203,22 +203,6 @@ class StringSplitter
 		const char delimiter_;
 };
 
-class Error
-{
-	public:
-
-		explicit Error(const char * what)
-			: what_(what) { ;; }
-
-		template <typename T1>
-		Error(const char * format, const T1 & t1)
-			: what_(XTL::FormatString(format, t1)) { ;; }
-
-};
-
-#define DECLARE_ERROR_CLASS(NAME) \
-class NAME
-
 
 class ProgramOptionsPool
 {
@@ -243,9 +227,13 @@ class ProgramOptionsPool
 		{
 			public:
 
-				explicit Error()
+				explicit Error(const std::string & what)
+					: what_(what)
+				{
+					;;
+				}
 
-				const char * What() throw()
+				const char * What() const throw()
 				{
 					return what_.c_str();
 				}
