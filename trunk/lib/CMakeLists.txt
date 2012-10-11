@@ -44,6 +44,7 @@ SET (
 		xtl/linux/UnixUser.cpp
 		xtl/linux/Utils.cpp
 		xtl/linux/fs/DirectoryReader.cpp
+		xtl/linux/fs/DirectoryReaderRecursive.cpp
 		xtl/linux/fs/File.cpp
 		xtl/linux/fs/FilePath.cpp
 		xtl/linux/fs/FilePathTokenizer.cpp
