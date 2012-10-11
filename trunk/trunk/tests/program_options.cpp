@@ -90,30 +90,6 @@ namespace XTL
 	{
 		public:
 
-			class Error
-			{
-				public:
-
-					explicit Error(const char * what)
-						: what_(what) { ;; }
-
-					explicit Error(const std::string & what)
-						: what_(what) { ;; }
-
-					template <typename T1>
-					Error(const char * format, const T1 & t1)
-						: what_(XTL::FormatString(format, t1)) { ;; }
-
-					const char * What() const throw()
-					{
-						return what_.c_str();
-					}
-
-				private:
-
-					const std::string what_;
-			};
-
 			ProgramOption(const char * label, const char * text, unsigned int flags)
 				: label_(label),
 				  text_(text),
@@ -235,39 +211,6 @@ namespace XTL
 					const std::string key_;
 			};
 
-			class UnknownOption : public ParseError
-			{
-				public:
-
-					explicit UnknownOption(const std::string & key)
-						: ParseError(key)
-					{
-						;;
-					}
-			};
-
-			class NeedOptionValue : public ParseError
-			{
-				public:
-
-					explicit NeedOptionValue(const std::string & key)
-						: ParseError(key)
-					{
-						;;
-					}
-			};
-
-			class NeedNotOptionValue : public ParseError
-			{
-				public:
-
-					explicit NeedNotOptionValue(const std::string & key)
-						: ParseError(key)
-					{
-						;;
-					}
-			};
-
 			ProgramOptionsPool()
 				: optionsList_(),
 				  optionsMap_(),
@@ -335,7 +278,8 @@ namespace XTL
 							ProgramOption * option = FindOption(arg);
 							if (option == 0)
 							{
-								throw ProgramOption::Error("Unknown option '%s'", arg);
+								fprintf(stderr, "Unknown option '%s'\n", arg);
+								throw TerminateProgram(1);
 							}
 
 							++i;
@@ -344,7 +288,8 @@ namespace XTL
 							{
 								if (i == argc)
 								{
-									throw ProgramOption::Error("Option '%s' requires value", arg);
+									fprintf(stderr, "Option '%s' requires value\n", arg);
+									throw TerminateProgram(1);
 								}
 
 								OnOption(arg, option, argv[i]);
@@ -404,7 +349,8 @@ namespace XTL
 
 				if (option == 0)
 				{
-					throw ProgramOption::Error("Unknown option '%s'", key);
+					fprintf(stderr, "Unknown option '%s'\n", key.c_str());
+					throw TerminateProgram(1);
 				}
 
 				OnOption(key, option, value);
@@ -416,14 +362,16 @@ namespace XTL
 				{
 					if (value == 0)
 					{
-						throw ProgramOption::Error("Option '%s' requires value", key.c_str());
+						fprintf(stderr, "Option '%s' requires value\n", key.c_str());
+						throw TerminateProgram(1);
 					}
 				}
 				else
 				{
 					if (value != 0)
 					{
-						throw ProgramOption::Error("Option '%s' does not require value", key.c_str());
+						fprintf(stderr, "Option '%s' does not require value\n", key.c_str());
+						throw TerminateProgram(1);
 					}
 				}
 
@@ -556,7 +504,8 @@ namespace PO
 			{
 				if (!XTL::IsInteger(value))
 				{
-					throw Error("Invalid value of parameter '%s'", GetLabel());
+					fprintf(stderr, "Invalid value of parameter '%s' (integer expected)\n", GetLabel());
+					throw XTL::TerminateProgram(1);
 				}
 
 				ref_ = XTL::StringToInteger<T>(value);
@@ -604,11 +553,6 @@ int main(int argc, char * argv[])
 	try
 	{
 		XTL::PO::ProgramOptions().Parse(argc, argv);
-	}
-	catch (const XTL::ProgramOption::Error & e)
-	{
-		fprintf(stderr, "%s\n", e.What());
-		return 1;
 	}
 	catch (const XTL::TerminateProgram & e)
 	{
