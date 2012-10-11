@@ -147,6 +147,46 @@ namespace XTL
 			const unsigned int flags_;
 			bool               exists_;
 	};
+
+	class ProgramOptionsList
+	{
+		public:
+
+			ProgramOptionsList()
+				: optionsList_(),
+				  lastIsOptional_(false),
+				  lastIsArray_(false)
+			{
+				;;
+			}
+
+			ProgramOptionsList & operator<< (std::auto_ptr<ProgramOption> option)
+			{
+				if (lastIsArray_)
+				{
+					fprintf(stderr, "Internal error: could not add list option, while array-option was added");
+					throw TerminateProgram(1);
+				}
+
+				if (lastIsOptional_ && option->IsRequired())
+				{
+					fprintf(stderr, "Internal error: option #%u is required, while previous option is optional\n", static_cast<unsigned int>(optionsList_.Size() + 1));
+					throw TerminateProgram(1);
+				}
+
+				lastIsOptional_ = !option->IsRequired();
+
+				optionsList_.PushBack(option);
+
+				return *this;
+			}
+
+		private:
+
+			XTL::AutoPtrVector<ProgramOption> optionsList_;
+			bool lastIsOptional_;
+			bool lastIsArray_;
+	};
 }
 
 class StringSplitter
@@ -194,22 +234,24 @@ namespace XTL
 {
 	class ProgramOptionsPool
 	{
+		/*
+		class NamedOptionsBuilder
+		{
+			public:
+
+				explicit NamedOptionsBuilder(ProgramOptionsPool & optionsPool)
+					: optionsPool_(optionsPool)
+				{
+					;;
+				}
+
+			private:
+
+				ProgramOptionsPool & optionsPool_;
+		};
+		*/
+
 		public:
-
-			class ParseError
-			{
-				public:
-
-					explicit ParseError(const std::string & key)
-						: key_(key)
-					{
-						;;
-					}
-
-				private:
-
-					const std::string key_;
-			};
 
 			ProgramOptionsPool()
 				: optionsList_(),
@@ -537,6 +579,7 @@ namespace PO
 	{
 	}
 */
+
 }
 
 int main(int argc, char * argv[])
@@ -549,6 +592,31 @@ int main(int argc, char * argv[])
 		<< PO::Flag    ("-f,--flag",    "Some description of this flag", argFlag)
 		<< PO::String  ("-s",           "String",                        argString, XTL::PO::REQUIRED | XTL::PO::PASSWORD)
 		<< PO::Integer ("-i,--integer", "Integer",                       argInteger, XTL::PO::REQUIRED);
+
+	/*
+		try
+		{
+			XTL::PO::ProgramOptions().Map()
+				<< PO::Flag    ("-f,--flag",    "Some description of this flag", argFlag)
+				<< PO::String  ("-s",           "String",                        argString,    XTL::PO::REQUIRED | XTL::PO::PASSWORD)
+				<< PO::Integer ("-i,--integer", "Integer",                       argInteger,   XTL::PO::REQUIRED);
+
+			XTL::PO::ProgramOptions().List()
+				<< PO::String  ("DIRECTORY",    "Path to events directory",      argDirectory, XTL::PO::REQUIRED)
+				<< PO::String  ("FILE_NAME",    "Event file name",               argFileName,  XTL::PO::REQUIRED)
+				<< PO::Integer ("POSITION",     "Position in event file",        argFilePos)
+				<< PO::IntegerList ("JOURNAL_ID", argJournalIds)
+
+			XTL::PO::ProgramOptions().Parse(argc, argv);
+
+			program_name -s STRING -i INTEGER DIRECTORY FILE_NAME [POSITION] [JOURNAL_ID ...]
+
+		}
+		catch (XTL::TerminateProgram & e)
+		{
+			return e.ExitCode();
+		}
+	*/
 
 	try
 	{
