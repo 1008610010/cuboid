@@ -179,6 +179,7 @@ FIND_LIBRARY (
 			/usr/local/lib
 			/usr/lib64/mysql
 			/usr/lib/i386-linux-gnu
+			/usr/lib/x86_64-linux-gnu
 		DOC "Path where the MySQL client library can be found"
 )
 

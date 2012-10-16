@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <list>
 #include <map>
 #include <stdexcept>
 #include <string>
 
 #include <xtl/FormatString.hpp>
 #include <xtl/StringUtils.hpp>
+#include <xtl/utils/AutoPtrVector.hpp>
 
 /*
 class ProgramOptions
@@ -47,8 +49,6 @@ class ProgramOptions
 };
 */
 
-#include <xtl/utils/AutoPtrVector.hpp>
-
 namespace XTL
 {
 	class TerminateProgram
@@ -70,6 +70,47 @@ namespace XTL
 
 			const int exitCode_;
 	};
+
+	class StringSplitter
+	{
+		public:
+
+			StringSplitter(const char * source, char delimiter)
+				: source_(source),
+				  begin_(source),
+				  delimiter_(delimiter)
+			{
+				;;
+			}
+
+			bool GetNext(std::string & result)
+			{
+				if (begin_ == 0)
+				{
+					return false;
+				}
+
+				const char * end = ::strchr(begin_, delimiter_);
+				if (end != 0)
+				{
+					result.assign(begin_, end - begin_);
+					begin_ = end + 1;
+				}
+				else
+				{
+					result.assign(begin_);
+					begin_ = 0;
+				}
+
+				return true;
+			}
+
+		private:
+
+			const char * const source_;
+			const char * begin_;
+			const char delimiter_;
+	};
 }
 
 namespace XTL
@@ -83,6 +124,133 @@ namespace PO
 	};
 }
 }
+
+/*
+	ConsoleTable table;
+	table
+		.Row()
+			.Column("abc")
+			.Column("1")
+		.Row()
+			.Column("xyz")
+			.Column("2");
+*/
+
+class ConsoleTable
+{
+	typedef std::vector<std::string> ColumnsVector;
+	public:
+
+		class RowRef
+		{
+			public:
+
+				RowRef(ConsoleTable & table, unsigned int rowIndex)
+					: table_(table),
+					  rowIndex_(rowIndex),
+					  currentColumnIndex_(0)
+				{
+					;;
+				}
+
+				RowRef Row() const
+				{
+					return table_.Row();
+				}
+
+				RowRef & Column(const std::string & value)
+				{
+					table_.Set(rowIndex_, currentColumnIndex_++, value);
+					return *this;
+				}
+
+			private:
+
+				ConsoleTable & table_;
+				unsigned int   rowIndex_;
+				unsigned int   currentColumnIndex_;
+		};
+
+		ConsoleTable()
+			: currentRowIndex_(0),
+			  columnsCount_(0),
+			  rows_(),
+			  columnsWidths_()
+		{
+			;;
+		}
+
+		RowRef Row()
+		{
+			return RowRef(*this, currentRowIndex_++);
+		}
+
+		ConsoleTable & Set(unsigned int row, unsigned int column, const std::string & value)
+		{
+			std::vector<std::string> * columns = 0;
+
+			if (row < rows_.Size())
+			{
+				columns = rows_[row];
+				if (columns == 0)
+				{
+					rows_.Set(row, std::auto_ptr<ColumnsVector>(new ColumnsVector()));
+					columns = rows_[row];
+				}
+			}
+			else
+			{
+				rows_.Set(row, std::auto_ptr<ColumnsVector>(new ColumnsVector()));
+				columns = rows_[row];
+			}
+
+			if (column >= columns->size())
+			{
+				columns->resize(column + 1);
+			}
+
+			(*columns)[column] = value;
+
+			if (column >= columnsWidths_.size())
+			{
+				columnsWidths_.resize(column + 1);
+			}
+
+			if (columnsWidths_[column] < value.size())
+			{
+				columnsWidths_[column] = value.size();
+			}
+
+			return *this;
+		}
+
+		void Print()
+		{
+			for (unsigned int i = 0; i < rows_.Size(); ++i)
+			{
+				ColumnsVector * columns = rows_[i];
+				if (columns == 0)
+				{
+					printf("\n");
+					continue;
+				}
+
+				for (unsigned int j = 0; j < columns->size(); ++j)
+				{
+					printf("%*s;", columnsWidths_[j], (*columns)[j].c_str());
+				}
+
+				printf("\n");
+			}
+		}
+
+	private:
+
+		unsigned int currentRowIndex_;
+		unsigned int columnsCount_;
+		XTL::AutoPtrVector<ColumnsVector> rows_;
+		std::vector<unsigned int> columnsWidths_;
+};
 
 namespace XTL
 {
@@ -109,6 +277,11 @@ namespace XTL
 				return label_;
 			}
 
+			const char * GetText() const
+			{
+				return text_;
+			}
+
 			bool IsRequired() const
 			{
 				return (flags_ & XTL::PO::REQUIRED) != 0;
@@ -118,6 +291,8 @@ namespace XTL
 			{
 				return exists_;
 			}
+
+			virtual bool IsArray() const = 0;
 
 			virtual bool NeedValue() const = 0;
 
@@ -154,106 +329,104 @@ namespace XTL
 
 			ProgramOptionsList()
 				: optionsList_(),
-				  lastIsOptional_(false),
-				  lastIsArray_(false)
+				  currentIndex_(0)
 			{
 				;;
 			}
 
 			ProgramOptionsList & operator<< (std::auto_ptr<ProgramOption> option)
 			{
-				if (lastIsArray_)
+				if (IsLastArray())
 				{
 					fprintf(stderr, "Internal error: could not add list option, while array-option was added");
 					throw TerminateProgram(1);
 				}
 
-				if (lastIsOptional_ && option->IsRequired())
+				if (IsLastOptional() && option->IsRequired())
 				{
 					fprintf(stderr, "Internal error: option #%u is required, while previous option is optional\n", static_cast<unsigned int>(optionsList_.Size() + 1));
 					throw TerminateProgram(1);
 				}
-
-				lastIsOptional_ = !option->IsRequired();
 
 				optionsList_.PushBack(option);
 
 				return *this;
 			}
 
+			void Print()
+			{
+				for (unsigned int i = 0; i < optionsList_.Size(); ++i)
+				{
+					const ProgramOption * option = optionsList_[i];
+					if (option->IsArray())
+					{
+						fprintf(stderr, " [%s ...]", option->GetLabel());
+					}
+					else if (option->IsRequired())
+					{
+						fprintf(stderr, " %s", option->GetLabel());
+					}
+					else
+					{
+						fprintf(stderr, " [%s]", option->GetLabel());
+					}
+				}
+			}
+
 		private:
 
-			XTL::AutoPtrVector<ProgramOption> optionsList_;
-			bool lastIsOptional_;
-			bool lastIsArray_;
-	};
-}
+			friend class ProgramOptionsPool;
 
-class StringSplitter
-{
-	public:
-
-		StringSplitter(const char * source, char delimiter)
-			: source_(source),
-			  begin_(source),
-			  delimiter_(delimiter)
-		{
-			;;
-		}
-
-		bool GetNext(std::string & result)
-		{
-			if (begin_ == 0)
+			bool IsLastArray() const
 			{
-				return false;
+				return optionsList_.Size() > 0 && optionsList_.Back()->IsArray();
 			}
 
-			const char * end = ::strchr(begin_, delimiter_);
-			if (end != 0)
+			bool IsLastOptional() const
 			{
-				result.assign(begin_, end - begin_);
-				begin_ = end + 1;
-			}
-			else
-			{
-				result.assign(begin_);
-				begin_ = 0;
+				return optionsList_.Size() > 0 && !optionsList_.Back()->IsRequired();
 			}
 
-			return true;
-		}
-
-	private:
-
-		const char * const source_;
-		const char * begin_;
-		const char delimiter_;
-};
-
-namespace XTL
-{
-	class ProgramOptionsPool
-	{
-		/*
-		class NamedOptionsBuilder
-		{
-			public:
-
-				explicit NamedOptionsBuilder(ProgramOptionsPool & optionsPool)
-					: optionsPool_(optionsPool)
+			void SetOptionValue(char * value)
+			{
+				if (currentIndex_ >= optionsList_.Size())
 				{
-					;;
+					return;
+
+					/*
+					TODO: Print error and terminate program
+					fprintf(stderr, "");
+					throw TerminateProgram(1);
+					*/
 				}
 
-			private:
+				ProgramOption * option = optionsList_[currentIndex_];
 
-				ProgramOptionsPool & optionsPool_;
-		};
-		*/
+				option->Set(value);
 
+				if (!option->IsArray())
+				{
+					++currentIndex_;
+				}
+			}
+
+			void CheckRequired(std::list<const ProgramOption *> & missingRequired)
+			{
+				for (unsigned int i = currentIndex_; i < optionsList_.Size() && optionsList_[i]->IsRequired(); ++i)
+				{
+					missingRequired.push_back(optionsList_[i]);
+				}
+			}
+
+			XTL::AutoPtrVector<ProgramOption> optionsList_;
+			unsigned int currentIndex_;
+	};
+
+	class ProgramOptionsMap
+	{
 		public:
 
-			ProgramOptionsPool()
+			ProgramOptionsMap()
 				: optionsList_(),
 				  optionsMap_(),
 				  optionsRequired_()
@@ -261,7 +434,7 @@ namespace XTL
 				;;
 			}
 
-			ProgramOptionsPool & operator<< (std::auto_ptr<ProgramOption> option)
+			ProgramOptionsMap & operator<< (std::auto_ptr<ProgramOption> option)
 			{
 				StringSplitter splitter(option->GetLabel(), ',');
 				std::string label;
@@ -292,91 +465,19 @@ namespace XTL
 				return *this;
 			}
 
-			void Parse(int argc, char * argv[])
+			bool Empty() const
 			{
-				int i = 0;
-				while (i < argc)
-				{
-					char * arg = argv[i];
-					if (arg[0] == '-')
-					{
-						if (arg[1] == '-')
-						{
-							char * v = ::strchr(arg + 2, '=');
+				return optionsMap_.empty();
+			}
 
-							if (v == 0)
-							{
-								OnOption(arg, 0);
-							}
-							else
-							{
-								OnOption(std::string(arg, v), v + 1);
-							}
-
-							++i;
-						}
-						else
-						{
-							ProgramOption * option = FindOption(arg);
-							if (option == 0)
-							{
-								fprintf(stderr, "Unknown option '%s'\n", arg);
-								throw TerminateProgram(1);
-							}
-
-							++i;
-
-							if (option->NeedValue())
-							{
-								if (i == argc)
-								{
-									fprintf(stderr, "Option '%s' requires value\n", arg);
-									throw TerminateProgram(1);
-								}
-
-								OnOption(arg, option, argv[i]);
-								++i;
-							}
-							else
-							{
-								OnOption(arg, option, 0);
-							}
-						}
-					}
-					else
-					{
-						++i;
-					}
-				}
-
-				for (unsigned int i = 0; i < optionsRequired_.size(); )
-				{
-					if (optionsRequired_[i]->Exists())
-					{
-						optionsRequired_.erase(optionsRequired_.begin() + i);
-					}
-					else
-					{
-						++i;
-					}
-				}
-
-				if (!optionsRequired_.empty())
-				{
-					fprintf(stderr, "Missing required parameters:\n");
-					for (unsigned int i = 0; i < optionsRequired_.size(); ++i)
-					{
-						fprintf(stderr, "  %s\n", optionsRequired_[i]->GetLabel());
-					}
-
-					throw TerminateProgram(1);
-				}
+			bool Contains(const std::string & key) const
+			{
+				return optionsMap_.count(key) > 0;
 			}
 
 		private:
 
-			ProgramOptionsPool(const ProgramOptionsPool &);
-			ProgramOptionsPool & operator= (const ProgramOptionsPool &);
+			friend class ProgramOptionsPool;
 
 			ProgramOption * FindOption(const std::string & key) const
 			{
@@ -385,7 +486,7 @@ namespace XTL
 				return itr != optionsMap_.end() ? itr->second : 0;
 			}
 
-			void OnOption(const std::string & key, char * value)
+			void SetOptionValue(const std::string & key, char * value)
 			{
 				ProgramOption * option = FindOption(key);
 
@@ -395,10 +496,10 @@ namespace XTL
 					throw TerminateProgram(1);
 				}
 
-				OnOption(key, option, value);
+				SetOptionValue(key, option, value);
 			}
 
-			void OnOption(const std::string & key, ProgramOption * option, char * value)
+			void SetOptionValue(const std::string & key, ProgramOption * option, char * value)
 			{
 				if (option->NeedValue())
 				{
@@ -420,22 +521,161 @@ namespace XTL
 				option->Set(value);
 			}
 
+			void CheckRequired(std::list<const ProgramOption *> & missingRequired)
+			{
+				for (unsigned int i = 0; i < optionsRequired_.size(); ++i)
+				{
+					if (!optionsRequired_[i]->Exists())
+					{
+						missingRequired.push_back(optionsRequired_[i]);
+					}
+				}
+			}
+
 			XTL::AutoPtrVector<ProgramOption>      optionsList_;
 			std::map<std::string, ProgramOption *> optionsMap_;
 			std::vector<const ProgramOption *>     optionsRequired_;
 	};
+
+	class ProgramOptionsPool
+	{
+		public:
+
+			ProgramOptionsList & List()
+			{
+				return optionsList_;
+			}
+
+			ProgramOptionsMap & Map()
+			{
+				return optionsMap_;
+			}
+
+			void PrintUsage()
+			{
+				fprintf(stderr, "Usage:\n");
+				fprintf(stderr, "\n");
+				fprintf(stderr, "%s", programName_.c_str());
+
+				if (!optionsMap_.Empty())
+				{
+					fprintf(stderr, " {OPTIONS}");
+				}
+
+				optionsList_.Print();
+				fprintf(stderr, "\n");
+				fprintf(stderr, "\n");
+
+				fprintf(stderr, "where {OPTIONS} can be:\n");
+
+				throw TerminateProgram(0);
+			}
+
+			void Parse(int argc, char * argv[])
+			{
+				programName_ = argv[0];
+
+				int i = 1;
+				while (i < argc)
+				{
+					char * arg = argv[i];
+					if (arg[0] == '-')
+					{
+						if (arg[1] == '-')
+						{
+							char * v = ::strchr(arg + 2, '=');
+
+							if (v == 0)
+							{
+								optionsMap_.SetOptionValue(arg, 0);
+							}
+							else
+							{
+								optionsMap_.SetOptionValue(std::string(arg, v), v + 1);
+							}
+
+							++i;
+						}
+						else
+						{
+							ProgramOption * option = optionsMap_.FindOption(arg);
+							if (option == 0)
+							{
+								fprintf(stderr, "Unknown option '%s'\n", arg);
+								throw TerminateProgram(1);
+							}
+
+							++i;
+
+							if (option->NeedValue())
+							{
+								if (i == argc)
+								{
+									fprintf(stderr, "Option '%s' requires value\n", arg);
+									throw TerminateProgram(1);
+								}
+
+								optionsMap_.SetOptionValue(arg, option, argv[i]);
+								++i;
+							}
+							else
+							{
+								optionsMap_.SetOptionValue(arg, option, 0);
+							}
+						}
+					}
+					else
+					{
+						optionsList_.SetOptionValue(arg);
+						++i;
+					}
+				}
+
+				std::list<const ProgramOption *> missingRequired;
+
+				optionsList_.CheckRequired(missingRequired);
+				optionsMap_.CheckRequired(missingRequired);
+
+				if (!missingRequired.empty())
+				{
+					fprintf(stderr, "Missing required parameters:\n");
+
+					for (std::list<const ProgramOption *>::const_iterator itr = missingRequired.begin(); itr != missingRequired.end(); ++itr)
+					{
+						fprintf(stderr, "  %s\n", (*itr)->GetLabel());
+					}
+
+					throw TerminateProgram(1);
+				}
+			}
+
+		private:
+
+			friend ProgramOptionsPool & ProgramOptions();
+
+			ProgramOptionsPool()
+				: programName_(),
+				  optionsList_(),
+				  optionsMap_()
+			{
+			}
+
+			ProgramOptionsPool(const ProgramOptionsPool &);
+			ProgramOptionsPool & operator= (const ProgramOptionsPool &);
+
+			std::string        programName_;
+			ProgramOptionsList optionsList_;
+			ProgramOptionsMap  optionsMap_;
+	};
 }
 
 namespace XTL
-{
-namespace PO
 {
 	ProgramOptionsPool & ProgramOptions()
 	{
 		static ProgramOptionsPool instance;
 		return instance;
 	}
-}
 }
 
 namespace PO
@@ -454,6 +694,11 @@ namespace PO
 			virtual ~ProgramOption_Boolean() throw()
 			{
 				;;
+			}
+
+			virtual bool IsArray() const
+			{
+				return false;
 			}
 
 			virtual bool NeedValue() const
@@ -484,6 +729,11 @@ namespace PO
 				;;
 			}
 
+			virtual bool IsArray() const
+			{
+				return false;
+			}
+
 			virtual bool NeedValue() const
 			{
 				return false;
@@ -508,6 +758,11 @@ namespace PO
 				  ref_(ref)
 			{
 				ref_ = defaultValue;
+			}
+
+			virtual bool IsArray() const
+			{
+				return false;
 			}
 
 			virtual bool NeedValue() const
@@ -535,6 +790,11 @@ namespace PO
 				  ref_(ref)
 			{
 				ref_ = defaultValue;
+			}
+
+			virtual bool IsArray() const
+			{
+				return false;
 			}
 
 			virtual bool NeedValue() const
@@ -584,14 +844,45 @@ namespace PO
 
 int main(int argc, char * argv[])
 {
+	{
+		ConsoleTable table;
+
+		table
+			.Row()
+				.Column("1")
+				.Column("abc")
+			.Row()
+				.Column("2")
+				.Column("xyzm")
+		;
+
+		table.Print();
+		return 0;
+	}
+
 	bool argFlag;
 	std::string argString;
 	int argInteger;
+	unsigned int argPeriodId;
 
-	XTL::PO::ProgramOptions()
-		<< PO::Flag    ("-f,--flag",    "Some description of this flag", argFlag)
-		<< PO::String  ("-s",           "String",                        argString, XTL::PO::REQUIRED | XTL::PO::PASSWORD)
-		<< PO::Integer ("-i,--integer", "Integer",                       argInteger, XTL::PO::REQUIRED);
+	try
+	{
+		XTL::ProgramOptions().Map()
+			<< PO::Flag    ("-f,--flag",    "Some description of this flag", argFlag)
+			<< PO::String  ("-s",           "String",                        argString,  XTL::PO::REQUIRED | XTL::PO::PASSWORD)
+			<< PO::Integer ("-i,--integer", "Integer",                       argInteger, XTL::PO::REQUIRED);
+
+		XTL::ProgramOptions().List()
+			<< PO::Integer ("PERIOD_ID",    "Period number",                 argPeriodId, XTL::PO::REQUIRED);
+
+		XTL::ProgramOptions().Parse(argc, argv);
+
+		XTL::ProgramOptions().PrintUsage();
+	}
+	catch (const XTL::TerminateProgram & e)
+	{
+		return e.ExitCode();
+	}
 
 	/*
 		try
@@ -618,14 +909,6 @@ int main(int argc, char * argv[])
 		}
 	*/
 
-	try
-	{
-		XTL::PO::ProgramOptions().Parse(argc, argv);
-	}
-	catch (const XTL::TerminateProgram & e)
-	{
-		return e.ExitCode();
-	}
 
 	printf("flag    = %s\n", argFlag ? "ON" : "OFF");
 	printf("string  = %s\n", argString.c_str());
