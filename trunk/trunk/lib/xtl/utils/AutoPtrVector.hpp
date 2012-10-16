@@ -118,6 +118,24 @@ namespace XTL
 				items_.erase(items_.begin() + index);
 			}
 
+			void Resize(unsigned int newSize)
+			{
+				if (newSize < items_.size())
+				{
+					for (unsigned int i = newSize; i < items_.size(); ++i)
+					{
+						delete items_[i];
+						items_[i] = 0;
+					}
+
+					items_.resize(newSize);
+				}
+				else if (newSize > items_.size())
+				{
+					items_.resize(newSize, 0);
+				}
+			}
+
 		private:
 
 			AutoPtrVector(const AutoPtrVector &);
