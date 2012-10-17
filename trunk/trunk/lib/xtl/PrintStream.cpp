@@ -6,13 +6,13 @@
 
 namespace XTL
 {
-	PrintStream & StandardPrintStream::Out()
+	PrintStream & StdOut()
 	{
 		static StandardPrintStream instance(stdout);
 		return instance;
 	}
 
-	PrintStream & StandardPrintStream::Err()
+	PrintStream & StdErr()
 	{
 		static StandardPrintStream instance(stderr);
 		return instance;
@@ -34,12 +34,17 @@ namespace XTL
 		::fprintf(stream_, "%s", s);
 	}
 
-	void StandardPrintStream::Print(const std::string & s)
+	void StandardPrintStream::Print(const char * s, unsigned int size)
 	{
-		if (::fwrite(s.data(), 1, s.size(), stream_) != s.size())
+		if (size == 0)
 		{
+			return;
+		}
+
+		if (::fwrite(s, 1, size, stream_) != size)
+		{
+			// TODO: replace this with XTL::RuntimeError
 			throw std::runtime_error("Error in StandardPrintStream::Print()");
 		}
 	}
 }
-

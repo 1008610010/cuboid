@@ -470,7 +470,7 @@ int main(int argc, const char * argv[])
 		// TODO: move this shit to the Terminator::EmptyStackAction() method
 		std::auto_ptr<XTL::Expression::Node> expressionRoot = sa.Release();
 
-		expressionRoot->DebugPrint(XTL::StandardPrintStream::Out());
+		expressionRoot->DebugPrint(XTL::StdOut());
 		fprintf(stdout, "\n");
 	}
 	catch (const std::runtime_error & e)
