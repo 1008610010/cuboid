@@ -148,7 +148,7 @@ namespace XTL
 		}
 	};
 
-	class ConsoleTable
+	class StringsTable
 	{
 		typedef std::vector<std::string> StringsVector;
 
@@ -188,7 +188,7 @@ namespace XTL
 			{
 				public:
 
-					RowRef(ConsoleTable & table, unsigned int rowIndex)
+					RowRef(StringsTable & table, unsigned int rowIndex)
 						: table_(table),
 						  rowIndex_(rowIndex),
 						  currentColumnIndex_(0)
@@ -209,12 +209,12 @@ namespace XTL
 
 				private:
 
-					ConsoleTable & table_;
+					StringsTable & table_;
 					unsigned int   rowIndex_;
 					unsigned int   currentColumnIndex_;
 			};
 
-			ConsoleTable()
+			StringsTable()
 				: currentRowIndex_(0),
 				  rows_(),
 				  columns_()
@@ -222,7 +222,7 @@ namespace XTL
 				;;
 			}
 
-			ConsoleTable & SetColumn(unsigned int columnIndex, unsigned int alignment, const std::string & title)
+			StringsTable & SetColumn(unsigned int columnIndex, unsigned int alignment, const std::string & title)
 			{
 				ColumnDesc & columnDesc = GetColumnDesc(columnIndex);
 				columnDesc.alignment = alignment;
@@ -280,7 +280,7 @@ namespace XTL
 				return *(rows_[rowIndex]);
 			}
 
-			ConsoleTable & Set(unsigned int rowIndex, unsigned int columnIndex, const std::string & value)
+			StringsTable & Set(unsigned int rowIndex, unsigned int columnIndex, const std::string & value)
 			{
 				StringsVector & values = CreateRow(rowIndex);
 
@@ -387,7 +387,7 @@ namespace XTL
 	{
 		public:
 
-			explicit StringTablePrinter(const ConsoleTable & table, PrintStream & printStream)
+			explicit StringTablePrinter(const StringsTable & table, PrintStream & printStream)
 				: table_(table),
 				  printStream_(printStream)
 			{
@@ -401,6 +401,8 @@ namespace XTL
 					return;
 				}
 
+				PrintDivider();
+
 				printStream_.Print(" ");
 				table_.PrintColumnTitle(printStream_, 0);
 				for (unsigned int j = 1; j < table_.ColumnsCount(); ++j)
@@ -410,14 +412,7 @@ namespace XTL
 				}
 				printStream_.Print("\n");
 
-				printStream_.Print("-");
-				PrintDashes(0);
-				for (unsigned int j = 1; j < table_.ColumnsCount(); ++j)
-				{
-					printStream_.Print("-+-");
-					PrintDashes(j);
-				}
-				printStream_.Print("-\n");
+				PrintDivider();
 
 				for (unsigned int i = 0; i < table_.RowsCount(); ++i)
 				{
@@ -433,16 +428,30 @@ namespace XTL
 
 					printStream_.Print("\n");
 				}
+
+				PrintDivider();
 			}
 
 		private:
+
+			void PrintDivider()
+			{
+				printStream_.Print("-");
+				PrintDashes(0);
+				for (unsigned int j = 1; j < table_.ColumnsCount(); ++j)
+				{
+					printStream_.Print("-+-");
+					PrintDashes(j);
+				}
+				printStream_.Print("-\n");
+			}
 
 			void PrintDashes(unsigned int columnIndex)
 			{
 				XTL::CharRepeater<'-'>::Print(printStream_, table_.ColumnWidth(columnIndex));
 			}
 
-			const ConsoleTable & table_;
+			const StringsTable & table_;
 			PrintStream        & printStream_;
 	};
 }
@@ -1040,19 +1049,20 @@ namespace PO
 int main(int argc, char * argv[])
 {
 	{
-		XTL::ConsoleTable table;
+		XTL::StringsTable table;
 
 		table
-			.SetColumn(0, XTL::ConsoleTable::RIGHT,  "id")
-			.SetColumn(1, XTL::ConsoleTable::CENTER, "description")
-			.SetColumn(2, XTL::ConsoleTable::LEFT,   "flag")
+			.SetColumn(0, XTL::StringsTable::RIGHT,  "id")
+			.SetColumn(1, XTL::StringsTable::CENTER, "description")
+			.SetColumn(2, XTL::StringsTable::LEFT,   "flag")
 			.Row()
 				.Column("1")
-				.Column("abc")
+				.Column("abc asdf asdlkfj asdf a;lskdjf")
 				.Column("YES")
 			.Row()
 				.Column("65536")
 				.Column("xyzm")
+			.Row()
 			.Row()
 				.Column("16")
 				.Column("R G B")
