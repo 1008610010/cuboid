@@ -139,7 +139,36 @@ namespace PO
 class ConsoleTable
 {
 	typedef std::vector<std::string> ColumnsVector;
+
 	public:
+
+		enum Alignment
+		{
+			LEFT   = 0,
+			CENTER = 1,
+			RIGHT  = 2
+		};
+
+		struct ColumnDesc
+		{
+			ColumnDesc()
+				: alignment(LEFT),
+				  width(0)
+			{
+				;;
+			}
+
+			void UpdateWidth(unsigned int newWidth)
+			{
+				if (newWidth > width)
+				{
+					width = newWidth;
+				}
+			}
+
+			unsigned int alignment;
+			unsigned int width;
+		};
 
 		class RowRef
 		{
@@ -173,9 +202,8 @@ class ConsoleTable
 
 		ConsoleTable()
 			: currentRowIndex_(0),
-			  columnsCount_(0),
 			  rows_(),
-			  columnsWidths_()
+			  columns_()
 		{
 			;;
 		}
@@ -185,59 +213,69 @@ class ConsoleTable
 			return RowRef(*this, currentRowIndex_++);
 		}
 
-		ConsoleTable & Set(unsigned int row, unsigned int column, const std::string & value)
+		ConsoleTable & ColumnParams(unsigned int columnIndex, unsigned int alignment)
+		{
+			ColumnDesc & columnDesc = GetColumnDesc(columnIndex);
+			columnDesc.alignment = alignment;
+			return *this;
+		}
+
+		ConsoleTable & Set(unsigned int rowIndex, unsigned int columnIndex, const std::string & value)
 		{
 			std::vector<std::string> * columns = 0;
 
-			if (row < rows_.Size())
+			if (rowIndex < rows_.Size())
 			{
-				columns = rows_[row];
+				columns = rows_[rowIndex];
 				if (columns == 0)
 				{
-					rows_.Set(row, std::auto_ptr<ColumnsVector>(new ColumnsVector()));
-					columns = rows_[row];
+					rows_.Set(rowIndex, std::auto_ptr<ColumnsVector>(new ColumnsVector()));
+					columns = rows_[rowIndex];
 				}
 			}
 			else
 			{
-				rows_.Set(row, std::auto_ptr<ColumnsVector>(new ColumnsVector()));
-				columns = rows_[row];
+				rows_.Set(rowIndex, std::auto_ptr<ColumnsVector>(new ColumnsVector()));
+				columns = rows_[rowIndex];
 			}
 
-			if (column >= columns->size())
+			if (columnIndex >= columns->size())
 			{
-				columns->resize(column + 1);
+				columns->resize(columnIndex + 1);
 			}
 
-			(*columns)[column] = value;
+			(*columns)[columnIndex] = value;
 
-			if (column >= columnsWidths_.size())
-			{
-				columnsWidths_.resize(column + 1);
-			}
-
-			if (columnsWidths_[column] < value.size())
-			{
-				columnsWidths_[column] = value.size();
-			}
+			GetColumnDesc(columnIndex).UpdateWidth(value.size());
 
 			return *this;
 		}
 
 		void Print()
 		{
+			static const std::string EMPTY("");
+
+			if (ColumnsCount() == 0)
+			{
+				return;
+			}
+
 			for (unsigned int i = 0; i < rows_.Size(); ++i)
 			{
 				ColumnsVector * columns = rows_[i];
+
+				printf("  ");
 				if (columns == 0)
 				{
-					printf("\n");
-					continue;
 				}
-
-				for (unsigned int j = 0; j < columns->size(); ++j)
+				else
 				{
-					printf("%*s;", columnsWidths_[j], (*columns)[j].c_str());
+					PrintColumn(0, columns->size() > 0 ? (*columns)[0] : EMPTY);
+					for (unsigned j = 1; j < ColumnsCount(); ++j)
+					{
+						printf("  ");
+						PrintColumn(j, j < columns->size() ? (*columns)[j] : EMPTY);
+					}
 				}
 
 				printf("\n");
@@ -246,10 +284,72 @@ class ConsoleTable
 
 	private:
 
+		ColumnDesc & GetColumnDesc(unsigned int columnIndex)
+		{
+			if (columnIndex >= columns_.size())
+			{
+				columns_.resize(columnIndex + 1);
+			}
+
+			return columns_[columnIndex];
+		}
+
+		unsigned int ColumnsCount() const
+		{
+			return columns_.size();
+		}
+
+		void PrintColumn(unsigned int columnIndex, const std::string & value) const
+		{
+			const ColumnDesc & columnDesc = columns_[columnIndex];
+
+			if (columnDesc.width <= value.size())
+			{
+				printf("%s", value.c_str());
+				return;
+			}
+
+			unsigned int spaces = columnDesc.width - value.size();
+
+			switch (columnDesc.alignment)
+			{
+				case RIGHT:
+					PrintSpaces(spaces);
+					printf("%s", value.c_str());
+					break;
+
+				case CENTER:
+					PrintSpaces(spaces / 2);
+					printf("%s", value.c_str());
+					PrintSpaces(spaces - spaces / 2);
+					break;
+
+				default: // LEFT
+					printf("%s", value.c_str());
+					PrintSpaces(spaces);
+					break;
+			}
+		}
+
+		void PrintSpaces(unsigned int count) const
+		{
+			static const std::string SPACES("                                ");
+
+			while (count > SPACES.size())
+			{
+				printf("%s", SPACES.c_str());
+				count -= SPACES.size();
+			}
+
+			if (count > 0)
+			{
+				fwrite(SPACES.c_str(), 1, count, stdout);
+			}
+		}
+
 		unsigned int currentRowIndex_;
-		unsigned int columnsCount_;
 		XTL::AutoPtrVector<ColumnsVector> rows_;
-		std::vector<unsigned int> columnsWidths_;
+		std::vector<ColumnDesc> columns_;
 };
 
 namespace XTL
@@ -848,12 +948,18 @@ int main(int argc, char * argv[])
 		ConsoleTable table;
 
 		table
+			.ColumnParams(0, ConsoleTable::CENTER)
+			.ColumnParams(1, ConsoleTable::CENTER)
 			.Row()
 				.Column("1")
 				.Column("abc")
+				.Column("YES")
 			.Row()
-				.Column("2")
+				.Column("256")
 				.Column("xyzm")
+			.Row()
+				.Column("16")
+				.Column("Red Green Blue")
 		;
 
 		table.Print();
