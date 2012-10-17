@@ -9,7 +9,7 @@ namespace XTL
 	void SyntaxAnalyzer::Process(std::auto_ptr<Expression::Node> node)
 	{
 		fprintf(stdout, "<<< ");
-		XTL::StandardPrintStream::Out().Print(node->ToString());
+		XTL::StdOut().Print(node->ToString());
 		fprintf(stdout, "\n");
 
 		if (node->IsOperand())

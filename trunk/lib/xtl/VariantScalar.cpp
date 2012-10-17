@@ -107,7 +107,7 @@ namespace XTL
 
 	void Variant::LongLongInt::DebugPrintValue(PrintStream & stream, unsigned int indent) const
 	{
-		stream.Print("%lld", value_);
+		stream.PrintF("%lld", value_);
 	}
 
 	bool Variant::LongLongInt::IsInteger() const
@@ -136,7 +136,7 @@ namespace XTL
 
 	void Variant::Double::DebugPrintValue(PrintStream & stream, unsigned int indent) const
 	{
-		stream.Print("%g", value_);
+		stream.PrintF("%g", value_);
 	}
 
 	bool Variant::Double::IsInteger() const

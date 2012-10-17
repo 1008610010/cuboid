@@ -27,7 +27,7 @@ namespace XTL
 			do
 			{
 				PrintIndent(stream, indent + 1);
-				stream.Print("%s : ", itr->Key());
+				stream.PrintF("%s : ", itr->Key());
 				itr->Value()->DebugPrintValue(stream, indent + 1);
 				itr->Advance();
 				if (itr->NotAtEnd())
