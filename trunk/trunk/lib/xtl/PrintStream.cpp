@@ -6,6 +6,11 @@
 
 namespace XTL
 {
+	void PrintStream::PrintSpaces(unsigned int count)
+	{
+		XTL::CharRepeater<' '>::Print(*this, count);
+	}
+
 	PrintStream & StdOut()
 	{
 		static StandardPrintStream instance(stdout);
