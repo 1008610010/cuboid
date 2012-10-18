@@ -84,6 +84,7 @@ SET (
 		xtl/utils/Chronometer.cpp
 		xtl/utils/Date.cpp
 		xtl/utils/SimpleStringMatcher.cpp
+		xtl/utils/StringsTable.cpp
 
 		xtl/io/FileInputStream.cpp
 		xtl/io/FileInputStreamBuffered.cpp

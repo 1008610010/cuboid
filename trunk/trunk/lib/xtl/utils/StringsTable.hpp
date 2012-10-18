@@ -8,216 +8,69 @@
 
 namespace XTL
 {
-	class StringAlignment
-	{
-		public:
-
-
-
-		private:
-
-			unsigned int id_;
-	};
-
-	class StringsVector
-	{
-		public:
-
-			StringsVector()
-				: values_()
-			{
-			}
-
-			unsigned int Size() const
-			{
-				return values_.size();
-			}
-
-			void PushBack(const std::string & value)
-			{
-				values_.push_back(value);
-			}
-
-			StringsVector & Set(unsigned int columnIndex, const std::string & value)
-			{
-				if (columnIndex >= values_.size())
-				{
-					values_.resize(columnIndex + 1);
-				}
-
-				values_[columnIndex] = value;
-				return *this;
-			}
-
-			const std::string & operator[] (unsigned int index) const
-			{
-				static const std::string EMPTY("");
-				return index < values_.size() ? values_[index] : EMPTY;
-			}
-
-		private:
-
-			std::vector<std::string> values_;
-	};
-
 	class StringsTable
 	{
 		public:
 
-			enum Alignment
+			class Row
 			{
-				LEFT   = 0,
-				CENTER = 1,
-				RIGHT  = 2
-			};
+				public:
 
-			struct ColumnDesc
-			{
-				ColumnDesc();
+					Row();
 
-				void UpdateWidth(unsigned int newWidth);
+					unsigned int Size() const;
 
-				unsigned int alignment;
-				unsigned int width;
-				std::string  title;
+					void PushBack(const std::string & value);
+
+					Row & Set(unsigned int columnIndex, const std::string & value);
+
+					const std::string & operator[] (unsigned int index) const;
+
+				private:
+
+					std::vector<std::string> values_;
 			};
 
 			class RowBuilder
 			{
 				public:
 
-					RowBuilder(StringsTable & table, StringsVector & values);
+					RowBuilder(StringsTable & table, Row & rowRef);
 
-					RowBuilder Row() const;
+					RowBuilder AddRow() const;
 
-					RowBuilder & Column(const std::string & value);
+					RowBuilder & AddColumn(const std::string & value);
 
 				private:
 
-					StringsTable  & table_;
-					StringsVector & values_;
+					StringsTable & table_;
+					Row          & rowRef_;
 			};
 
-			StringsTable()
-				: rows_(),
-				  columns_()
-			{
-				;;
-			}
+			StringsTable();
 
-			StringsTable & SetColumn(unsigned int columnIndex, unsigned int alignment, const std::string & title)
-			{
-				ColumnDesc & columnDesc = CreateColumn(columnIndex);
-				columnDesc.alignment = alignment;
-				columnDesc.title = title;
+			RowBuilder AddRow();
 
-				columnDesc.UpdateWidth(title.size());
+			StringsTable & Set(unsigned int rowIndex, unsigned int columnIndex, const std::string & value);
 
-				return *this;
-			}
+			unsigned int RowsCount() const;
 
-			RowBuilder Row()
-			{
-				rows_.PushBack(NewStringsVector());
-				return RowBuilder(*this, *(rows_.Back()));
-			}
+			unsigned int ColumnsCount() const;
 
-			StringsTable & Set(unsigned int rowIndex, unsigned int columnIndex, const std::string & value)
-			{
-				StringsVector & values = CreateRow(rowIndex);
+			unsigned int ColumnWidth(unsigned int columnIndex) const;
 
-				values.Set(columnIndex, value);
+			void UpdateColumnWidth(unsigned int columnIndex, unsigned int width);
 
-				CreateColumn(columnIndex).UpdateWidth(value.size());
+			const Row & GetRow(unsigned int rowIndex) const;
 
-				return *this;
-			}
-
-			unsigned int RowsCount() const
-			{
-				return rows_.Size();
-			}
-
-			unsigned int ColumnsCount() const
-			{
-				return columns_.size();
-			}
-
-			const std::string & ColumnTitle(unsigned int columnIndex) const
-			{
-				return columns_[columnIndex].title;
-			}
-
-			unsigned int ColumnAlignment(unsigned int columnIndex) const
-			{
-				return columns_[columnIndex].alignment;
-			}
-
-			unsigned int ColumnWidth(unsigned int columnIndex) const
-			{
-				return columns_[columnIndex].width;
-			}
-
-			void UpdateColumnWidth(unsigned int columnIndex, unsigned int width)
-			{
-				CreateColumn(columnIndex).UpdateWidth(width);
-			}
-
-			const StringsVector & GetRow(unsigned int rowIndex) const
-			{
-				static const StringsVector EMPTY_ROW;
-
-				if (rowIndex >= rows_.Size())
-				{
-					return EMPTY_ROW;
-				}
-
-				return rows_[rowIndex] != 0 ? *(rows_[rowIndex]) : EMPTY_ROW;
-			}
-
-			const StringsVector & operator[] (unsigned int rowIndex) const
-			{
-				return GetRow(rowIndex);
-			}
+			const Row & operator[] (unsigned int rowIndex) const;
 
 		private:
 
-			std::auto_ptr<StringsVector> NewStringsVector() const
-			{
-				return std::auto_ptr<StringsVector>(new StringsVector());
-			}
+			Row & CreateRow(unsigned int rowIndex);
 
-			StringsVector & CreateRow(unsigned int rowIndex)
-			{
-				if (rowIndex < rows_.Size())
-				{
-					if (rows_[rowIndex] == 0)
-					{
-						rows_.Set(rowIndex, NewStringsVector());
-					}
-				}
-				else
-				{
-					rows_.Set(rowIndex, NewStringsVector());
-				}
-
-				return *(rows_[rowIndex]);
-			}
-
-			ColumnDesc & CreateColumn(unsigned int columnIndex)
-			{
-				if (columnIndex >= columns_.size())
-				{
-					columns_.resize(columnIndex + 1);
-				}
-
-				return columns_[columnIndex];
-			}
-
-
-			XTL::AutoPtrVector<StringsVector> rows_;
-			std::vector<ColumnDesc> columns_;
-
+			XTL::AutoPtrVector<Row>   rows_;
+			std::vector<unsigned int> columnsWidths_;
 	};
 }
 
