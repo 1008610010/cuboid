@@ -6,9 +6,11 @@
 #include <stdexcept>
 #include <string>
 
+#include <xtl/Exception.hpp>
 #include <xtl/FormatString.hpp>
 #include <xtl/StringUtils.hpp>
 #include <xtl/utils/AutoPtrVector.hpp>
+#include <xtl/utils/StringsTable.hpp>
 
 /*
 class ProgramOptions
@@ -51,26 +53,6 @@ class ProgramOptions
 
 namespace XTL
 {
-	class TerminateProgram
-	{
-		public:
-
-			explicit TerminateProgram(int exitCode)
-				: exitCode_(exitCode)
-			{
-				;;
-			}
-
-			int ExitCode() const
-			{
-				return exitCode_;
-			}
-
-		private:
-
-			const int exitCode_;
-	};
-
 	class StringSplitter
 	{
 		public:
@@ -126,100 +108,6 @@ namespace PO
 }
 
 #include <xtl/PrintStream.hpp>
-
-namespace XTL
-{
-
-	class StringsTable
-	{
-
-			void PrintAligned(PrintStream & printStream, unsigned int rowIndex, unsigned int columnIndex) const
-			{
-				const ColumnDesc & columnDesc = columns_[columnIndex];
-
-				const std::string & value = GetValue(rowIndex, columnIndex);
-
-				PrintStringAligned(printStream, value, columnDesc.alignment, columnDesc.width);
-			}
-
-			void PrintColumnTitle(PrintStream & printStream, unsigned int columnIndex) const
-			{
-				PrintStringAligned(printStream, columns_[columnIndex].title, CENTER, columns_[columnIndex].width);
-			}
-	};
-
-	class StringTablePrinter
-	{
-		public:
-
-			explicit StringTablePrinter(const StringsTable & table, PrintStream & printStream)
-				: table_(table),
-				  printStream_(printStream)
-			{
-				;;
-			}
-
-			void Print()
-			{
-				if (table_.ColumnsCount() == 0)
-				{
-					return;
-				}
-
-				PrintDivider();
-
-				printStream_.Print(" ");
-				table_.PrintColumnTitle(printStream_, 0);
-				for (unsigned int j = 1; j < table_.ColumnsCount(); ++j)
-				{
-					printStream_.Print(" | ");
-					table_.PrintColumnTitle(printStream_, j);
-				}
-				printStream_.Print("\n");
-
-				PrintDivider();
-
-				for (unsigned int i = 0; i < table_.RowsCount(); ++i)
-				{
-					printStream_.Print(" ");
-
-					table_.PrintAligned(printStream_, i, 0);
-
-					for (unsigned j = 1; j < table_.ColumnsCount(); ++j)
-					{
-						printStream_.Print(" | ");
-						table_.PrintAligned(printStream_, i, j);
-					}
-
-					printStream_.Print("\n");
-				}
-
-				PrintDivider();
-			}
-
-		private:
-
-			void PrintDivider()
-			{
-				printStream_.Print("-");
-				PrintDashes(0);
-				for (unsigned int j = 1; j < table_.ColumnsCount(); ++j)
-				{
-					printStream_.Print("-+-");
-					PrintDashes(j);
-				}
-				printStream_.Print("-\n");
-			}
-
-			void PrintDashes(unsigned int columnIndex)
-			{
-				XTL::CharRepeater<'-'>::Print(printStream_, table_.ColumnWidth(columnIndex));
-			}
-
-			const StringsTable & table_;
-			PrintStream        & printStream_;
-	};
-}
 
 namespace XTL
 {
@@ -811,29 +699,262 @@ namespace PO
 
 }
 
+namespace XTL
+{
+	class CellAlignment
+	{
+		public:
+
+			static const CellAlignment LEFT;
+			static const CellAlignment CENTER;
+			static const CellAlignment RIGHT;
+
+			bool operator== (const CellAlignment & other) const
+			{
+				return id_ == other.id_;
+			}
+
+		private:
+
+			explicit CellAlignment(unsigned int id)
+				: id_(id)
+			{
+				;;
+			}
+
+			unsigned int id_;
+	};
+
+	const CellAlignment CellAlignment::LEFT(0);
+	const CellAlignment CellAlignment::CENTER(1);
+	const CellAlignment CellAlignment::RIGHT(2);
+
+	void PrintStringAligned(PrintStream & printStream, const std::string & value, CellAlignment alignment, unsigned int width)
+	{
+		if (width <= value.size())
+		{
+			printStream.Print(value);
+			return;
+		}
+
+		unsigned int spaces = width - value.size();
+
+		if (alignment == CellAlignment::RIGHT)
+		{
+			printStream.PrintSpaces(spaces);
+			printStream.Print(value);
+		}
+		else if (alignment == CellAlignment::CENTER)
+		{
+			printStream.PrintSpaces(spaces / 2);
+			printStream.Print(value);
+			printStream.PrintSpaces(spaces - spaces / 2);
+		}
+		else if (alignment == CellAlignment::LEFT)
+		{
+			printStream.Print(value);
+			printStream.PrintSpaces(spaces);
+		}
+		else
+		{
+			throw ILLEGAL_ARGUMENT_ERROR("Invalid parameter 'alignment'");
+		}
+	}
+
+	class StringsTablePrinter
+	{
+		public:
+
+			explicit StringsTablePrinter(PrintStream & printStream)
+				: printStream_(printStream)
+			{
+				;;
+			}
+
+			virtual ~StringsTablePrinter() throw()
+			{
+				;;
+			}
+
+			virtual void Print(const StringsTable & table)
+			{
+				if (table.ColumnsCount() == 0)
+				{
+					return;
+				}
+
+				for (unsigned int i = 0; i < table.RowsCount(); ++i)
+				{
+					const StringsTable::Row & row = table.GetRow(i);
+
+					for (unsigned int j = 0; j < table.ColumnsCount(); ++j)
+					{
+						if (j != 0)
+						{
+							printStream_.Print(" | ");
+						}
+
+						PrintStringAligned(printStream_, row[j], CellAlignment::LEFT, table.ColumnWidth(j));
+					}
+
+					printStream_.Print("\n");
+				}
+			}
+
+		private:
+
+			PrintStream & printStream_;
+	};
+
+	/*
+	struct ColumnDesc
+	{
+		ColumnDesc();
+
+		void UpdateWidth(unsigned int newWidth);
+
+		StringAlignment alignment;
+		unsigned int    width;
+		std::string     title;
+	};
+
+	StringsTable & SetColumn(unsigned int columnIndex, StringAlignment alignment, const std::string & title)
+	{
+		ColumnDesc & columnDesc = CreateColumn(columnIndex);
+		columnDesc.alignment = alignment;
+		columnDesc.title = title;
+
+		columnDesc.UpdateWidth(title.size());
+
+		return *this;
+	}
+
+	class StringsTable
+	{
+			void PrintAligned(PrintStream & printStream, unsigned int rowIndex, unsigned int columnIndex) const
+			{
+				const ColumnDesc & columnDesc = columns_[columnIndex];
+
+				const std::string & value = GetValue(rowIndex, columnIndex);
+
+				PrintStringAligned(printStream, value, columnDesc.alignment, columnDesc.width);
+			}
+
+			void PrintColumnTitle(PrintStream & printStream, unsigned int columnIndex) const
+			{
+				PrintStringAligned(printStream, columns_[columnIndex].title, CENTER, columns_[columnIndex].width);
+			}
+	};
+
+	class StringTablePrinter
+	{
+		public:
+
+			explicit StringTablePrinter(const StringsTable & table, PrintStream & printStream)
+				: table_(table),
+				  printStream_(printStream)
+			{
+				;;
+			}
+
+			void Print()
+			{
+				if (table_.ColumnsCount() == 0)
+				{
+					return;
+				}
+
+				PrintDivider();
+
+				printStream_.Print(" ");
+				table_.PrintColumnTitle(printStream_, 0);
+				for (unsigned int j = 1; j < table_.ColumnsCount(); ++j)
+				{
+					printStream_.Print(" | ");
+					table_.PrintColumnTitle(printStream_, j);
+				}
+				printStream_.Print("\n");
+
+				PrintDivider();
+
+				for (unsigned int i = 0; i < table_.RowsCount(); ++i)
+				{
+					printStream_.Print(" ");
+
+					table_.PrintAligned(printStream_, i, 0);
+
+					for (unsigned j = 1; j < table_.ColumnsCount(); ++j)
+					{
+						printStream_.Print(" | ");
+						table_.PrintAligned(printStream_, i, j);
+					}
+
+					printStream_.Print("\n");
+				}
+
+				PrintDivider();
+			}
+
+		private:
+
+			void PrintDivider()
+			{
+				printStream_.Print("-");
+				PrintDashes(0);
+				for (unsigned int j = 1; j < table_.ColumnsCount(); ++j)
+				{
+					printStream_.Print("-+-");
+					PrintDashes(j);
+				}
+				printStream_.Print("-\n");
+			}
+
+			void PrintDashes(unsigned int columnIndex)
+			{
+				XTL::CharRepeater<'-'>::Print(printStream_, table_.ColumnWidth(columnIndex));
+			}
+
+			const StringsTable & table_;
+			PrintStream        & printStream_;
+	};
+
+
+	*/
+}
+
 int main(int argc, char * argv[])
 {
 	{
 		XTL::StringsTable table;
 
 		table
+			/*
 			.SetColumn(0, XTL::StringsTable::RIGHT,  "id")
 			.SetColumn(1, XTL::StringsTable::CENTER, "description")
 			.SetColumn(2, XTL::StringsTable::LEFT,   "flag")
-			.Row()
-				.Column("1")
-				.Column("abc asdf asdlkfj asdf a;lskdjf")
-				.Column("YES")
-			.Row()
-				.Column("65536")
-				.Column("xyzm")
-			.Row()
-			.Row()
-				.Column("16")
-				.Column("R G B")
+			*/
+			.AddRow()
+				.AddColumn("1")
+				.AddColumn("abc asdf asdlkfj asdf a;lskdjf")
+				.AddColumn("YES")
+			.AddRow()
+				.AddColumn("65536")
+				.AddColumn("xyzm")
+				.AddColumn("YES")
+			.AddRow()
+			.AddRow()
+				.AddColumn("16")
+				.AddColumn("R G B")
+				.AddColumn("NO")
 		;
 
+		XTL::StringsTablePrinter tablePrinter(XTL::StdOut());
+
+		tablePrinter.Print(table);
+
+		/*
 		XTL::StringTablePrinter(table, XTL::StdOut()).Print();
+		*/
 		return 0;
 	}
 
