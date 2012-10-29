@@ -63,12 +63,17 @@ namespace XTL
 
 	void StringsTablePrinter::Print(const StringsTable & table)
 	{
+		Print(table, 0, table.RowsCount());
+	}
+
+	void StringsTablePrinter::Print(const StringsTable & table, unsigned int rowFrom, unsigned int rowTo)
+	{
 		if (!PrepareBeforePrint(table))
 		{
 			return;
 		}
 
-		for (unsigned int i = 0; i < table.RowsCount(); ++i)
+		for (unsigned int i = rowFrom; i < rowTo; ++i)
 		{
 			const StringsTable::Row & row = table.GetRow(i);
 

@@ -40,7 +40,12 @@ namespace XTL
 
 			StringsTablePrinter & SetAlignment(unsigned int columnIndex, CellAlignment alignment);
 
-			virtual void Print(const StringsTable & table);
+			void Print(const StringsTable & table);
+
+			/**
+			 * Вывести строки из интервала [rowFrom, rowTo).
+			 */
+			virtual void Print(const StringsTable & table, unsigned int rowFrom, unsigned int rowTo);
 
 		protected:
 
