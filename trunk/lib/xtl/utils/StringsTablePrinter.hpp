@@ -1,6 +1,9 @@
 #ifndef XTL__STRINGS_TABLE_PRINTER_HPP__
 #define XTL__STRINGS_TABLE_PRINTER_HPP__ 1
 
+#include "../PrintStream.hpp"
+#include "StringsTable.hpp"
+
 namespace XTL
 {
 	class CellAlignment
@@ -25,6 +28,35 @@ namespace XTL
 			unsigned int id_;
 	};
 
+	class StringsTablePrinter
+	{
+		public:
+
+			explicit StringsTablePrinter(PrintStream & printStream);
+
+			virtual ~StringsTablePrinter() throw();
+
+			CellAlignment GetAlignment(unsigned int columnIndex) const;
+
+			StringsTablePrinter & SetAlignment(unsigned int columnIndex, CellAlignment alignment);
+
+			virtual void Print(const StringsTable & table);
+
+		protected:
+
+			bool PrepareBeforePrint(const StringsTable & table);
+
+			void PrintString(const char * value);
+
+			void PrintString(const std::string & value);
+
+			void PrintStringAligned(const std::string & value, CellAlignment alignment, unsigned int width);
+
+		private:
+
+			PrintStream & printStream_;
+			std::vector<CellAlignment> columns_;
+	};
 }
 
 #endif

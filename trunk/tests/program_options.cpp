@@ -696,108 +696,23 @@ namespace PO
 	{
 	}
 */
-
 }
 
+/*
+
+ xxxxxx | xxxx | x
+--------+------+---
+ xxxxxx | xxxx | x
+ xxxxxx | xxxx | x
+ xxxxxx | xxxx | x
+
+*/
+
 #include <vector>
+#include <xtl/utils/StringsTablePrinter.hpp>
 
 namespace XTL
 {
-	class StringsTablePrinter
-	{
-		public:
-
-			explicit StringsTablePrinter(PrintStream & printStream)
-				: printStream_(printStream),
-				  columns_()
-			{
-				;;
-			}
-
-			virtual ~StringsTablePrinter() throw()
-			{
-				;;
-			}
-
-			CellAlignment GetAlignment(unsigned int columnIndex) const
-			{
-				return columns_[columnIndex];
-			}
-
-			StringsTablePrinter & SetAlignment(unsigned int columnIndex, CellAlignment alignment)
-			{
-				if (columnIndex >= columns_.size())
-				{
-					columns_.resize(columnIndex + 1);
-				}
-
-				columns_[columnIndex] = alignment;
-				return *this;
-			}
-
-			virtual void Print(const StringsTable & table)
-			{
-				if (!PrepareBeforePrint(table))
-				{
-					return;
-				}
-
-				for (unsigned int i = 0; i < table.RowsCount(); ++i)
-				{
-					const StringsTable::Row & row = table.GetRow(i);
-
-					for (unsigned int j = 0; j < table.ColumnsCount(); ++j)
-					{
-						if (j != 0)
-						{
-							PrintString(" ");
-						}
-
-						PrintStringAligned(row[j], GetAlignment(j), table.ColumnWidth(j));
-					}
-
-					PrintString("\n");
-				}
-			}
-
-		protected:
-
-			void PrintString(const char * value)
-			{
-				printStream_.Print(value);
-			}
-
-			void PrintString(const std::string & value)
-			{
-				printStream_.Print(value);
-			}
-
-			void PrintStringAligned(const std::string & value, CellAlignment alignment, unsigned int width)
-			{
-				XTL::PrintStringAligned(printStream_, value, alignment, width);
-			}
-
-			bool PrepareBeforePrint(const StringsTable & table)
-			{
-				if (table.ColumnsCount() == 0)
-				{
-					return false;
-				}
-
-				if (table.ColumnsCount() > columns_.size())
-				{
-					columns_.resize(table.ColumnsCount());
-				}
-
-				return true;
-			}
-
-		private:
-
-			PrintStream & printStream_;
-			std::vector<CellAlignment> columns_;
-	};
-
 	class SimpleStringsTablePrinter : public StringsTablePrinter
 	{
 		public:
@@ -874,23 +789,6 @@ namespace XTL
 		return *this;
 	}
 
-	class StringsTable
-	{
-			void PrintAligned(PrintStream & printStream, unsigned int rowIndex, unsigned int columnIndex) const
-			{
-				const ColumnDesc & columnDesc = columns_[columnIndex];
-
-				const std::string & value = GetValue(rowIndex, columnIndex);
-
-				PrintStringAligned(printStream, value, columnDesc.alignment, columnDesc.width);
-			}
-
-			void PrintColumnTitle(PrintStream & printStream, unsigned int columnIndex) const
-			{
-				PrintStringAligned(printStream, columns_[columnIndex].title, CENTER, columns_[columnIndex].width);
-			}
-	};
-
 	class StringTablePrinter
 	{
 		public:
@@ -962,8 +860,6 @@ namespace XTL
 			const StringsTable & table_;
 			PrintStream        & printStream_;
 	};
-
-
 	*/
 }
 

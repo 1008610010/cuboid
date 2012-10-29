@@ -85,6 +85,7 @@ SET (
 		xtl/utils/Date.cpp
 		xtl/utils/SimpleStringMatcher.cpp
 		xtl/utils/StringsTable.cpp
+		xtl/utils/StringsTablePrinter.cpp
 
 		xtl/io/FileInputStream.cpp
 		xtl/io/FileInputStreamBuffered.cpp
