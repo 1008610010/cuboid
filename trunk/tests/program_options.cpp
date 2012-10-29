@@ -11,6 +11,7 @@
 #include <xtl/StringUtils.hpp>
 #include <xtl/utils/AutoPtrVector.hpp>
 #include <xtl/utils/StringsTable.hpp>
+#include <xtl/utils/StringsTablePrinter.hpp>
 
 /*
 class ProgramOptions
@@ -50,6 +51,62 @@ class ProgramOptions
 				<< PO::SelectEnd()
 };
 */
+
+namespace XTL
+{
+	class SimpleStringsTablePrinter : public StringsTablePrinter
+	{
+		public:
+
+			SimpleStringsTablePrinter(PrintStream & printStream, const std::string & rowBegin, const std::string & rowEnd, const std::string & columnDivider)
+				: StringsTablePrinter(printStream),
+				  rowBegin_(rowBegin),
+				  rowEnd_(rowEnd),
+				  columnDivider_(columnDivider)
+			{
+				;;
+			}
+
+			virtual ~SimpleStringsTablePrinter() throw()
+			{
+				;;
+			}
+
+			virtual void Print(const StringsTable & table, unsigned int rowFrom, unsigned int rowTo)
+			{
+				if (!PrepareBeforePrint(table))
+				{
+					return;
+				}
+
+				for (unsigned int i = rowFrom; i < rowTo; ++i)
+				{
+					const StringsTable::Row & row = table.GetRow(i);
+
+					PrintString(rowBegin_);
+
+					for (unsigned int j = 0; j < table.ColumnsCount(); ++j)
+					{
+						if (j != 0)
+						{
+							PrintString(columnDivider_);
+						}
+
+						PrintStringAligned(row[j], GetAlignment(j), table.ColumnWidth(j));
+					}
+
+					PrintString(rowEnd_);
+					PrintString("\n");
+				}
+			}
+
+		private:
+
+			const std::string rowBegin_;
+			const std::string rowEnd_;
+			const std::string columnDivider_;
+	};
+}
 
 namespace XTL
 {
@@ -139,6 +196,14 @@ namespace XTL
 				return text_;
 			}
 
+			const std::string GetTextWithRequired() const
+			{
+				static const std::string REQUIRED = "[Required] ";
+				static const std::string OPTIONAL = "[Optional] ";
+
+				return (IsRequired() ? REQUIRED : OPTIONAL) + GetText();
+			}
+
 			bool IsRequired() const
 			{
 				return (flags_ & XTL::PO::REQUIRED) != 0;
@@ -210,6 +275,16 @@ namespace XTL
 				return *this;
 			}
 
+			bool IsEmpty() const
+			{
+				return optionsList_.IsEmpty();
+			}
+
+			unsigned int Size() const
+			{
+				return optionsList_.Size();
+			}
+
 			void Print()
 			{
 				for (unsigned int i = 0; i < optionsList_.Size(); ++i)
@@ -227,6 +302,17 @@ namespace XTL
 					{
 						fprintf(stderr, " [%s]", option->GetLabel());
 					}
+				}
+			}
+
+			void PrintToTable(StringsTable & table) const
+			{
+				for (unsigned int i = 0; i < optionsList_.Size(); ++i)
+				{
+					table
+						.AddRow()
+							.AddColumn(optionsList_[i]->GetLabel())
+							.AddColumn(optionsList_[i]->GetTextWithRequired());
 				}
 			}
 
@@ -297,6 +383,7 @@ namespace XTL
 				std::string label;
 				while (splitter.GetNext(label))
 				{
+					// - _ A..Z a..z 0..9 ? ! @ $
 					if (label.size() == 0 || label[0] != '-')
 					{
 						fprintf(stderr, "Internal error: Invalid option's label '%s'\n", label.c_str());
@@ -322,7 +409,7 @@ namespace XTL
 				return *this;
 			}
 
-			bool Empty() const
+			bool IsEmpty() const
 			{
 				return optionsMap_.empty();
 			}
@@ -330,6 +417,17 @@ namespace XTL
 			bool Contains(const std::string & key) const
 			{
 				return optionsMap_.count(key) > 0;
+			}
+
+			void PrintToTable(StringsTable & table) const
+			{
+				for (unsigned int i = 0; i < optionsList_.Size(); ++i)
+				{
+					table
+						.AddRow()
+							.AddColumn(optionsList_[i]->GetLabel())
+							.AddColumn(optionsList_[i]->GetTextWithRequired());
+				}
 			}
 
 		private:
@@ -414,16 +512,42 @@ namespace XTL
 				fprintf(stderr, "\n");
 				fprintf(stderr, "%s", programName_.c_str());
 
-				if (!optionsMap_.Empty())
+				if (!optionsMap_.IsEmpty())
 				{
 					fprintf(stderr, " {OPTIONS}");
 				}
 
 				optionsList_.Print();
 				fprintf(stderr, "\n");
-				fprintf(stderr, "\n");
 
-				fprintf(stderr, "where {OPTIONS} can be:\n");
+				StringsTable optionsTable;
+
+				optionsList_.PrintToTable(optionsTable);
+				optionsMap_.PrintToTable(optionsTable);
+
+				XTL::SimpleStringsTablePrinter tablePrinter(XTL::StdErr(), "  ", "", "  ");
+
+				tablePrinter
+					.SetAlignment(0, XTL::CellAlignment::LEFT)
+					.SetAlignment(1, XTL::CellAlignment::LEFT);
+
+				if (!optionsList_.IsEmpty())
+				{
+					fprintf(stderr, "\n");
+					fprintf(stderr, "where:\n");
+
+					tablePrinter.Print(optionsTable, 0, optionsList_.Size());
+				}
+
+				if (!optionsMap_.IsEmpty())
+				{
+					fprintf(stderr, "\n");
+					fprintf(stderr, "where OPTIONS can be:\n");
+
+					tablePrinter.Print(optionsTable, optionsList_.Size(), optionsTable.RowsCount());
+				}
+
+				fprintf(stderr, "\n");
 
 				throw TerminateProgram(0);
 			}
@@ -458,8 +582,14 @@ namespace XTL
 							ProgramOption * option = optionsMap_.FindOption(arg);
 							if (option == 0)
 							{
+								optionsList_.SetOptionValue(arg);
+								++i;
+								continue;
+
+								/*
 								fprintf(stderr, "Unknown option '%s'\n", arg);
 								throw TerminateProgram(1);
+								*/
 							}
 
 							++i;
@@ -497,10 +627,22 @@ namespace XTL
 				{
 					fprintf(stderr, "Missing required parameters:\n");
 
+					StringsTable table;
 					for (std::list<const ProgramOption *>::const_iterator itr = missingRequired.begin(); itr != missingRequired.end(); ++itr)
 					{
-						fprintf(stderr, "  %s\n", (*itr)->GetLabel());
+						table
+							.AddRow()
+								.AddColumn((*itr)->GetLabel())
+								.AddColumn((*itr)->GetText());
 					}
+
+					XTL::SimpleStringsTablePrinter tablePrinter(XTL::StdErr(), "  ", "", "  ");
+
+					tablePrinter
+						.SetAlignment(0, XTL::CellAlignment::LEFT)
+						.SetAlignment(1, XTL::CellAlignment::LEFT);
+
+					tablePrinter.Print(table, 0, table.RowsCount());
 
 					throw TerminateProgram(1);
 				}
@@ -699,181 +841,59 @@ namespace PO
 }
 
 /*
-
- xxxxxx | xxxx | x
+--------+------+---
+ xxxxxx | xxxx | x  <-- First row - Alignment::CENTER
 --------+------+---
  xxxxxx | xxxx | x
  xxxxxx | xxxx | x
  xxxxxx | xxxx | x
+--------+------+---
 
+void PrintDivider()
+{
+	printStream_.Print("-");
+	PrintDashes(0);
+	for (unsigned int j = 1; j < table_.ColumnsCount(); ++j)
+	{
+		printStream_.Print("-+-");
+		PrintDashes(j);
+	}
+	printStream_.Print("-\n");
+}
+
+void PrintDashes(unsigned int columnIndex)
+{
+	XTL::CharRepeater<'-'>::Print(printStream_, table_.ColumnWidth(columnIndex));
+}
 */
 
-#include <vector>
 #include <xtl/utils/StringsTablePrinter.hpp>
 
-namespace XTL
+void TestStringSplitter(const char * source, ...)
 {
-	class SimpleStringsTablePrinter : public StringsTablePrinter
-	{
-		public:
 
-			SimpleStringsTablePrinter(PrintStream & printStream, const std::string & rowBegin, const std::string & rowEnd, const std::string & columnDivider)
-				: StringsTablePrinter(printStream),
-				  rowBegin_(rowBegin),
-				  rowEnd_(rowEnd),
-				  columnDivider_(columnDivider)
-			{
-				;;
-			}
-
-			virtual ~SimpleStringsTablePrinter() throw()
-			{
-				;;
-			}
-
-			virtual void Print(const StringsTable & table)
-			{
-				if (!PrepareBeforePrint(table))
-				{
-					return;
-				}
-
-				for (unsigned int i = 0; i < table.RowsCount(); ++i)
-				{
-					const StringsTable::Row & row = table.GetRow(i);
-
-					PrintString(rowBegin_);
-
-					for (unsigned int j = 0; j < table.ColumnsCount(); ++j)
-					{
-						if (j != 0)
-						{
-							PrintString(columnDivider_);
-						}
-
-						PrintStringAligned(row[j], GetAlignment(j), table.ColumnWidth(j));
-					}
-
-					PrintString(rowEnd_);
-					PrintString("\n");
-				}
-			}
-
-		private:
-
-			const std::string rowBegin_;
-			const std::string rowEnd_;
-			const std::string columnDivider_;
-	};
-
-	/*
-	struct ColumnDesc
-	{
-		ColumnDesc();
-
-		void UpdateWidth(unsigned int newWidth);
-
-		StringAlignment alignment;
-		unsigned int    width;
-		std::string     title;
-	};
-
-	StringsTable & SetColumn(unsigned int columnIndex, StringAlignment alignment, const std::string & title)
-	{
-		ColumnDesc & columnDesc = CreateColumn(columnIndex);
-		columnDesc.alignment = alignment;
-		columnDesc.title = title;
-
-		columnDesc.UpdateWidth(title.size());
-
-		return *this;
-	}
-
-	class StringTablePrinter
-	{
-		public:
-
-			explicit StringTablePrinter(const StringsTable & table, PrintStream & printStream)
-				: table_(table),
-				  printStream_(printStream)
-			{
-				;;
-			}
-
-			void Print()
-			{
-				if (table_.ColumnsCount() == 0)
-				{
-					return;
-				}
-
-				PrintDivider();
-
-				printStream_.Print(" ");
-				table_.PrintColumnTitle(printStream_, 0);
-				for (unsigned int j = 1; j < table_.ColumnsCount(); ++j)
-				{
-					printStream_.Print(" | ");
-					table_.PrintColumnTitle(printStream_, j);
-				}
-				printStream_.Print("\n");
-
-				PrintDivider();
-
-				for (unsigned int i = 0; i < table_.RowsCount(); ++i)
-				{
-					printStream_.Print(" ");
-
-					table_.PrintAligned(printStream_, i, 0);
-
-					for (unsigned j = 1; j < table_.ColumnsCount(); ++j)
-					{
-						printStream_.Print(" | ");
-						table_.PrintAligned(printStream_, i, j);
-					}
-
-					printStream_.Print("\n");
-				}
-
-				PrintDivider();
-			}
-
-		private:
-
-			void PrintDivider()
-			{
-				printStream_.Print("-");
-				PrintDashes(0);
-				for (unsigned int j = 1; j < table_.ColumnsCount(); ++j)
-				{
-					printStream_.Print("-+-");
-					PrintDashes(j);
-				}
-				printStream_.Print("-\n");
-			}
-
-			void PrintDashes(unsigned int columnIndex)
-			{
-				XTL::CharRepeater<'-'>::Print(printStream_, table_.ColumnWidth(columnIndex));
-			}
-
-			const StringsTable & table_;
-			PrintStream        & printStream_;
-	};
-	*/
 }
 
 int main(int argc, char * argv[])
 {
 	{
+		const std::string source("abc,,xyzd,");
+
+		XTL::StringSplitter splitter(source.c_str(), ',');
+		std::string label;
+		while (splitter.GetNext(label))
+		{
+			printf("%s\n", label.c_str());
+		}
+
+		return 0;
+	}
+
+	/*
+	{
 		XTL::StringsTable table;
 
 		table
-			/*
-			.SetColumn(0, XTL::StringsTable::RIGHT,  "id")
-			.SetColumn(1, XTL::StringsTable::CENTER, "description")
-			.SetColumn(2, XTL::StringsTable::LEFT,   "flag")
-			*/
 			.AddRow()
 				.AddColumn("1")
 				.AddColumn("abc asdf asdlkfj asdf a;lskdjf")
@@ -895,11 +915,9 @@ int main(int argc, char * argv[])
 
 		tablePrinter.Print(table);
 
-		/*
-		XTL::StringTablePrinter(table, XTL::StdOut()).Print();
-		*/
-		return 0;
+		// return 0;
 	}
+	*/
 
 	bool argFlag;
 	std::string argString;
@@ -908,6 +926,7 @@ int main(int argc, char * argv[])
 
 	try
 	{
+
 		XTL::ProgramOptions().Map()
 			<< PO::Flag    ("-f,--flag",    "Some description of this flag", argFlag)
 			<< PO::String  ("-s",           "String",                        argString,  XTL::PO::REQUIRED | XTL::PO::PASSWORD)

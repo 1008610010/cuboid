@@ -21,15 +21,19 @@ namespace XTL
 			size = ::vsnprintf(&buffer[0], buffer.size(), format, ap);
 			va_end(ap);
 
-			if (size >= 0) {
-				if (static_cast<std::size_t>(size) < buffer.size()) {
+			if (size >= 0)
+			{
+				if (static_cast<std::size_t>(size) < buffer.size())
+				{
 					break;
 				}
-				else {
+				else
+				{
 					buffer.resize(size + 1);
 				}
 			}
-			else {
+			else
+			{
 				buffer.resize(buffer.size() << 1);
 			}
 		}
