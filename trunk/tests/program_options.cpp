@@ -699,74 +699,10 @@ namespace PO
 
 }
 
+#include <vector>
+
 namespace XTL
 {
-	class CellAlignment
-	{
-		public:
-
-			static const CellAlignment LEFT;
-			static const CellAlignment CENTER;
-			static const CellAlignment RIGHT;
-
-			CellAlignment()
-				: id_(0)
-			{
-				;;
-			};
-
-			bool operator== (const CellAlignment & other) const
-			{
-				return id_ == other.id_;
-			}
-
-		private:
-
-			explicit CellAlignment(unsigned int id)
-				: id_(id)
-			{
-				;;
-			}
-
-			unsigned int id_;
-	};
-
-	const CellAlignment CellAlignment::LEFT(0);
-	const CellAlignment CellAlignment::CENTER(1);
-	const CellAlignment CellAlignment::RIGHT(2);
-
-	void PrintStringAligned(PrintStream & printStream, const std::string & value, CellAlignment alignment, unsigned int width)
-	{
-		if (width <= value.size())
-		{
-			printStream.Print(value);
-			return;
-		}
-
-		unsigned int spaces = width - value.size();
-
-		if (alignment == CellAlignment::RIGHT)
-		{
-			printStream.PrintSpaces(spaces);
-			printStream.Print(value);
-		}
-		else if (alignment == CellAlignment::CENTER)
-		{
-			printStream.PrintSpaces(spaces / 2);
-			printStream.Print(value);
-			printStream.PrintSpaces(spaces - spaces / 2);
-		}
-		else if (alignment == CellAlignment::LEFT)
-		{
-			printStream.Print(value);
-			printStream.PrintSpaces(spaces);
-		}
-		else
-		{
-			throw ILLEGAL_ARGUMENT_ERROR("Invalid parameter 'alignment'");
-		}
-	}
-
 	class StringsTablePrinter
 	{
 		public:
@@ -781,6 +717,11 @@ namespace XTL
 			virtual ~StringsTablePrinter() throw()
 			{
 				;;
+			}
+
+			CellAlignment GetAlignment(unsigned int columnIndex) const
+			{
+				return columns_[columnIndex];
 			}
 
 			StringsTablePrinter & SetAlignment(unsigned int columnIndex, CellAlignment alignment)
@@ -812,7 +753,7 @@ namespace XTL
 							PrintString(" ");
 						}
 
-						PrintStringAligned(row[j], columns_[j], table.ColumnWidth(j));
+						PrintStringAligned(row[j], GetAlignment(j), table.ColumnWidth(j));
 					}
 
 					PrintString("\n");
@@ -895,7 +836,7 @@ namespace XTL
 							PrintString(columnDivider_);
 						}
 
-						PrintStringAligned(row[j], columns_[j], table.ColumnWidth(j));
+						PrintStringAligned(row[j], GetAlignment(j), table.ColumnWidth(j));
 					}
 
 					PrintString(rowEnd_);
