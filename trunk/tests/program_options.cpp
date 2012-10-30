@@ -110,6 +110,16 @@ namespace XTL
 
 namespace XTL
 {
+	/*
+		const std::string source("abc,,xyzd,");
+
+		XTL::StringSplitter splitter(source.c_str(), ',');
+		std::string label;
+		while (splitter.GetNext(label))
+		{
+			...
+		}
+	*/
 	class StringSplitter
 	{
 		public:
@@ -377,26 +387,49 @@ namespace XTL
 				;;
 			}
 
+			// - _ A..Z a..z 0..9 ? ! @ $
+			bool IsLabelNameChar(char c) const
+			{
+				return (c >= 'a' && c <= 'z') ||
+				       (c >= 'A' && c <= 'Z') ||
+				       (c >= '0' && c <= '9') ||
+				       (c == '-') || (c == '_') ||
+				       (c == '?') || (c == '!') ||
+				       (c == '@') || (c == '$');
+			}
+
+			const std::string GetLabelName(const std::string & label)
+			{
+				unsigned int i = 0;
+				while (i < label.length() && IsLabelNameChar(label[i]))
+				{
+					++i;
+				}
+
+				return label.substr(0, i);
+			}
+
 			ProgramOptionsMap & operator<< (std::auto_ptr<ProgramOption> option)
 			{
 				StringSplitter splitter(option->GetLabel(), ',');
 				std::string label;
 				while (splitter.GetNext(label))
 				{
-					// - _ A..Z a..z 0..9 ? ! @ $
 					if (label.size() == 0 || label[0] != '-')
 					{
 						fprintf(stderr, "Internal error: Invalid option's label '%s'\n", label.c_str());
 						throw TerminateProgram(1);
 					}
 
-					if (optionsMap_.count(label) > 0)
+					const std::string labelName(GetLabelName(label));
+
+					if (optionsMap_.count(labelName) > 0)
 					{
 						fprintf(stderr, "Internal error: Duplicate program option '%s'\n", label.c_str());
 						throw TerminateProgram(1);
 					}
 
-					optionsMap_[label] = option.get();
+					optionsMap_[labelName] = option.get();
 				}
 
 				if (option->IsRequired())
@@ -506,11 +539,13 @@ namespace XTL
 				return optionsMap_;
 			}
 
-			void PrintUsage()
+			void PrintUsage(PrintStream & printStream)
 			{
-				fprintf(stderr, "Usage:\n");
+				printStream.Print("\n");
+				printStream.Print("Usage:\n");
+				HERE!!!
 				fprintf(stderr, "\n");
-				fprintf(stderr, "%s", programName_.c_str());
+				fprintf(stderr, "  %s", programName_.c_str());
 
 				if (!optionsMap_.IsEmpty())
 				{
@@ -869,25 +904,56 @@ void PrintDashes(unsigned int columnIndex)
 
 #include <xtl/utils/StringsTablePrinter.hpp>
 
-void TestStringSplitter(const char * source, ...)
-{
+#include <stdarg.h>
 
+bool TestStringSplitter(const char * source, char delimiter, const char * firstArg, ...)
+{
+	va_list args;
+	va_start(args, firstArg);
+
+	XTL::StringSplitter splitter(source, delimiter);
+	std::string item;
+	bool result = true;
+	for (const char * arg = firstArg; arg != NULL; arg = va_arg(args, const char *))
+	{
+		if (!splitter.GetNext(item))
+		{
+			result = false;
+			break;
+		}
+
+		if (item != arg)
+		{
+			result = false;
+			break;
+		}
+	}
+	va_end(args);
+
+	if (splitter.GetNext(item))
+	{
+		result = false;
+	}
+
+	if (!result)
+	{
+		fprintf(stderr, "StringSplitter error: \"%s\"\n", source);
+	}
+
+	return result;
 }
 
 int main(int argc, char * argv[])
 {
+	/*
 	{
-		const std::string source("abc,,xyzd,");
-
-		XTL::StringSplitter splitter(source.c_str(), ',');
-		std::string label;
-		while (splitter.GetNext(label))
-		{
-			printf("%s\n", label.c_str());
-		}
-
+		TestStringSplitter(NULL, ',', NULL);
+		TestStringSplitter("", ',', "", NULL);
+		TestStringSplitter("||||", '|', "", "", "", "", "", NULL);
+		TestStringSplitter("abc,,xyzd,", ',', "abc", "", "xyzd", "", NULL);
 		return 0;
 	}
+	* */
 
 	/*
 	{
@@ -928,16 +994,16 @@ int main(int argc, char * argv[])
 	{
 
 		XTL::ProgramOptions().Map()
-			<< PO::Flag    ("-f,--flag",    "Some description of this flag", argFlag)
-			<< PO::String  ("-s",           "String",                        argString,  XTL::PO::REQUIRED | XTL::PO::PASSWORD)
-			<< PO::Integer ("-i,--integer", "Integer",                       argInteger, XTL::PO::REQUIRED);
+			<< PO::Flag    ("-f,--flag",      "Some description of this flag", argFlag)
+			<< PO::String  ("-s NAME",        "String",                        argString,  XTL::PO::REQUIRED | XTL::PO::PASSWORD)
+			<< PO::Integer ("-i,--integer=#", "Integer value of argument",     argInteger, XTL::PO::REQUIRED);
 
 		XTL::ProgramOptions().List()
 			<< PO::Integer ("PERIOD_ID",    "Period number",                 argPeriodId, XTL::PO::REQUIRED);
 
 		XTL::ProgramOptions().Parse(argc, argv);
 
-		XTL::ProgramOptions().PrintUsage();
+		XTL::ProgramOptions().PrintUsage(XTL::StdErr());
 	}
 	catch (const XTL::TerminateProgram & e)
 	{
