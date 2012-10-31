@@ -13,7 +13,7 @@ namespace XTL
 		unsigned int count = 0;
 		for (unsigned int i = 0; i < sizeof(value) / sizeof(UINT_8); ++i)
 		{
-			count += NumberOfOneBits(*(reinterpret_cast<UINT_8 *>(&value) + i));
+			count += NumberOfOneBits(*(reinterpret_cast<const UINT_8 *>(&value) + i));
 		}
 		return count;
 	}
@@ -22,6 +22,47 @@ namespace XTL
 	unsigned int NumberOfZeroBits(T value)
 	{
 		return (sizeof(T) << 3) - NumberOfOneBits(value);
+	}
+
+	/**
+	 * @return -1  если value равно нулю (все биты нулевые).
+	 */
+	int LeastOneBit(UINT_8 value);
+
+	template <typename T>
+	int LeastOneBit(T value)
+	{
+		const UINT_8 * const begin = reinterpret_cast<const UINT_8 *>(&value);
+		const UINT_8 * const end = begin + sizeof(value) / sizeof(UINT_8);
+
+		for (const UINT_8 * p = begin; p < end; ++p)
+		{
+			if (*p != static_cast<UINT_8>(0))
+			{
+				return ((p - begin) << 3) + LeastOneBit(*p);
+			}
+		}
+
+		return -1;
+	}
+
+	int GreatestOneBit(UINT_8 value);
+
+	template <typename T>
+	int GreatestOneBit(T value)
+	{
+		const UINT_8 * const begin = reinterpret_cast<const UINT_8 *>(&value);
+		const UINT_8 * const end = begin + sizeof(value) / sizeof(UINT_8);
+
+		for (const UINT_8 * p = end - 1; p >= begin; --p)
+		{
+			if (*p != static_cast<UINT_8>(0))
+			{
+				return ((p - begin) << 3) + LeastOneBit(*p);
+			}
+		}
+
+		return -1;
 	}
 
 	template <typename T>
