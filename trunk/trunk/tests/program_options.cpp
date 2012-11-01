@@ -270,13 +270,13 @@ namespace XTL
 			{
 				if (IsLastArray())
 				{
-					fprintf(stderr, "Internal error: could not add list option, while array-option was added");
+					fprintf(stderr, "Internal error: Could not add list option, while array-option was added\n");
 					throw TerminateProgram(1);
 				}
 
 				if (IsLastOptional() && option->IsRequired())
 				{
-					fprintf(stderr, "Internal error: option #%u is required, while previous option is optional\n", static_cast<unsigned int>(optionsList_.Size() + 1));
+					fprintf(stderr, "Internal error: Option #%u is required, while previous option is optional\n", static_cast<unsigned int>(optionsList_.Size() + 1));
 					throw TerminateProgram(1);
 				}
 
@@ -295,22 +295,22 @@ namespace XTL
 				return optionsList_.Size();
 			}
 
-			void Print()
+			void Print(PrintStream & printStream)
 			{
 				for (unsigned int i = 0; i < optionsList_.Size(); ++i)
 				{
 					const ProgramOption * option = optionsList_[i];
 					if (option->IsArray())
 					{
-						fprintf(stderr, " [%s ...]", option->GetLabel());
+						printStream.PrintF(" [%s ...]", option->GetLabel());
 					}
 					else if (option->IsRequired())
 					{
-						fprintf(stderr, " %s", option->GetLabel());
+						printStream.PrintF(" %s", option->GetLabel());
 					}
 					else
 					{
-						fprintf(stderr, " [%s]", option->GetLabel());
+						printStream.PrintF(" [%s]", option->GetLabel());
 					}
 				}
 			}
@@ -365,9 +365,12 @@ namespace XTL
 
 			void CheckRequired(std::list<const ProgramOption *> & missingRequired)
 			{
-				for (unsigned int i = currentIndex_; i < optionsList_.Size() && optionsList_[i]->IsRequired(); ++i)
+				for (unsigned int i = 0; i < optionsList_.Size(); ++i)
 				{
-					missingRequired.push_back(optionsList_[i]);
+					if (optionsList_[i]->IsRequired() && !optionsList_[i]->Exists())
+					{
+						missingRequired.push_back(optionsList_[i]);
+					}
 				}
 			}
 
@@ -411,6 +414,12 @@ namespace XTL
 
 			ProgramOptionsMap & operator<< (std::auto_ptr<ProgramOption> option)
 			{
+				if (option->IsArray())
+				{
+					fprintf(stderr, "Internal error: Array option '%s' in map\n", option->GetLabel());
+					throw TerminateProgram(1);
+				}
+
 				StringSplitter splitter(option->GetLabel(), ',');
 				std::string label;
 				while (splitter.GetNext(label))
@@ -543,24 +552,23 @@ namespace XTL
 			{
 				printStream.Print("\n");
 				printStream.Print("Usage:\n");
-				//HERE!!!
-				fprintf(stderr, "\n");
-				fprintf(stderr, "  %s", programName_.c_str());
+				printStream.Print("\n");
+				printStream.PrintF("  %s", programName_);
 
 				if (!optionsMap_.IsEmpty())
 				{
-					fprintf(stderr, " {OPTIONS}");
+					printStream.Print(" {OPTIONS}");
 				}
 
-				optionsList_.Print();
-				fprintf(stderr, "\n");
+				optionsList_.Print(printStream);
+				printStream.Print("\n");
 
 				StringsTable optionsTable;
 
 				optionsList_.PrintToTable(optionsTable);
 				optionsMap_.PrintToTable(optionsTable);
 
-				XTL::SimpleStringsTablePrinter tablePrinter(XTL::StdErr(), "  ", "", "  ");
+				XTL::SimpleStringsTablePrinter tablePrinter(printStream, "  ", "", "  ");
 
 				tablePrinter
 					.SetAlignment(0, XTL::CellAlignment::LEFT)
@@ -568,21 +576,21 @@ namespace XTL
 
 				if (!optionsList_.IsEmpty())
 				{
-					fprintf(stderr, "\n");
-					fprintf(stderr, "where:\n");
+					printStream.Print("\n");
+					printStream.Print("where:\n");
 
 					tablePrinter.Print(optionsTable, 0, optionsList_.Size());
 				}
 
 				if (!optionsMap_.IsEmpty())
 				{
-					fprintf(stderr, "\n");
-					fprintf(stderr, "where OPTIONS can be:\n");
+					printStream.Print("\n");
+					printStream.Print("where OPTIONS can be:\n");
 
 					tablePrinter.Print(optionsTable, optionsList_.Size(), optionsTable.RowsCount());
 				}
 
-				fprintf(stderr, "\n");
+				printStream.Print("\n");
 
 				throw TerminateProgram(0);
 			}
@@ -752,11 +760,11 @@ namespace PO
 
 	typedef void (*Handler) (const char *);
 
-	class ProgramOption_Handler : public XTL::ProgramOption
+	class ProgramOption_Function : public XTL::ProgramOption
 	{
 		public:
 
-			explicit ProgramOption_Handler(const char * label, const char * text, unsigned int flags, Handler handler)
+			explicit ProgramOption_Function(const char * label, const char * text, unsigned int flags, Handler handler)
 				: ProgramOption(label, text, flags),
 				  handler_(handler)
 			{
@@ -852,6 +860,37 @@ namespace PO
 			T & ref_;
 	};
 
+	class ProgramOption_StringArray : public XTL::ProgramOption
+	{
+		public:
+
+			ProgramOption_StringArray(const char * label, const char * text, unsigned int flags, std::vector<std::string> & ref)
+				: ProgramOption(label, text, flags),
+				  ref_(ref)
+			{
+				;;
+			}
+
+			virtual bool IsArray() const
+			{
+				return true;
+			}
+
+			virtual bool NeedValue() const
+			{
+				return true;
+			}
+
+			virtual void SetValue(const char * value)
+			{
+				ref_.push_back(value);
+			}
+
+		private:
+
+			std::vector<std::string> & ref_;
+	};
+
 	std::auto_ptr<XTL::ProgramOption> Flag(const char * label, const char * text, bool & result)
 	{
 		return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Boolean(label, text, 0, result, false));
@@ -862,10 +901,44 @@ namespace PO
 		return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_String(label, text, flags, result, ""));
 	}
 
-	template <typename T>
-	std::auto_ptr<XTL::ProgramOption> Integer(const char * label, const char * text, T & result, unsigned int flags = 0)
+	std::auto_ptr<XTL::ProgramOption> Integer(const char * label, const char * text, int & result, unsigned int flags = 0)
 	{
-		return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<T>(label, text, flags, result, 0));
+		return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<int>(label, text, flags, result, 0));
+	}
+
+	std::auto_ptr<XTL::ProgramOption> Integer(const char * label, const char * text, unsigned int & result, unsigned int flags = 0)
+	{
+		return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<unsigned int>(label, text, flags, result, 0));
+	}
+
+	std::auto_ptr<XTL::ProgramOption> LongLong(const char * label, const char * text, long long int & result, unsigned int flags = 0)
+	{
+		return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<long long int>(label, text, flags, result, 0));
+	}
+
+	std::auto_ptr<XTL::ProgramOption> LongLong(const char * label, const char * text, unsigned long long int & result, unsigned int flags = 0)
+	{
+		return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<unsigned long long int>(label, text, flags, result, 0));
+	}
+
+	std::auto_ptr<XTL::ProgramOption> Function(const char * label, const char * text, Handler handler, unsigned int flags = 0)
+	{
+		return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Function(label, text, flags, handler));
+	}
+
+	std::auto_ptr<XTL::ProgramOption> Array(const char * label, const char * text, std::vector<std::string> & result, unsigned int flags = 0)
+	{
+		return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_StringArray(label,text, flags, result));
+	}
+
+	void ProgramOptionsPrintUsage(const char * value)
+	{
+		XTL::ProgramOptions().PrintUsage(XTL::StdErr());
+	}
+
+	std::auto_ptr<XTL::ProgramOption> PrintUsage(const char * label, const char * text)
+	{
+		return Function(label, text, ProgramOptionsPrintUsage);
 	}
 
 /*
@@ -944,52 +1017,41 @@ bool TestStringSplitter(const char * source, char delimiter, const char * firstA
 }
 
 #include <xtl/utils/BitUtils.hpp>
+#include <xtl/linux/fs/FileUtils.hpp>
+
+
+void ParseTablePath(const std::string & tablePath, std::string & tableDir, std::string & tableName)
+{
+	std::string::size_type solidus = tablePath.find_last_of('/');
+	if (solidus != std::string::npos)
+	{
+		tableDir = tablePath.substr(0, solidus);
+		if (tableDir.empty())
+		{
+			tableDir = "/";
+		}
+		else
+		{
+			tableDir = XTL::FileUtils::NormalizeFilePath(tableDir);
+		}
+
+		tableName = tablePath.substr(solidus + 1);
+	}
+	else
+	{
+		tableDir = ".";
+		tableName = tablePath;
+	}
+
+	std::string::size_type dot = tableName.find_last_of('.');
+	if (dot != std::string::npos && dot != 0)
+	{
+		tableName = tableName.substr(0, dot);
+	}
+}
 
 int main(int argc, char * argv[])
 {
-	printf("%d\n", XTL::LeastOneBit(9223372036854775808ull));
-
-	return 0;
-
-	for (unsigned int i = 0; i <= 255; ++i)
-	{
-		int bit = -1;
-		for (int j = 0; j <= 7; ++j)
-		{
-			if ((i & (1 << j)) != 0)
-			{
-				bit = j;
-				break;
-			}
-		}
-		printf("%d,", bit);
-
-		printf("%s", (i + 1) % 16 == 0 ? "\n" : " ");
-	}
-	printf("\n");
-	return 0;
-
-/*
-	-1, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 7, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-	 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1,
-*/
-/*
--1,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-*/
 	/*
 	{
 		TestStringSplitter(NULL, ',', NULL);
@@ -1033,27 +1095,49 @@ int main(int argc, char * argv[])
 	bool argFlag;
 	std::string argString;
 	int argInteger;
-	unsigned int argPeriodId;
+	std::string argTablePath;
+	unsigned int argJournalId;
+	std::vector<std::string> argDitemIds;
 
 	try
 	{
 
 		XTL::ProgramOptions().Map()
-			<< PO::Flag    ("-f,--flag",      "Some description of this flag", argFlag)
-			<< PO::String  ("-s NAME",        "String",                        argString,  XTL::PO::REQUIRED | XTL::PO::PASSWORD)
-			<< PO::Integer ("-i,--integer=#", "Integer value of argument",     argInteger, XTL::PO::REQUIRED);
+			// << PO::Flag       ("-f,--flag",      "Some description of this flag", argFlag)
+			// << PO::String     ("-s NAME",        "String",                        argString,  XTL::PO::REQUIRED | XTL::PO::PASSWORD)
+			// << PO::Integer    ("-i,--integer=#", "Integer value of argument",     argInteger, XTL::PO::REQUIRED)
+			<< PO::PrintUsage ("-h,--help",      "Show this help")
+		;
 
 		XTL::ProgramOptions().List()
-			<< PO::Integer ("PERIOD_ID",    "Period number",                 argPeriodId, XTL::PO::REQUIRED);
+			<< PO::String     ("TABLE_PATH",     "Path to journal_stats table",   argTablePath, XTL::PO::REQUIRED | XTL::PO::PASSWORD)
+			<< PO::Integer    ("JOURNAL_ID",     "Journal id",                    argJournalId, XTL::PO::REQUIRED)
+			<< PO::Array      ("DITEM_ID",       "List of entries ditem_id",      argDitemIds,  XTL::PO::REQUIRED | XTL::PO::PASSWORD)
+		;
 
 		XTL::ProgramOptions().Parse(argc, argv);
 
-		XTL::ProgramOptions().PrintUsage(XTL::StdErr());
+		getc(stdin);
+		std::string tableDir;
+		std::string tableName;
+
+		ParseTablePath(argTablePath, tableDir, tableName);
+
+		printf("%s --- %s\n", tableDir.c_str(), tableName.c_str());
+		printf("%s\n", XTL::FileUtils::JoinFilePath(tableDir, tableName).c_str());
+
+		// XTL::ProgramOptions().PrintUsage(XTL::StdOut());
 	}
 	catch (const XTL::TerminateProgram & e)
 	{
 		return e.ExitCode();
 	}
+
+/*
+	printf("flag    = %s\n", argFlag ? "ON" : "OFF");
+	printf("string  = %s\n", argString.c_str());
+	printf("integer = %i\n", argInteger);
+*/
 
 	/*
 		try
@@ -1080,8 +1164,4 @@ int main(int argc, char * argv[])
 		}
 	*/
 
-
-	printf("flag    = %s\n", argFlag ? "ON" : "OFF");
-	printf("string  = %s\n", argString.c_str());
-	printf("integer = %i\n", argInteger);
 }
