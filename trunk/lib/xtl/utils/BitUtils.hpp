@@ -58,7 +58,7 @@ namespace XTL
 		{
 			if (*p != static_cast<UINT_8>(0))
 			{
-				return ((p - begin) << 3) + LeastOneBit(*p);
+				return ((p - begin) << 3) + GreatestOneBit(*p);
 			}
 		}
 
