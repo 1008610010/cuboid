@@ -110,60 +110,6 @@ namespace XTL
 
 namespace XTL
 {
-	/*
-		const std::string source("abc,,xyzd,");
-
-		XTL::StringSplitter splitter(source.c_str(), ',');
-		std::string label;
-		while (splitter.GetNext(label))
-		{
-			...
-		}
-	*/
-	class StringSplitter
-	{
-		public:
-
-			StringSplitter(const char * source, char delimiter)
-				: source_(source),
-				  begin_(source),
-				  delimiter_(delimiter)
-			{
-				;;
-			}
-
-			bool GetNext(std::string & result)
-			{
-				if (begin_ == 0)
-				{
-					return false;
-				}
-
-				const char * end = ::strchr(begin_, delimiter_);
-				if (end != 0)
-				{
-					result.assign(begin_, end - begin_);
-					begin_ = end + 1;
-				}
-				else
-				{
-					result.assign(begin_);
-					begin_ = 0;
-				}
-
-				return true;
-			}
-
-		private:
-
-			const char * const source_;
-			const char * begin_;
-			const char delimiter_;
-	};
-}
-
-namespace XTL
-{
 namespace PO
 {
 	enum ProgramOptionFlags
@@ -977,45 +923,6 @@ void PrintDashes(unsigned int columnIndex)
 
 #include <xtl/utils/StringsTablePrinter.hpp>
 
-#include <stdarg.h>
-
-bool TestStringSplitter(const char * source, char delimiter, const char * firstArg, ...)
-{
-	va_list args;
-	va_start(args, firstArg);
-
-	XTL::StringSplitter splitter(source, delimiter);
-	std::string item;
-	bool result = true;
-	for (const char * arg = firstArg; arg != NULL; arg = va_arg(args, const char *))
-	{
-		if (!splitter.GetNext(item))
-		{
-			result = false;
-			break;
-		}
-
-		if (item != arg)
-		{
-			result = false;
-			break;
-		}
-	}
-	va_end(args);
-
-	if (splitter.GetNext(item))
-	{
-		result = false;
-	}
-
-	if (!result)
-	{
-		fprintf(stderr, "StringSplitter error: \"%s\"\n", source);
-	}
-
-	return result;
-}
-
 #include <xtl/utils/BitUtils.hpp>
 #include <xtl/linux/fs/FileUtils.hpp>
 
@@ -1052,16 +959,6 @@ void ParseTablePath(const std::string & tablePath, std::string & tableDir, std::
 
 int main(int argc, char * argv[])
 {
-	/*
-	{
-		TestStringSplitter(NULL, ',', NULL);
-		TestStringSplitter("", ',', "", NULL);
-		TestStringSplitter("||||", '|', "", "", "", "", "", NULL);
-		TestStringSplitter("abc,,xyzd,", ',', "abc", "", "xyzd", "", NULL);
-		return 0;
-	}
-	* */
-
 	/*
 	{
 		XTL::StringsTable table;

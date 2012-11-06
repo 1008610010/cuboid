@@ -266,6 +266,31 @@ namespace XTL
 	{
 		return IntegerStringifier<T>(value).ToString();
 	}
+
+	/*
+		const std::string source("abc,,xyzd,");
+
+		XTL::StringSplitter splitter(source.c_str(), ',');
+		std::string label;
+		while (splitter.GetNext(label))
+		{
+			...
+		}
+	*/
+	class StringSplitter
+	{
+		public:
+
+			StringSplitter(const char * source, char delimiter);
+
+			bool GetNext(std::string & result);
+
+		private:
+
+			const char * const source_;
+			const char * begin_;
+			const char delimiter_;
+	};
 }
 
 #endif
