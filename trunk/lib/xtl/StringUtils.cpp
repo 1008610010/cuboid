@@ -1,5 +1,7 @@
 #include "StringUtils.hpp"
 
+#include <string.h>
+
 namespace XTL
 {
 	namespace
@@ -93,6 +95,38 @@ namespace XTL
 	bool IsInteger(const std::string & s)
 	{
 		return IsInteger(s.c_str());
+	}
+
+	/********** StringSplitter **********/
+
+	StringSplitter::StringSplitter(const char * source, char delimiter)
+		: source_(source),
+		  begin_(source),
+		  delimiter_(delimiter)
+	{
+		;;
+	}
+
+	bool StringSplitter::GetNext(std::string & result)
+	{
+		if (begin_ == 0)
+		{
+			return false;
+		}
+
+		const char * end = ::strchr(begin_, delimiter_);
+		if (end != 0)
+		{
+			result.assign(begin_, end - begin_);
+			begin_ = end + 1;
+		}
+		else
+		{
+			result.assign(begin_);
+			begin_ = 0;
+		}
+
+		return true;
 	}
 
 /*

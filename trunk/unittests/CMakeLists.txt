@@ -83,6 +83,7 @@ ADD_EXECUTABLE (
 		DateTest.cpp
 		FormatStringTest.cpp
 		SimpleTemplateTest.cpp
+		StringSplitterTest.cpp
 		StringUtilsTest.cpp
 )
 
