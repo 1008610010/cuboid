@@ -31,6 +31,7 @@ SET (
 		xtl/FormatString.cpp
 		xtl/StringUtils.cpp
 		xtl/PrintStream.cpp
+		xtl/ProgramOptions.cpp
 		xtl/Variant.cpp
 		xtl/VariantArray.cpp
 		xtl/VariantPtr.cpp
