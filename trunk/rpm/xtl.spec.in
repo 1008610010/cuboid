@@ -70,6 +70,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/FormatString.inc
 %{_prefix}/include/xtl/Logger.hpp
 %{_prefix}/include/xtl/PrintStream.hpp
+%{_prefix}/include/xtl/ProgramOptions.hpp
 %{_prefix}/include/xtl/SharedPtr.hpp
 %{_prefix}/include/xtl/StringUtils.hpp
 %{_prefix}/include/xtl/TypeTraits.hpp
