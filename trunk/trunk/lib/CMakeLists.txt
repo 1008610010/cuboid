@@ -38,6 +38,9 @@ SET (
 		xtl/VariantScalar.cpp
 		xtl/VariantStruct.cpp
 
+		xtl/ini/IniConfig.cpp
+		xtl/ini/IniConfigParser.cpp
+
 		xtl/linux/AccessMode.cpp
 		xtl/linux/Signals.cpp
 		xtl/linux/SystemConfig.cpp
