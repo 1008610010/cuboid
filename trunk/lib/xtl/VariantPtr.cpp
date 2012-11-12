@@ -45,6 +45,13 @@ namespace XTL
 		return newPtr->GetValue();
 	}
 
+	double VariantPtr::ToDouble()
+	{
+		Variant::Double * newPtr = ptr_->ToDouble();
+		*this = newPtr;
+		return newPtr->GetValue();
+	}
+
 	const std::string & VariantPtr::ToString()
 	{
 		Variant::String * newPtr = ptr_->ToString();

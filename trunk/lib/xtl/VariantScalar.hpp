@@ -38,6 +38,8 @@ namespace XTL
 
 			virtual LongLongInt * ToLongLongInt();
 
+			virtual Double * ToDouble();
+
 			virtual Variant::String * ToString();
 
 		private:
@@ -57,6 +59,8 @@ namespace XTL
 			virtual ~Boolean() throw();
 
 			virtual LongLongInt * ToLongLongInt();
+
+			virtual Double * ToDouble();
 
 			virtual Variant::String * ToString();
 
@@ -88,13 +92,15 @@ namespace XTL
 
 			virtual LongLongInt * ToLongLongInt();
 
+			virtual Double * ToDouble();
+
 			virtual String * ToString();
 
 			virtual bool IsInteger() const;
 
 			virtual void DebugPrintValue(PrintStream & stream, unsigned int indent) const;
 
-			long long int GetValue() const { return value_; }
+			const long long int GetValue() const { return value_; }
 
 		private:
 
@@ -111,9 +117,15 @@ namespace XTL
 
 			virtual LongLongInt * ToLongLongInt();
 
+			virtual Double * ToDouble();
+
+			virtual String * ToString();
+
 			virtual bool IsInteger() const;
 
 			virtual void DebugPrintValue(PrintStream & stream, unsigned int indent) const;
+
+			const double GetValue() const { return value_; }
 
 		private:
 
@@ -131,6 +143,8 @@ namespace XTL
 			virtual ~String() throw();
 
 			virtual LongLongInt * ToLongLongInt();
+
+			virtual Double * ToDouble();
 
 			virtual Variant::String * ToString();
 

@@ -64,6 +64,8 @@ namespace XTL
 
 			long long int ToLongLongInt();
 
+			double ToDouble();
+
 			const std::string & ToString();
 
 			Variant::Array & ToArray();

@@ -64,6 +64,11 @@ namespace XTL
 				throw BadCast();
 			}
 
+			virtual Double * ToDouble()
+			{
+				throw BadCast();
+			}
+
 			virtual String * ToString()
 			{
 				throw BadCast();
