@@ -6,6 +6,30 @@
 
 #include "../lib/xtl/utils/AutoPtrMap.hpp"
 
+/*
+; Comments string
+[SectionName]
+  Parameter1 = Value1  ; Comments
+  Parameter2 : Value2  # Comments
+  Parameter3   Value3
+
+* Number
+    -?1[0-9]* (\.[0-9]+)? ([eE][+-]?[0-9]+)?
+    0b[01]+
+    0x[0-9A-Fa-f]+
+    0[0-7]+
+* String - однострочный строковый литерал
+    " ([^\]|\ESC)* "  ESC = ["\", '"', "r", "n", "t"]
+    ' ([^\]|\ESC)* '  ESC = ["\", "'"]
+
+{Include "StringLiteral"}
+{Set Var = "StringLiteral"}
+{$Var}
+
+  {Set BinDir = "/usr/local/bin"}
+  Param = "{$BinDir}/program_name"
+*/
+
 namespace XTL
 {
 	class IniConfig
