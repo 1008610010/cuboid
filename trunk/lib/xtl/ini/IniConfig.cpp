@@ -1,6 +1,7 @@
 #include "IniConfig.hpp"
 
-#include "lib/xtl/FormatString.hpp"
+#include "../FormatString.hpp"
+#include "../VariantScalar.hpp"
 
 namespace XTL
 {
@@ -12,12 +13,12 @@ namespace XTL
 		;;
 	}
 
-	virtual IniConfig::Error::SectionDoesNotExist::~SectionDoesNotExist() throw()
+	IniConfig::Error::SectionDoesNotExist::~SectionDoesNotExist() throw()
 	{
 		;;
 	}
 
-	virtual const std::string IniConfig::Error::SectionDoesNotExist::What() const
+	const std::string IniConfig::Error::SectionDoesNotExist::What() const
 	{
 		return FormatString("Section '%s' does not exist", sectionName_);
 	}
@@ -125,7 +126,7 @@ namespace XTL
 
 	/********** IniConfig **********/
 
-	Section & IniConfig::CreateSection(const std::string & sectionName)
+	IniConfig::Section & IniConfig::CreateSection(const std::string & sectionName)
 	{
 		Section * section = sections_[sectionName];
 		if (section == 0)
@@ -143,7 +144,7 @@ namespace XTL
 		CreateSection(sectionName).Set(key, value);
 	}
 
-	const Section & IniConfig::GetSectionRequired(const std::string & sectionName) const
+	const IniConfig::Section & IniConfig::GetSectionRequired(const std::string & sectionName) const
 	{
 		Section * section = sections_[sectionName];
 
@@ -155,14 +156,12 @@ namespace XTL
 		return *section;
 	}
 
-	const Section & IniConfig::GetSectionOptional(const std::string & sectionName) const
+	const IniConfig::Section & IniConfig::GetSectionOptional(const std::string & sectionName) const
 	{
 		static const Section EMPTY_SECTION("");
 
 		Section * section = sections_[sectionName];
 
-		return section != 0 ? section : EMPTY_SECTION;
+		return section != 0 ? *section : EMPTY_SECTION;
 	}
-
-
 }

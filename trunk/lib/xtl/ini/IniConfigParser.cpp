@@ -1,7 +1,8 @@
 #include "IniConfigParser.hpp"
 
-#include "../lib/xtl/tp/NumberLiteralParser.hpp"
-#include "../lib/xtl/tp/StringLiteralParser.hpp"
+#include "../VariantScalar.hpp"
+#include "../tp/NumberLiteralParser.hpp"
+#include "../tp/StringLiteralParser.hpp"
 
 namespace XTL
 {

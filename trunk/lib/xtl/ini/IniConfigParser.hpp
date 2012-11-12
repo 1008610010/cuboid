@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "../lib/xtl/tp/Parser.hpp"
 #include "IniConfig.hpp"
+#include "../tp/Parser.hpp"
 
 namespace XTL
 {

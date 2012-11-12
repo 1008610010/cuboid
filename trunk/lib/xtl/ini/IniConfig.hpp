@@ -4,7 +4,9 @@
 #include <map>
 #include <string>
 
-#include "../lib/xtl/utils/AutoPtrMap.hpp"
+#include "../Exception.hpp"
+#include "../VariantPtr.hpp"
+#include "../utils/AutoPtrMap.hpp"
 
 /*
 ; Comments string
