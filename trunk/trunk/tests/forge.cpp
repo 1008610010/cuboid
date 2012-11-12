@@ -430,6 +430,7 @@ struct FriendsPair
 	}
 };
 
+
 // typedef XTL::BTree<int, int, std::less<int>, false, 256, 31> MyTree;
 typedef int MyTreeItemType;
 typedef int MyTreeKeyType;
@@ -2299,96 +2300,7 @@ enum
 #include <xtl/VariantScalar.hpp>
 #include <xtl/VariantPtr.hpp>
 
-namespace XTL
-{
-			class SectionDoesNotExist
-			{
-				public:
-
-					explicit SectionDoesNotExist(const std::string & sectionName)
-						: sectionName_(sectionName)
-					{
-						;;
-					}
-
-					const std::string & SectionName() const
-					{
-						return sectionName_;
-					}
-
-				private:
-
-					const std::string sectionName_;
-			};
-
-			class KeyDoesNotExist
-			{
-				public:
-
-					explicit KeyDoesNotExist(const std::string & sectionName, const std::string & key)
-						: sectionName_(sectionName),
-						  key_(key)
-					{
-						;;
-					}
-
-					const std::string & SectionName() const
-					{
-						return sectionName_;
-					}
-
-					const std::string & Key() const
-					{
-						return key_;
-					}
-
-				private:
-
-					const std::string sectionName_;
-					const std::string key_;
-			};
-
-
-			void Set(const std::string & sectionName, const std::string & key, VariantPtr value)
-			{
-				CreateSection(sectionName)->Set(key, value);
-			}
-
-			const Section & GetSection(const std::string & sectionName) const
-			{
-				Section * section = sections_[sectionName];
-
-				if (section == 0)
-				{
-					throw SectionDoesNotExist(sectionName);
-				}
-
-				return *section;
-			}
-
-		protected:
-
-			static const Section * EmptySection()
-			{
-				static const Section instance("__empty__");
-				return &instance;
-			}
-
-			Section * CreateSection(const std::string & sectionName)
-			{
-				Section * section = sections_[sectionName];
-				if (section == 0)
-				{
-					std::auto_ptr<Section> newSection(new Section(sectionName));
-					section = newSection.get();
-					sections_.Set(sectionName, newSection);
-				}
-
-				return section;
-			}
-
-	};
-}
+#include "IniConfig.hpp"
 
 #include <xtl/CharBuffer.hpp>
 
@@ -2688,8 +2600,112 @@ class CharStateMachine2
 
 #include <xtl/utils/SimpleStringMatcher.hpp>
 
+#include <xtl/BTree.hpp>
+
+struct MyKey
+{
+	unsigned int i;
+
+	MyKey()
+		: i(0) { ;; }
+
+	explicit MyKey(unsigned int i_)
+		: i(i_) { ;; }
+
+	bool operator< (const MyKey & other) const
+	{
+		return i < other.i;
+	}
+};
+
+struct MyItem
+{
+	MyKey        key;
+	unsigned int value;
+
+	MyItem()
+		: key(),
+		  value()
+	{
+		;;
+	}
+
+	explicit MyItem(const MyKey & key_)
+		: key(key_),
+		  value()
+	{
+		;;
+	}
+
+	operator const MyKey & () const
+	{
+		return key;
+	}
+
+	MyItem & operator= (const MyKey & key_)
+	{
+		key = key_;
+		return *this;
+	}
+};
+
+
+// i    := 1..N
+// F(i) := 1..N
+unsigned int F1(unsigned int i, unsigned int N)
+{
+	return i;
+}
+
+unsigned int F2(unsigned int i, unsigned int N)
+{
+	return N + 1 - i;
+}
+
+unsigned int F3(unsigned int i, unsigned int N)
+{
+	return (i % 2 == 1 ? i / 2 : N - i / 2) + 1;
+}
+
+unsigned int F4(unsigned int i, unsigned int N)
+{
+	return (i % 2 == 1 ? (N - 1) / 2 - i / 2 : (N - 1) / 2 + i / 2) + 1;
+}
+
+typedef XTL::BTree<MyItem, MyKey, std::less<MyKey>, true, 4, 4> MyFuckingTree;
+
 int main(int argc, const char * argv[])
 {
+	MyFuckingTree bt;
+
+	const unsigned int N = 1000;
+	bool inserted = false;
+	for (unsigned int i = 1; i <= N; ++i)
+	{
+		MyItem & item = bt.Insert(MyKey(F4(i, N)), inserted);
+		item.value = i;
+	}
+
+	unsigned int i = 1;
+	for (MyFuckingTree::ConstIterator itr = bt.Begin(); !itr.AtEnd(); itr.Advance())
+	{
+		if (i != (*itr).key.i)
+		{
+			fprintf(stderr, "Test Failed!\n");
+			return 1;
+		}
+		++i;
+	}
+
+	fprintf(stderr, "Test ok!\n");
+
+	printf("Tree size........%u\n", bt.Size());
+	printf("Tree is empty....%s\n", bt.Empty() ? "YES" : "NO");
+	printf("Leaves count.....%u\n", bt.LeavesCount());
+	printf("Branches count...%u\n", bt.BranchesCount());
+
+	return 0;
+
 	{
 		XTL::SimpleStringMatcher ssm("abc-(%d%d))");
 

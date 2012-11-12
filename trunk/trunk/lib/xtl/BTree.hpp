@@ -162,8 +162,16 @@ namespace XTL
 		TODO: При вставке, если лист заполнен, то сначала попробовать перераспределить элементы
 		между соседним левым и правым листами. Дробить его, только в случае, если соседние тоже заполнены.
 
+		Получение ключа:
 		operator const KeyType_ & (const ItemType_ &);
-		bool KeyComparator operator() (const KeyType &, const KeyType &);
+
+		Инициализация ключом:
+		ItemType_ & ItemType_::operator= (const KeyType_ &);
+
+		Сравнение ключей:
+		bool KeyComparator::operator() (const KeyType &, const KeyType &);
+
+
 		LEAF_CAPACITY >= 2
 		BRANCH_CAPACITY >= 2
 	*/
@@ -215,21 +223,6 @@ namespace XTL
 				{
 					unsigned int middle = (left + right) >> 1;
 					const KeyType & middleKey = static_cast<const KeyType &>(items[middle]);
-					if (middleKey < key)
-					{
-						left = middle + 1;
-					}
-					else if (key < middleKey)
-					{
-						right = middle;
-					}
-					else
-					{
-						found = true;
-						return middle;
-					}
-
-					/*
 					if (Less(middleKey, key))
 					{
 						left = middle + 1;
@@ -243,7 +236,6 @@ namespace XTL
 						found = true;
 						return middle;
 					}
-					*/
 				}
 
 				found = false;

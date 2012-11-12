@@ -35,6 +35,11 @@ namespace XTL
 		return new Variant::LongLongInt(0);
 	}
 
+	Variant::Double * Variant::Null::ToDouble()
+	{
+		return new Variant::Double(0.0);
+	}
+
 	Variant::String * Variant::Null::ToString()
 	{
 		return new Variant::String("");
@@ -71,6 +76,11 @@ namespace XTL
 		return new Variant::LongLongInt(value_ ? 1 : 0);
 	}
 
+	Variant::Double * Variant::Boolean::ToDouble()
+	{
+		return new Variant::Double(value_ ? 1.0 : 0.0);
+	}
+
 	Variant::String * Variant::Boolean::ToString()
 	{
 		return new Variant::String(value_ ? "true" : "false");
@@ -98,6 +108,11 @@ namespace XTL
 	Variant::LongLongInt * Variant::LongLongInt::ToLongLongInt()
 	{
 		return this;
+	}
+
+	Variant::Double * Variant::LongLongInt::ToDouble()
+	{
+		return new Variant::Double(static_cast<double>(value_));
 	}
 
 	Variant::String * Variant::LongLongInt::ToString()
@@ -134,6 +149,16 @@ namespace XTL
 		return new Variant::LongLongInt(static_cast<long long int>(value_));
 	}
 
+	Variant::Double * Variant::Double::ToDouble()
+	{
+		return this;
+	}
+
+	Variant::String * Variant::Double::ToString()
+	{
+		return new Variant::String(FormatString("%g", value_));
+	}
+
 	void Variant::Double::DebugPrintValue(PrintStream & stream, unsigned int indent) const
 	{
 		stream.PrintF("%g", value_);
@@ -168,6 +193,11 @@ namespace XTL
 	Variant::LongLongInt * Variant::String::ToLongLongInt()
 	{
 		return new Variant::LongLongInt(StringToInteger<long long int>(value_));
+	}
+
+	Variant::Double * Variant::String::ToDouble()
+	{
+		return new Variant::Double(StringToFloat<double>(value_));
 	}
 
 	Variant::String * Variant::String::ToString()
