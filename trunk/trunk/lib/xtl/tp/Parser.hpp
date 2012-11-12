@@ -155,6 +155,8 @@ namespace XTL
 			 */
 			const std::string ReadIdentifier();
 
+			void IniConfigParser::SkipLinearSpaces();
+
 			void ThrowError(const TextCursor & cursor, const char * what)
 			{
 				throw Error(cursor, what);

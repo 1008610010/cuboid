@@ -29,8 +29,7 @@ namespace XTL
 			else if (c == '\n' && !multiline_)
 			{
 				Unmark();
-				Unmark();
-				ThrowError("Multiline string literal");
+				ThrowError(ReleaseCursor(), "Multiline string literal");
 			}
 			else if (c == escapeSequenceChar_)
 			{

@@ -77,5 +77,12 @@ namespace XTL
 
 		return ReleaseString();
 	}
-}
 
+	void Parser::SkipLinearSpaces()
+	{
+		while (NotAtEnd() && InClass(CharClass::LINEAR_SPACE))
+		{
+			Advance();
+		}
+	}
+}
