@@ -222,15 +222,18 @@ namespace XTL
 				return VariantPtr(new Variant::LongLongInt(n.ToSignedInteger()));
 			}
 		}
-		else
-		{
-			ThrowError("Value was expected");
-		}
 		/*
 		else if (CharClass::IDENTIFIER_HEAD.Contains(c))
 		{
 		}
 		*/
+		else
+		{
+			ThrowError("Value was expected");
+
+			// To avoid warning "control reaches end of non-void function"
+			return Variant::Null::Instance();
+		}
 	}
 
 	void IniConfigParser::SkipComments()

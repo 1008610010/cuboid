@@ -87,8 +87,12 @@ namespace XTL
 
 			const Section & GetSectionOptional(const std::string & sectionName) const;
 
-		private:
+			void LoadFromFile(const std::string & filePath)
+			{
+				// TODO: create this shit!
+			}
 
+		private:
 
 			AutoPtrMap<std::string, Section> sections_;
 	};
