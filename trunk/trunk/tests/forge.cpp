@@ -2300,7 +2300,7 @@ enum
 #include <xtl/VariantScalar.hpp>
 #include <xtl/VariantPtr.hpp>
 
-#include "IniConfig.hpp"
+#include <xtl/ini/IniConfig.hpp>
 
 #include <xtl/CharBuffer.hpp>
 
