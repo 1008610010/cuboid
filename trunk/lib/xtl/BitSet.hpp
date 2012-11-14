@@ -38,6 +38,11 @@ namespace XTL
 				return CAPACITY;
 			}
 
+			bool IsEmpty() const
+			{
+				return bits_ == 0;
+			}
+
 			void Clear()
 			{
 				bits_ = 0;
