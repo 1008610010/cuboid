@@ -38,6 +38,8 @@ namespace XTL
 
 		std::auto_ptr<XTL::ProgramOption> LongLong(const char * label, const char * text, unsigned long long int & result, unsigned int flags = 0);
 
+		std::auto_ptr<XTL::ProgramOption> Choice(const char * label, const char * text, unsigned int & result, const char * const * options, unsigned int flags = 0);
+
 		std::auto_ptr<XTL::ProgramOption> Array(const char * label, const char * text, std::vector<std::string> & result, unsigned int flags = 0);
 
 		typedef void (*Handler) (const char *);

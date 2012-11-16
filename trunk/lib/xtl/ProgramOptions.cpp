@@ -589,11 +589,14 @@ namespace XTL
 		{
 			public:
 
-				ProgramOption_String(const char * label, const char * text, unsigned int flags, std::string & ref, const char * defaultValue)
+				ProgramOption_String(const char * label, const char * text, unsigned int flags, std::string & ref, const char * defaultValue = 0)
 					: ProgramOption(label, text, flags),
 					  ref_(ref)
 				{
-					ref_ = defaultValue;
+					if (defaultValue != 0)
+					{
+						ref_ = defaultValue;
+					}
 				}
 
 				virtual bool IsArray() const
@@ -652,6 +655,64 @@ namespace XTL
 			private:
 
 				T & ref_;
+		};
+
+		class ProgramOption_Choice : public XTL::ProgramOption
+		{
+			public:
+
+				ProgramOption_Choice(const char * label, const char * text, unsigned int flags, unsigned int & ref, unsigned int defaultValue, const char * const * options)
+					: ProgramOption(label, text, flags),
+					  ref_(ref),
+					  options_(options)
+				{
+					ref_ = defaultValue;
+				}
+
+				virtual bool IsArray() const
+				{
+					return false;
+				}
+
+				virtual bool NeedValue() const
+				{
+					return true;
+				}
+
+				virtual void SetValue(const char * value)
+				{
+					unsigned int i = 0;
+
+					for (const char * const * ptr = options_; *ptr != 0; ++ptr)
+					{
+						if (::strcmp(value, *ptr) == 0)
+						{
+							ref_ = i;
+							return;
+						}
+
+						++i;
+					}
+
+					std::string allOptions;
+					for (const char * const * ptr = options_; *ptr != 0; ++ptr)
+					{
+						if (!allOptions.empty())
+						{
+							allOptions += "|";
+						}
+
+						allOptions += *ptr;
+					}
+
+					fprintf(stderr, "Invalid value of parameter '%s' (%s)\n", GetLabel(), allOptions.c_str());
+					throw XTL::TerminateProgram(1);
+				}
+
+			private:
+
+				unsigned int & ref_;
+				const char * const * const options_;
 		};
 
 		class ProgramOption_StringArray : public XTL::ProgramOption
@@ -734,7 +795,7 @@ namespace XTL
 
 		std::auto_ptr<XTL::ProgramOption> String(const char * label, const char * text, std::string & result, unsigned int flags)
 		{
-			return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_String(label, text, flags, result, ""));
+			return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_String(label, text, flags, result));
 		}
 
 		std::auto_ptr<XTL::ProgramOption> Integer(const char * label, const char * text, int & result, unsigned int flags)
@@ -755,6 +816,11 @@ namespace XTL
 		std::auto_ptr<XTL::ProgramOption> LongLong(const char * label, const char * text, unsigned long long int & result, unsigned int flags)
 		{
 			return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<unsigned long long int>(label, text, flags, result, 0));
+		}
+
+		std::auto_ptr<XTL::ProgramOption> Choice(const char * label, const char * text, unsigned int & result, const char * const * options, unsigned int flags)
+		{
+			return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Choice(label, text, flags, result, 0, options));
 		}
 
 		std::auto_ptr<XTL::ProgramOption> Function(const char * label, const char * text, Handler handler, unsigned int flags)
