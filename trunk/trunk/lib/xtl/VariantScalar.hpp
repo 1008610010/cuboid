@@ -70,7 +70,7 @@ namespace XTL
 
 			virtual void DebugPrintValue(PrintStream & stream, unsigned int indent) const;
 
-			bool GetValue() const;
+			bool GetValue() const { return value_; }
 
 		private:
 
