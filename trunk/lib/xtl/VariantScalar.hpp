@@ -42,6 +42,8 @@ namespace XTL
 
 			virtual Variant::String * ToString();
 
+			virtual void Visit(Visitor & visitor) const;
+
 		private:
 
 			Null()
@@ -64,7 +66,11 @@ namespace XTL
 
 			virtual Variant::String * ToString();
 
+			virtual void Visit(Visitor & visitor) const;
+
 			virtual void DebugPrintValue(PrintStream & stream, unsigned int indent) const;
+
+			bool GetValue() const;
 
 		private:
 
@@ -98,6 +104,8 @@ namespace XTL
 
 			virtual bool IsInteger() const;
 
+			virtual void Visit(Visitor & visitor) const;
+
 			virtual void DebugPrintValue(PrintStream & stream, unsigned int indent) const;
 
 			const long long int GetValue() const { return value_; }
@@ -123,6 +131,8 @@ namespace XTL
 
 			virtual bool IsInteger() const;
 
+			virtual void Visit(Visitor & visitor) const;
+
 			virtual void DebugPrintValue(PrintStream & stream, unsigned int indent) const;
 
 			const double GetValue() const { return value_; }
@@ -147,6 +157,8 @@ namespace XTL
 			virtual Double * ToDouble();
 
 			virtual Variant::String * ToString();
+
+			virtual void Visit(Visitor & visitor) const;
 
 			virtual void DebugPrintValue(PrintStream & stream, unsigned int indent) const;
 

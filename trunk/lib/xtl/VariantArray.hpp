@@ -24,6 +24,8 @@ namespace XTL
 
 			virtual Variant::Array * ToArray();
 
+			void Visit(Visitor & visitor) const;
+
 			virtual void DebugPrintValue(PrintStream & stream, unsigned int indent) const;
 
 			virtual bool IsEmpty() const = 0;

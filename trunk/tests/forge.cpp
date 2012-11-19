@@ -2674,8 +2674,72 @@ unsigned int F4(unsigned int i, unsigned int N)
 
 typedef XTL::BTree<MyItem, MyKey, std::less<MyKey>, true, 4, 4> MyFuckingTree;
 
+#include <xtl/PrintStream.hpp>
+
+namespace XTL
+{
+	class VariantDumper : public Variant::Visitor
+	{
+		public:
+
+			explicit VariantDumper(PrintStream & stream)
+				: stream_(stream),
+				  indent_(0)
+			{
+				;;
+			}
+
+			~VariantDumper() throw()
+			{
+				;;
+			}
+
+			virtual void Visit(const Variant::Null & v)
+			{
+				stream_.Print("null");
+			}
+
+			virtual void Visit(const Variant::Boolean & v)
+			{
+				stream_.Print(v.GetValue() ? "true" : "false");
+
+			}
+
+			virtual void Visit(const Variant::LongLongInt & v)
+			{
+
+			}
+
+			virtual void Visit(const Variant::Double & v)
+			{
+			}
+
+			virtual void Visit(const Variant::String & v)
+			{
+			}
+
+			virtual void Visit(const Variant::Array & v)
+			{
+			}
+
+			virtual void Visit(const Variant::Struct & v)
+			{
+			}
+
+		private:
+
+			PrintStream  & stream_;
+			unsigned int   indent_;
+	};
+}
+
 int main(int argc, const char * argv[])
 {
+	{
+		XTL::VariantDumper dumper(XTL::StdOut());
+		return 0;
+	}
+
 	MyFuckingTree bt;
 
 	const unsigned int N = 1000;

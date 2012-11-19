@@ -31,6 +31,27 @@ namespace XTL
 			class Array;
 			class Struct;
 
+			class Visitor
+			{
+				public:
+
+					virtual ~Visitor() throw() { ;; }
+
+					virtual void Visit(const Null & v) = 0;
+
+					virtual void Visit(const Boolean & v) = 0;
+
+					virtual void Visit(const LongLongInt & v) = 0;
+
+					virtual void Visit(const Double & v) = 0;
+
+					virtual void Visit(const String & v) = 0;
+
+					virtual void Visit(const Array & v) = 0;
+
+					virtual void Visit(const Struct & v) = 0;
+			};
+
 			Variant()
 				: refCount_(0) // WARNING: After construction refCount_ is zero!
 			{
@@ -78,6 +99,8 @@ namespace XTL
 			{
 				throw BadCast();
 			}
+
+			virtual void Visit(Visitor & visitor) const = 0;
 
 			void DebugPrint(PrintStream & stream) const;
 
