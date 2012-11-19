@@ -25,11 +25,6 @@ namespace XTL
 		return true;
 	}
 
-	void Variant::Null::DebugPrintValue(PrintStream & stream, unsigned int indent) const
-	{
-		stream.Print("null");
-	}
-
 	Variant::LongLongInt * Variant::Null::ToLongLongInt()
 	{
 		return new Variant::LongLongInt(0);
@@ -43,6 +38,16 @@ namespace XTL
 	Variant::String * Variant::Null::ToString()
 	{
 		return new Variant::String("");
+	}
+
+	void Variant::Null::Visit(Visitor & visitor) const
+	{
+		visitor.Visit(*this);
+	}
+
+	void Variant::Null::DebugPrintValue(PrintStream & stream, unsigned int indent) const
+	{
+		stream.Print("null");
 	}
 
 	/*************************** Boolean ***************************/
@@ -86,9 +91,19 @@ namespace XTL
 		return new Variant::String(value_ ? "true" : "false");
 	}
 
+	void Variant::Boolean::Visit(Visitor & visitor) const
+	{
+		visitor.Visit(*this);
+	}
+
 	void Variant::Boolean::DebugPrintValue(PrintStream & stream, unsigned int indent) const
 	{
 		stream.Print(value_ ? "true" : "false");
+	}
+
+	bool Variant::Boolean::GetValue() const
+	{
+		return value_;
 	}
 
 	/*************************** LongLongInt ***************************/
@@ -118,6 +133,11 @@ namespace XTL
 	Variant::String * Variant::LongLongInt::ToString()
 	{
 		return new Variant::String(IntegerToString(value_));
+	}
+
+	void Variant::LongLongInt::Visit(Visitor & visitor) const
+	{
+		visitor.Visit(*this);
 	}
 
 	void Variant::LongLongInt::DebugPrintValue(PrintStream & stream, unsigned int indent) const
@@ -157,6 +177,11 @@ namespace XTL
 	Variant::String * Variant::Double::ToString()
 	{
 		return new Variant::String(FormatString("%g", value_));
+	}
+
+	void Variant::Double::Visit(Visitor & visitor) const
+	{
+		visitor.Visit(*this);
 	}
 
 	void Variant::Double::DebugPrintValue(PrintStream & stream, unsigned int indent) const
@@ -203,6 +228,11 @@ namespace XTL
 	Variant::String * Variant::String::ToString()
 	{
 		return this;
+	}
+
+	void Variant::String::Visit(Visitor & visitor) const
+	{
+		visitor.Visit(*this);
 	}
 
 	void Variant::String::DebugPrintValue(PrintStream & stream, unsigned int indent) const

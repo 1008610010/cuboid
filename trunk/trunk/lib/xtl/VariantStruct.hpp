@@ -23,6 +23,8 @@ namespace XTL
 
 			virtual bool IsStruct() const;
 
+			virtual void Visit(Visitor & visitor) const;
+
 			virtual void DebugPrintValue(PrintStream & stream, unsigned int indent) const;
 
 			virtual bool IsEmpty() const = 0;

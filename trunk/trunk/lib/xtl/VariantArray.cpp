@@ -21,6 +21,11 @@ namespace XTL
 		return this;
 	}
 
+	void Variant::Array::Visit(Visitor & visitor) const
+	{
+		visitor.Visit(*this);
+	}
+
 	void Variant::Array::DebugPrintValue(PrintStream & stream, unsigned int indent) const
 	{
 		stream.Print("[\n");
