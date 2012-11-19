@@ -210,11 +210,45 @@ TARGET_LINK_LIBRARIES (
 
 
 
+FIND_LIBRARY (
+	SQLITE_LIBRARY
+		NAMES
+			sqlite3
+		PATHS
+			/opt/lib
+			/usr/lib
+			/usr/local/lib
+			/usr/lib64/mysql
+			/usr/lib/i386-linux-gnu
+			/usr/lib/x86_64-linux-gnu
+		DOC "Path where the SQLite library can be found"
+)
+
+SET (
+	XTL_SQLITE_SOURCES
+		xtl/sqlite/Database.cpp
+		xtl/sqlite/QueryResult.cpp
+)
+
+ADD_LIBRARY (
+	xtl-sqlite SHARED
+		${XTL_SQLITE_SOURCES}
+)
+
+TARGET_LINK_LIBRARIES (
+	xtl-sqlite
+		xtl
+		${SQLITE_LIBRARY}
+)
+
+
+
 INSTALL (
 	TARGETS
 		xtl
 		xtl-mysql
 		xtl-pgsql
+		xtl-sqlite
 	DESTINATION
 		lib
 )
