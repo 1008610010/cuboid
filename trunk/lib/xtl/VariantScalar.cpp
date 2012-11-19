@@ -101,11 +101,6 @@ namespace XTL
 		stream.Print(value_ ? "true" : "false");
 	}
 
-	bool Variant::Boolean::GetValue() const
-	{
-		return value_;
-	}
-
 	/*************************** LongLongInt ***************************/
 
 	Variant::LongLongInt::LongLongInt(const long long int & value)

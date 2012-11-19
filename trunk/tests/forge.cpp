@@ -2675,6 +2675,9 @@ unsigned int F4(unsigned int i, unsigned int N)
 typedef XTL::BTree<MyItem, MyKey, std::less<MyKey>, true, 4, 4> MyFuckingTree;
 
 #include <xtl/PrintStream.hpp>
+#include <xtl/VariantScalar.hpp>
+#include <xtl/VariantArray.hpp>
+#include <xtl/VariantStruct.hpp>
 
 namespace XTL
 {
@@ -2707,26 +2710,125 @@ namespace XTL
 
 			virtual void Visit(const Variant::LongLongInt & v)
 			{
-
+				stream_.PrintF("%lld", v.GetValue());
 			}
 
 			virtual void Visit(const Variant::Double & v)
 			{
+				stream_.PrintF("%g", v.GetValue());
 			}
 
 			virtual void Visit(const Variant::String & v)
 			{
+				stream_.Print("\"");
+
+				const std::string & s = v.GetValue();
+
+				unsigned int begin = 0;
+				const unsigned int end = s.size();
+				for (unsigned int i = 0; i < end; ++i)
+				{
+					if (s[i] == '\\')
+					{
+						if (begin < i)
+						{
+							stream_.Print(s.substr(begin, i - begin));
+						}
+						stream_.Print("\\\\");
+						begin = i + 1;
+					}
+					else if (s[i] == '"')
+					{
+						if (begin < i)
+						{
+							stream_.Print(s.substr(begin, i - begin));
+						}
+						stream_.Print("\\\"");
+						begin = i + 1;
+					}
+				}
+
+				if (begin < end)
+				{
+					stream_.Print(s.substr(begin, end - begin));
+				}
+
+				stream_.Print("\"");
 			}
 
 			virtual void Visit(const Variant::Array & v)
 			{
+				stream_.Print("[\n");
+
+				std::auto_ptr<Variant::Array::ConstIterator> itr(v.GetConstIterator());
+
+				if (itr->NotAtEnd())
+				{
+					++indent_;
+
+					do
+					{
+						PrintIndent();
+
+						itr->Current()->Visit(*this);
+						itr->Advance();
+
+						if (itr->NotAtEnd())
+						{
+							stream_.Print(",");
+						}
+
+						stream_.Print("\n");
+					}
+					while (itr->NotAtEnd());
+
+					--indent_;
+				}
+
+				PrintIndent();
+				stream_.Print("]");
 			}
 
 			virtual void Visit(const Variant::Struct & v)
 			{
+				stream_.Print("{\n");
+
+				std::auto_ptr<Variant::Struct::ConstIterator> itr(v.GetConstIterator());
+
+				if (itr->NotAtEnd())
+				{
+					++indent_;
+
+					do
+					{
+						PrintIndent();
+
+						stream_.PrintF("%s : ", itr->Key());
+						itr->Value()->Visit(*this);
+						itr->Advance();
+
+						if (itr->NotAtEnd())
+						{
+							stream_.Print(",");
+						}
+
+						stream_.Print("\n");
+					}
+					while (itr->NotAtEnd());
+
+					--indent_;
+				}
+
+				PrintIndent();
+				stream_.Print("}");
 			}
 
 		private:
+
+			void PrintIndent()
+			{
+				XTL::CharRepeater<' '>::Print(stream_, 4 * indent_);
+			}
 
 			PrintStream  & stream_;
 			unsigned int   indent_;
@@ -2737,6 +2839,16 @@ int main(int argc, const char * argv[])
 {
 	{
 		XTL::VariantDumper dumper(XTL::StdOut());
+
+		XTL::VariantMap vmap;
+
+		vmap.Set("x", XTL::VariantPtr(new XTL::Variant::LongLongInt(1024)));
+		vmap.Set("y", XTL::VariantPtr(new XTL::Variant::Double(3.1415)));
+		vmap.Set("First", XTL::Variant::Boolean::True());
+		vmap.Set("Second", XTL::Variant::Boolean::False());
+
+		//vmap.Visit(dumper);
+		printf("\n");
 		return 0;
 	}
 
