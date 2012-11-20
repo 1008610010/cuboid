@@ -261,6 +261,39 @@ namespace XTL
 			const char * const ptr_;
 	};
 
+	// TODO: Refactor this bullshit. Add precision parameters.
+	class FloatStringifier
+	{
+		public:
+
+			static const unsigned int BUFFER_SIZE = 32;
+
+			FloatStringifier(double value);
+
+			unsigned int Size() const
+			{
+				return size_;
+			}
+
+			const char * Chars() const
+			{
+				return buffer_;
+			}
+
+			const std::string ToString() const
+			{
+				return std::string(Chars(), Size());
+			}
+
+		private:
+
+			FloatStringifier(const FloatStringifier &);
+			FloatStringifier & operator= (const FloatStringifier &);
+
+			char buffer_[BUFFER_SIZE];
+			unsigned int size_;
+	};
+
 	template <typename T>
 	const std::string IntegerToString(const T & value)
 	{

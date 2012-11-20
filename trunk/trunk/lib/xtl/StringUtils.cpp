@@ -1,5 +1,6 @@
 #include "StringUtils.hpp"
 
+#include <stdio.h>
 #include <string.h>
 
 namespace XTL
@@ -95,6 +96,19 @@ namespace XTL
 	bool IsInteger(const std::string & s)
 	{
 		return IsInteger(s.c_str());
+	}
+
+	/********** FloatStringifier **********/
+
+	FloatStringifier::FloatStringifier(double value)
+		: size_(0)
+	{
+		size_ = ::snprintf(buffer_, BUFFER_SIZE, "%g", value);
+		if (size_ >= BUFFER_SIZE)
+		{
+			size_ = BUFFER_SIZE - 1;
+			buffer_[size_] = '\0';
+		}
 	}
 
 	/********** StringSplitter **********/
