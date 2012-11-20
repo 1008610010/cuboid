@@ -41,6 +41,8 @@ SET (
 		xtl/ini/IniConfig.cpp
 		xtl/ini/IniConfigParser.cpp
 
+		xtl/json/JsonPrinter.cpp
+
 		xtl/linux/AccessMode.cpp
 		xtl/linux/Signals.cpp
 		xtl/linux/SystemConfig.cpp

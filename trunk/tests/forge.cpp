@@ -2835,8 +2835,18 @@ namespace XTL
 	};
 }
 
+#include <xtl/json/JsonPrinter.hpp>
+
 int main(int argc, const char * argv[])
 {
+	XTL::FloatStringifier fs(-12345);
+	XTL::IntegerStringifier<int> is(123);
+
+	printf(">> (%s)\n", is.ToString().c_str());
+	printf(">> (%s)\n", fs.ToString().c_str());
+
+	return 0;
+
 	{
 		XTL::VariantDumper dumper(XTL::StdOut());
 
