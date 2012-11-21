@@ -47,6 +47,9 @@ namespace XTL
 					virtual void DecIndent() = 0;
 			};
 
+			class CompactSpacer;
+			class FormattingSpacer;
+
 			class Literal
 			{
 				public:
@@ -134,6 +137,62 @@ namespace XTL
 			PrintStream & printStream_;
 			Spacer      & spacer_;
 			std::auto_ptr<JsonPrinterStack> stack_;
+	};
+
+	class JsonPrinter::CompactSpacer : public JsonPrinter::Spacer
+	{
+		public:
+
+			virtual ~CompactSpacer() throw() { ;; }
+
+			virtual void Space(PrintStream & printStream) { ;; }
+
+			virtual void NextLine(PrintStream & printStream) { ;; }
+
+			virtual void IncIndent() { ;; }
+
+			virtual void DecIndent() { ;; }
+	};
+
+	class JsonPrinter::FormattingSpacer : public JsonPrinter::Spacer
+	{
+		public:
+
+			FormattingSpacer()
+				: indent_(0)
+			{
+				;;
+			}
+
+			virtual ~FormattingSpacer() throw()
+			{
+				;;
+			}
+
+			virtual void Space(PrintStream & printStream)
+			{
+				printStream.Print(" ");
+			}
+
+			virtual void NextLine(PrintStream & printStream)
+			{
+				printStream.Print("\n");
+				XTL::CharRepeater<' '>::Print(printStream, 4 * indent_);
+			}
+
+			virtual void IncIndent()
+			{
+				++indent_;
+			}
+
+			virtual void DecIndent()
+			{
+				--indent_;
+			}
+
+		protected:
+
+			unsigned int indent_;
 	};
 }
 

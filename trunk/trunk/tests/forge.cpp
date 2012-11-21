@@ -2839,65 +2839,6 @@ namespace XTL
 
 namespace XTL
 {
-	class FormattingSpacer : public JsonPrinter::Spacer
-	{
-		public:
-
-			FormattingSpacer()
-				: indent_(0)
-			{
-				;;
-			}
-
-			virtual ~FormattingSpacer() throw()
-			{
-				;;
-			}
-
-			virtual void Space(PrintStream & printStream)
-			{
-				printStream.Print(" ");
-			}
-
-			virtual void NextLine(PrintStream & printStream)
-			{
-				printStream.Print("\n");
-				XTL::CharRepeater<' '>::Print(printStream, 4 * indent_);
-			}
-
-			virtual void IncIndent()
-			{
-				++indent_;
-			}
-
-			virtual void DecIndent()
-			{
-				--indent_;
-			}
-
-		protected:
-
-			unsigned int indent_;
-	};
-
-	class CompactSpacer : public JsonPrinter::Spacer
-	{
-		public:
-
-			virtual ~CompactSpacer() throw() { ;; }
-
-			virtual void Space(PrintStream & printStream) { ;; }
-
-			virtual void NextLine(PrintStream & printStream) { ;; }
-
-			virtual void IncIndent() { ;; }
-
-			virtual void DecIndent() { ;; }
-	};
-}
-
-namespace XTL
-{
 	class VariantJsonifier : public Variant::Visitor
 	{
 		public:
@@ -2980,9 +2921,10 @@ int main(int argc, const char * argv[])
 	{
 		XTL::VariantMap vm;
 		vm.Set("abc", XTL::Variant::Null::Instance());
+		vm.Set("xyz", XTL::Variant::Boolean::True());
 
-		XTL::CompactSpacer compactSpacer;
-		XTL::FormattingSpacer formattingSpacer;
+		XTL::JsonPrinter::CompactSpacer compactSpacer;
+		XTL::JsonPrinter::FormattingSpacer formattingSpacer;
 
 		XTL::ToJson(vm, XTL::StdOut(), formattingSpacer);
 

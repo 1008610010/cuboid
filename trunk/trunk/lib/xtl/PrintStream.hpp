@@ -66,18 +66,18 @@ namespace XTL
 	{
 		public:
 
-		static void Print(PrintStream & printStream, unsigned int count)
-		{
-			static const std::string SOURCE(CAPACITY, C);
-
-			while (count > SOURCE.size())
+			static void Print(PrintStream & printStream, unsigned int count)
 			{
-				printStream.Print(SOURCE);
-				count -= SOURCE.size();
-			}
+				static const std::string SOURCE(CAPACITY, C);
 
-			printStream.Print(SOURCE.data(), count);
-		}
+				while (count > SOURCE.size())
+				{
+					printStream.Print(SOURCE);
+					count -= SOURCE.size();
+				}
+
+				printStream.Print(SOURCE.data(), count);
+			}
 	};
 }
 

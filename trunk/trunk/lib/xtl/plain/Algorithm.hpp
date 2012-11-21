@@ -3,9 +3,11 @@
 
 #include <stdexcept>
 
+#include <xtl/Exception.hpp>
+#include <xtl/io/SeekableInputStream.hpp>
+
 #include "Record.hpp"
 #include "RecordArray.hpp"
-#include "../io/SeekableInputStream.hpp"
 
 namespace XTL
 {
@@ -13,10 +15,23 @@ namespace PLAIN
 {
 	void Swap(RecordRef & left, RecordRef & right, RecordRef & temp);
 
+	/**
+	 * int RecordComparator_::operator() (RecordRef ref);
+	 */
 	template <typename RecordComparator_>
 	bool BinarySearch(XTL::SeekableInputStream & inputStream, RecordRef ref, const RecordComparator_ & comp)
 	{
 		unsigned int recordSize = ref.Size();
+
+		if (recordSize == 0)
+		{
+			throw ILLEGAL_OPERATION_ERROR("Record size is zero");
+		}
+
+		if (inputStream.Size() % recordSize != 0)
+		{
+			throw std::runtime_error("Input stream size is not a multiple of the record size");
+		}
 
 		unsigned int left = 0;
 		unsigned int right = inputStream.Size() / recordSize;
