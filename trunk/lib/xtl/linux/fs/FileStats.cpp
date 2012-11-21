@@ -98,6 +98,21 @@ namespace XTL
 		return S_ISDIR(stats_.st_mode);
 	}
 
+	time_t FileStats::LastAccessTime() const
+	{
+		return stats_.st_atime;
+	}
+
+	time_t FileStats::ModificationTime() const
+	{
+		return stats_.st_mtime;
+	}
+
+	time_t FileStats::StatusChangeTime() const
+	{
+		return stats_.st_ctime;
+	}
+
 	const FileType FileStats::Type(const std::string & filePath)
 	{
 		struct ::stat64 stats;
