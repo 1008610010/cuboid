@@ -2692,7 +2692,7 @@ namespace XTL
 				;;
 			}
 
-			~VariantDumper() throw()
+			virtual ~VariantDumper() throw()
 			{
 				;;
 			}
@@ -2837,8 +2837,187 @@ namespace XTL
 
 #include <xtl/json/JsonPrinter.hpp>
 
+namespace XTL
+{
+	class FormattingSpacer : public JsonPrinter::Spacer
+	{
+		public:
+
+			FormattingSpacer()
+				: indent_(0)
+			{
+				;;
+			}
+
+			virtual ~FormattingSpacer() throw()
+			{
+				;;
+			}
+
+			virtual void Space(PrintStream & printStream)
+			{
+				printStream.Print(" ");
+			}
+
+			virtual void NextLine(PrintStream & printStream)
+			{
+				printStream.Print("\n");
+				XTL::CharRepeater<' '>::Print(printStream, 4 * indent_);
+			}
+
+			virtual void IncIndent()
+			{
+				++indent_;
+			}
+
+			virtual void DecIndent()
+			{
+				--indent_;
+			}
+
+		protected:
+
+			unsigned int indent_;
+	};
+
+	class CompactSpacer : public JsonPrinter::Spacer
+	{
+		public:
+
+			virtual ~CompactSpacer() throw() { ;; }
+
+			virtual void Space(PrintStream & printStream) { ;; }
+
+			virtual void NextLine(PrintStream & printStream) { ;; }
+
+			virtual void IncIndent() { ;; }
+
+			virtual void DecIndent() { ;; }
+	};
+}
+
+namespace XTL
+{
+	class VariantJsonifier : public Variant::Visitor
+	{
+		public:
+
+			VariantJsonifier(PrintStream & stream, JsonPrinter::Spacer & spacer)
+				: printer_(stream, spacer)
+			{
+				;;
+			}
+
+			virtual ~VariantJsonifier() throw()
+			{
+				;;
+			}
+
+			virtual void Visit(const Variant::Null & v)
+			{
+				printer_ << XTL::JSON::Null();
+			}
+
+			virtual void Visit(const Variant::Boolean & v)
+			{
+				printer_ << v.GetValue();
+			}
+
+			virtual void Visit(const Variant::LongLongInt & v)
+			{
+				printer_ << v.GetValue();
+			}
+
+			virtual void Visit(const Variant::Double & v)
+			{
+				printer_ << v.GetValue();
+			}
+
+			virtual void Visit(const Variant::String & v)
+			{
+				printer_ << v.GetValue();
+			}
+
+			virtual void Visit(const Variant::Array & v)
+			{
+				printer_ << XTL::JSON::Array();
+
+				for (std::auto_ptr<Variant::Array::ConstIterator> itr(v.GetConstIterator()); itr->NotAtEnd(); itr->Advance())
+				{
+					itr->Current()->Visit(*this);
+				}
+
+				printer_ << XTL::JSON::End();
+			}
+
+			virtual void Visit(const Variant::Struct & v)
+			{
+				printer_ << XTL::JSON::Object();
+
+				for (std::auto_ptr<Variant::Struct::ConstIterator> itr(v.GetConstIterator()); itr->NotAtEnd(); itr->Advance())
+				{
+					printer_ << itr->Key();
+					itr->Value()->Visit(*this);
+				}
+
+				printer_ << XTL::JSON::End();
+			}
+
+		private:
+
+			JsonPrinter printer_;
+	};
+
+	void ToJson(const XTL::Variant & value, PrintStream & printStream, JsonPrinter::Spacer & spacer)
+	{
+		XTL::VariantJsonifier vj(printStream, spacer);
+		value.Visit(vj);
+	}
+}
+
 int main(int argc, const char * argv[])
 {
+	{
+		XTL::VariantMap vm;
+		vm.Set("abc", XTL::Variant::Null::Instance());
+
+		XTL::CompactSpacer compactSpacer;
+		XTL::FormattingSpacer formattingSpacer;
+
+		XTL::ToJson(vm, XTL::StdOut(), formattingSpacer);
+
+		return 0;
+
+		XTL::JsonPrinter(XTL::StdOut(), formattingSpacer)
+			<< XTL::JSON::Array()
+				<< XTL::JSON::Null()
+				<< true
+				<< "Fuck !!!"
+				<< 1
+				<< 0.0
+				<< 200000000000.0
+				<< XTL::JSON::Null()
+				<< XTL::JSON::Object()
+					<< "null" << XTL::JSON::Null()
+					<< "boolean0" << false
+					<< "boolean1" << true
+					<< "integer" << 1024
+					<< "unsigned long long int" << 18446744073709551615llu
+					<< "string" << "I said: \"It's ok!\""
+					<< "string2" << "\\\\\\\\\\\r\n"
+					<< "linear_array" << XTL::JSON::LinearArray()
+						<< 1 << 2 << 3 << 4 << 5 << XTL::JSON::LinearArray()
+								<< true << false
+							<< XTL::JSON::End()
+						<< XTL::JSON::End()
+					<< XTL::JSON::End()
+			<< XTL::JSON::End()
+		<< XTL::JSON::Finish()
+		;
+	}
+
+	return 0;
+
 	XTL::FloatStringifier fs(-12345);
 	XTL::IntegerStringifier<int> is(123);
 
