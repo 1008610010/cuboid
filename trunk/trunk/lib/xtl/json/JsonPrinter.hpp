@@ -32,7 +32,35 @@ namespace XTL
 	{
 		public:
 
-			JsonPrinter(PrintStream & printStream);
+			class Spacer
+			{
+				public:
+
+					virtual ~Spacer() throw() { ;; }
+
+					virtual void Space(PrintStream & printStream) = 0;
+
+					virtual void NextLine(PrintStream & printStream) = 0;
+
+					virtual void IncIndent() = 0;
+
+					virtual void DecIndent() = 0;
+			};
+
+			class Literal
+			{
+				public:
+
+					virtual ~Literal() { ;; }
+
+					virtual bool CanBeObjectKey() const { return false; }
+
+					virtual void Print(PrintStream & stream) const = 0;
+			};
+
+			JsonPrinter(PrintStream & printStream, Spacer & spacer);
+
+			~JsonPrinter() throw();
 
 			JsonPrinter & operator<< (JSON::Null);
 
@@ -68,11 +96,13 @@ namespace XTL
 
 			JsonPrinter & operator<< (JSON::End);
 
-			JsonPrinter & operator<< (JSON::LinearFinish);
+			void operator<< (JSON::LinearFinish);
 
-			JsonPrinter & operator<< (JSON::Finish);
+			void operator<< (JSON::Finish);
 
 		private:
+
+			JsonPrinter & operator<< (const Literal & literal);
 
 			void Char(char c)
 			{
@@ -81,22 +111,28 @@ namespace XTL
 
 			void Space()
 			{
-				// spacer_.WriteSpace(printStream_);
+				spacer_.Space(printStream_);
 			}
 
 			void NextLine()
 			{
-				// spacer_.WriteNextLine(printStream_);
+				spacer_.NextLine(printStream_);
 			}
 
 			void IncIndent()
 			{
-				// spacer_.IncIndent();
+				spacer_.IncIndent();
+			}
+
+			void DecIndent()
+			{
+				spacer_.DecIndent();
 			}
 
 			void RaiseError(const char * what);
 
 			PrintStream & printStream_;
+			Spacer      & spacer_;
 			std::auto_ptr<JsonPrinterStack> stack_;
 	};
 }
