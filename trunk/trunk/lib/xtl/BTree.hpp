@@ -928,6 +928,12 @@ namespace XTL
 				return branchesCount_;
 			}
 
+			unsigned long long int UsedMemory() const
+			{
+				return static_cast<unsigned long long int>(leavesCount_) * sizeof(Leaf) +
+				       static_cast<unsigned long long int>(branchesCount_) * sizeof(Branch);
+			}
+
 			void Clear()
 			{
 				delete root_;
