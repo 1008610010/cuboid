@@ -1,6 +1,5 @@
 #include "VariantPtr.hpp"
 
-#include "Variant.hpp"
 #include "VariantScalar.hpp"
 #include "VariantArray.hpp"
 #include "VariantStruct.hpp"

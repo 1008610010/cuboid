@@ -232,7 +232,7 @@ namespace XTL
 			ThrowError("Value was expected");
 
 			// To avoid warning "control reaches end of non-void function"
-			return Variant::Null::Instance();
+			return Variant::Null();
 		}
 	}
 

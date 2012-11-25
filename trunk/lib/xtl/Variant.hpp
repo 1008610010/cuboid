@@ -9,6 +9,8 @@ namespace XTL
 {
 	class PrintStream;
 
+	class VariantPtr;
+
 	class Variant
 	{
 		public:
@@ -22,7 +24,7 @@ namespace XTL
 			};
 
 			class Scalar;
-				class Null;
+				class NullValue;
 				class Boolean;
 				class Number;
 					class LongLongInt;
@@ -37,7 +39,7 @@ namespace XTL
 
 					virtual ~Visitor() throw() { ;; }
 
-					virtual void Visit(const Null & v) = 0;
+					virtual void Visit(const NullValue & v) = 0;
 
 					virtual void Visit(const Boolean & v) = 0;
 
@@ -99,6 +101,12 @@ namespace XTL
 			{
 				throw BadCast();
 			}
+
+			static VariantPtr Null();
+
+			static VariantPtr True();
+
+			static VariantPtr False();
 
 			virtual void Visit(Visitor & visitor) const = 0;
 
