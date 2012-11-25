@@ -4,11 +4,28 @@
 
 #include "PrintStream.hpp"
 
+#include "VariantScalar.hpp"
+
 namespace XTL
 {
 	Variant::~Variant() throw()
 	{
 		;;
+	}
+
+	VariantPtr Variant::Null()
+	{
+		return Variant::NullValue::Instance();
+	}
+
+	VariantPtr Variant::True()
+	{
+		return Variant::Boolean::True();
+	}
+
+	VariantPtr Variant::False()
+	{
+		return Variant::Boolean::False();
 	}
 
 	void Variant::DebugPrint(PrintStream & stream) const

@@ -2697,7 +2697,7 @@ namespace XTL
 				;;
 			}
 
-			virtual void Visit(const Variant::Null & v)
+			virtual void Visit(const Variant::NullValue & v)
 			{
 				stream_.Print("null");
 			}
@@ -2720,40 +2720,7 @@ namespace XTL
 
 			virtual void Visit(const Variant::String & v)
 			{
-				stream_.Print("\"");
-
-				const std::string & s = v.GetValue();
-
-				unsigned int begin = 0;
-				const unsigned int end = s.size();
-				for (unsigned int i = 0; i < end; ++i)
-				{
-					if (s[i] == '\\')
-					{
-						if (begin < i)
-						{
-							stream_.Print(s.substr(begin, i - begin));
-						}
-						stream_.Print("\\\\");
-						begin = i + 1;
-					}
-					else if (s[i] == '"')
-					{
-						if (begin < i)
-						{
-							stream_.Print(s.substr(begin, i - begin));
-						}
-						stream_.Print("\\\"");
-						begin = i + 1;
-					}
-				}
-
-				if (begin < end)
-				{
-					stream_.Print(s.substr(begin, end - begin));
-				}
-
-				stream_.Print("\"");
+				PrintString(stream_, v.GetValue());
 			}
 
 			virtual void Visit(const Variant::Array & v)
@@ -2803,7 +2770,9 @@ namespace XTL
 					{
 						PrintIndent();
 
-						stream_.PrintF("%s : ", itr->Key());
+						PrintString(stream_, itr->Key());
+						stream_.Print(" : ");
+
 						itr->Value()->Visit(*this);
 						itr->Advance();
 
@@ -2830,9 +2799,54 @@ namespace XTL
 				XTL::CharRepeater<' '>::Print(stream_, 4 * indent_);
 			}
 
+			static void PrintString(PrintStream & stream, const std::string & s)
+			{
+				stream.Print("\"");
+
+				unsigned int begin = 0;
+				const unsigned int end = s.size();
+
+				for (unsigned int i = 0; i < end; ++i)
+				{
+					if (s[i] == '\\')
+					{
+						if (begin < i)
+						{
+							stream.Print(s.substr(begin, i - begin));
+						}
+						stream.Print("\\\\");
+						begin = i + 1;
+					}
+					else if (s[i] == '"')
+					{
+						if (begin < i)
+						{
+							stream.Print(s.substr(begin, i - begin));
+						}
+						stream.Print("\\\"");
+						begin = i + 1;
+					}
+				}
+
+				if (begin < end)
+				{
+					stream.Print(s.substr(begin, end - begin));
+				}
+
+				stream.Print("\"");
+			}
+
 			PrintStream  & stream_;
 			unsigned int   indent_;
 	};
+
+	void Dump(PrintStream & stream, const Variant & value)
+	{
+		VariantDumper dumper(stream);
+
+		value.Visit(dumper);
+		stream.Print("\n");
+	}
 }
 
 #include <xtl/json/JsonPrinter.hpp>
@@ -2854,7 +2868,7 @@ namespace XTL
 				;;
 			}
 
-			virtual void Visit(const Variant::Null & v)
+			virtual void Visit(const Variant::NullValue & v)
 			{
 				printer_ << XTL::JSON::Null();
 			}
@@ -2920,8 +2934,12 @@ int main(int argc, const char * argv[])
 {
 	{
 		XTL::VariantMap vm;
-		vm.Set("abc", XTL::Variant::Null::Instance());
-		vm.Set("xyz", XTL::Variant::Boolean::True());
+		vm.Set("abc", XTL::Variant::Null());
+		vm.Set("xyz", XTL::Variant::True());
+		vm.Set("and \"false\"", XTL::Variant::False());
+
+		XTL::Dump(XTL::StdOut(), vm);
+		return 0;
 
 		XTL::JsonPrinter::CompactSpacer compactSpacer;
 		XTL::JsonPrinter::FormattingSpacer formattingSpacer;

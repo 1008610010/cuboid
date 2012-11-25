@@ -9,43 +9,43 @@ namespace XTL
 {
 	/*************************** Null ***************************/
 
-	VariantPtr Variant::Null::Instance()
+	VariantPtr Variant::NullValue::Instance()
 	{
-		static VariantPtr instance(new Null());
+		static VariantPtr instance(new NullValue());
 		return instance;
 	}
 
-	Variant::Null::~Null() throw()
+	Variant::NullValue::~NullValue() throw()
 	{
 		;;
 	}
 
-	bool Variant::Null::IsNull() const
+	bool Variant::NullValue::IsNull() const
 	{
 		return true;
 	}
 
-	Variant::LongLongInt * Variant::Null::ToLongLongInt()
+	Variant::LongLongInt * Variant::NullValue::ToLongLongInt()
 	{
 		return new Variant::LongLongInt(0);
 	}
 
-	Variant::Double * Variant::Null::ToDouble()
+	Variant::Double * Variant::NullValue::ToDouble()
 	{
 		return new Variant::Double(0.0);
 	}
 
-	Variant::String * Variant::Null::ToString()
+	Variant::String * Variant::NullValue::ToString()
 	{
 		return new Variant::String("");
 	}
 
-	void Variant::Null::Visit(Visitor & visitor) const
+	void Variant::NullValue::Visit(Visitor & visitor) const
 	{
 		visitor.Visit(*this);
 	}
 
-	void Variant::Null::DebugPrintValue(PrintStream & stream, unsigned int indent) const
+	void Variant::NullValue::DebugPrintValue(PrintStream & stream, unsigned int indent) const
 	{
 		stream.Print("null");
 	}

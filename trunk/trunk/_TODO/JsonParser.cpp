@@ -45,53 +45,6 @@ namespace XTL
 
 	JsonValue * JsonParser::ReadValue(JsonValue * parent)
 	{
-		if (*cur_ == '"')
-		{
-			return ReadString(parent);
-		}
-		else if (IsDigit(*cur_) || *cur_ == '-')
-		{
-			return ReadNumber(parent);
-		}
-		else if (IsAlpha(*cur_))
-		{
-			std::string keyword;
-			ParseIdentifier(keyword);
-
-			if (keyword == "null")
-			{
-				return 0;
-			}
-			if (keyword == "true")
-			{
-				return new JsonBooleanValue(parent, true);
-			}
-			else if (keyword == "false")
-			{
-				return new JsonBooleanValue(parent, false);
-			}
-			else
-			{
-				throw Error(
-					row_,
-					column_ - keyword.length(),
-					FormatString("Invalid bareword \"%s\", while value expected", keyword.c_str())
-				);
-			}
-		}
-		else if (*cur_ == '[')
-		{
-			return ReadArray(parent);
-		}
-		else if (*cur_ == '{')
-		{
-			return ReadObject(parent);
-		}
-		else
-		{
-			RaiseError("Invalid symbol, while value expected");
-			return 0;
-		}
 	}
 
 	/*

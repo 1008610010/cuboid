@@ -24,13 +24,13 @@ namespace XTL
 			}
 	};
 
-	class Variant::Null : public Variant::Scalar
+	class Variant::NullValue : public Variant::Scalar
 	{
 		public:
 
 			static VariantPtr Instance();
 
-			virtual ~Null() throw();
+			virtual ~NullValue() throw();
 
 			virtual bool IsNull() const;
 
@@ -46,7 +46,7 @@ namespace XTL
 
 		private:
 
-			Null()
+			NullValue()
 				: Variant::Scalar() { ;; }
 	};
 

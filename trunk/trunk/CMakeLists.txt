@@ -84,6 +84,17 @@ TARGET_LINK_LIBRARIES (
 )
 
 
+ADD_EXECUTABLE (
+	json_parser
+		tests/json_parser.cpp
+)
+
+TARGET_LINK_LIBRARIES (
+	json_parser
+		xtl
+)
+
+
 #ADD_EXECUTABLE (
 #	mysql_test
 #		tests/mysql_test.cpp
