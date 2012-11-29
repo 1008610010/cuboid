@@ -89,7 +89,12 @@ namespace SQLITE
 
 		sqlite3_stmt * stmt = 0;
 
-		int rc = ::sqlite3_prepare_v2(DB_, query.c_str(), query.length() + 1, &stmt, 0);
+		/*
+			Здесь должен быть вызов:
+			int rc = ::sqlite3_prepare_v2(DB_, query.c_str(), query.length() + 1, &stmt, 0);
+			Но на CentOS 5.3 в библиотеке sqlite еще нет таких функций.
+		*/
+		int rc = ::sqlite3_prepare(DB_, query.c_str(), query.length() + 1, &stmt, 0);
 
 		if (rc != SQLITE_OK)
 		{
