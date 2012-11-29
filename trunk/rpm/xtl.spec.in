@@ -21,14 +21,14 @@ XTL C++ Library
 
 
 %package mysql
-Summary:        XTL C++ Library - MySQL
+Summary:        XTL C++ wrapper of MySQL client
 Group:          Development/Libraries
 Requires:       %{name} = %{version}
 Requires:       mysql
 BuildRequires:  mysql-devel
 
 %description mysql
-XTL C++ Library - MySQL
+XTL C++ wrapper of MySQL client
 
 %files mysql
 %defattr(-,root,root,-)
@@ -37,18 +37,34 @@ XTL C++ Library - MySQL
 
 
 %package pgsql
-Summary:        XTL C++ Library - PostgreSQL
+Summary:        XTL C++ wrapper of PostgreSQL client
 Group:          Development/Libraries
 Requires:       %{name} = %{version}
 Requires:       postgresql-libs
 BuildRequires:  postgresql-devel
 
 %description pgsql
-XTL C++ Library - PostgreSQL
+XTL C++ wrapper of PostgreSQL client
 
 %files pgsql
 %defattr(-,root,root,-)
 %{_prefix}/lib/libxtl-pgsql.so
+
+
+
+%package sqlite
+Summary:        XTL C++ wrapper of SQLite
+Group:          Development/Libraries
+Requires:       %{name} = %{version}
+Requires:       sqlite
+BuildRequires:  sqlite-devel
+
+%description sqlite
+XTL C++ wrapper of SQLite
+
+%files sqlite
+%defattr(-,root,root,-)
+%{_prefix}/lib/libxtl-sqlite.so
 
 
 
@@ -216,6 +232,24 @@ XTL C++ Library development files - PostgreSQL
 %{_prefix}/include/xtl/pgsql/QueryResultIterator.hpp
 %{_prefix}/include/xtl/pgsql/QueryResultRow.hpp
 %{_prefix}/include/xtl/pgsql/QueryState.hpp
+
+
+
+%package sqlite-devel
+Summary:        XTL C++ Library development files - SQLite
+Group:          Development/Libraries
+Requires:       %{name} = %{version}
+Requires:       %{name}-devel = %{version}
+Requires:       %{name}-sqlite = %{version}
+
+%description sqlite-devel
+XTL C++ Library development files - SQLite
+
+%files sqlite-devel
+%defattr(-,root,root,-)
+%{_prefix}/include/xtl/sqlite/Database.hpp
+%{_prefix}/include/xtl/sqlite/Exception.hpp
+%{_prefix}/include/xtl/sqlite/QueryResult.hpp
 
 
 
