@@ -97,6 +97,8 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/VariantScalar.hpp
 %{_prefix}/include/xtl/VariantStruct.hpp
 %{_prefix}/include/xtl/VariantStructReader.hpp
+%{_prefix}/include/xtl/ini/IniConfig.hpp
+%{_prefix}/include/xtl/ini/IniConfigParser.hpp
 %{_prefix}/include/xtl/io/FileInputStream.hpp
 %{_prefix}/include/xtl/io/FileInputStreamBuffered.hpp
 %{_prefix}/include/xtl/io/FileOutputStream.hpp
@@ -107,6 +109,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/io/SeekableInputStream.hpp
 %{_prefix}/include/xtl/io/Serializable.hpp
 %{_prefix}/include/xtl/io/StringOutputStream.hpp
+%{_prefix}/include/xtl/json/JsonPrinter.hpp
 %{_prefix}/include/xtl/linux/AccessMode.hpp
 %{_prefix}/include/xtl/linux/Signals.hpp
 %{_prefix}/include/xtl/linux/SystemConfig.hpp
@@ -187,10 +190,13 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/utils/AutoPtrVector.hpp
 %{_prefix}/include/xtl/utils/Base64.hpp
 %{_prefix}/include/xtl/utils/BitUtils.hpp
+%{_prefix}/include/xtl/utils/CacheMap.hpp
 %{_prefix}/include/xtl/utils/Chronometer.hpp
 %{_prefix}/include/xtl/utils/Date.hpp
 %{_prefix}/include/xtl/utils/SimpleStringMatcher.hpp
 %{_prefix}/include/xtl/simple_template/SimpleTemplateWriter.hpp
+
+
 
 %package mysql-devel
 Summary:        XTL C++ Library development files - MySQL
