@@ -34,6 +34,8 @@ XTL C++ wrapper of MySQL client
 %defattr(-,root,root,-)
 %{_prefix}/lib/libxtl-mysql.so
 
+%post mysql
+ldconfig
 
 
 %package pgsql
@@ -50,6 +52,9 @@ XTL C++ wrapper of PostgreSQL client
 %defattr(-,root,root,-)
 %{_prefix}/lib/libxtl-pgsql.so
 
+%post pgsql
+ldconfig
+
 
 
 %package sqlite
@@ -65,6 +70,9 @@ XTL C++ wrapper of SQLite
 %files sqlite
 %defattr(-,root,root,-)
 %{_prefix}/lib/libxtl-sqlite.so
+
+%post sqlite
+ldconfig
 
 
 
