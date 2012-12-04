@@ -26,7 +26,8 @@ namespace XTL
 
 		try
 		{
-			for (XTL::DirectoryReader directoryReader(baseDir); !directoryReader.AtEnd(); directoryReader.Advance())
+			XTL::DirectoryReader directoryReader(baseDir);
+			while (directoryReader.Read())
 			{
 				const std::string fileName = directoryReader.Current().Name();
 
