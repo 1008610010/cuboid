@@ -75,16 +75,7 @@ namespace XTL
 
 			~DirectoryReader() throw();
 
-			// TODO: replace AtEnd()+Advance() by "bool Read()" method
-			const bool AtEnd() const
-			{
-				return entry_.IsNull();
-			}
-
-			void Advance()
-			{
-				GetNext();
-			}
+			bool Read();
 
 			const Entry & Current() const
 			{

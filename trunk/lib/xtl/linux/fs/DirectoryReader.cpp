@@ -12,7 +12,12 @@ namespace XTL
 		  dir_(0),
 		  entry_()
 	{
-		Init();
+		dir_ = ::opendir(directory_.c_str());
+
+		if (dir_ == 0)
+		{
+			throw XTL::UnixError();
+		}
 	}
 
 	DirectoryReader::DirectoryReader(const std::string & directory, const std::string & pattern)
@@ -21,19 +26,12 @@ namespace XTL
 		  dir_(0),
 		  entry_()
 	{
-		Init();
-	}
-
-	void DirectoryReader::Init()
-	{
 		dir_ = ::opendir(directory_.c_str());
 
 		if (dir_ == 0)
 		{
 			throw XTL::UnixError();
 		}
-
-		GetNext();
 	}
 
 	DirectoryReader::~DirectoryReader() throw()
@@ -50,13 +48,8 @@ namespace XTL
 		}
 	}
 
-	void DirectoryReader::GetNext()
+	bool DirectoryReader::Read()
 	{
-		if (entry_.IsNull())
-		{
-			return;
-		}
-
 		while (true)
 		{
 			int result = ::readdir_r(dir_, entry_.EntryPtr(), entry_.ResultPtr());
@@ -65,18 +58,15 @@ namespace XTL
 				throw UnixError(result);
 			}
 
-			if (entry_.IsNull() || pattern_.empty())
+			if (entry_.IsNull())
 			{
-				break;
+				return false;
 			}
 
-			// printf(">>> %s\n", entry_.Name());
-
-			if (::fnmatch(pattern_.c_str(), entry_.Name(), FNM_PATHNAME) == 0)
+			if (pattern_.empty() || ::fnmatch(pattern_.c_str(), entry_.Name(), FNM_PATHNAME) == 0)
 			{
-				break;
+				return true;
 			}
 		}
 	}
 }
-
