@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <algorithm> // std::swap()
+#include <vector>
 
 #include "FormatString.hpp"
 
