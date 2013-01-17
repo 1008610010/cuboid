@@ -87,6 +87,7 @@ XTL C++ Library development files
 %files devel
 %defattr(-,root,root,-)
 %{_prefix}/include/xtl/BTree.hpp
+%{_prefix}/include/xtl/BTreeSet.hpp
 %{_prefix}/include/xtl/BitSet.hpp
 %{_prefix}/include/xtl/CharBuffer.hpp
 %{_prefix}/include/xtl/Exception.hpp
@@ -201,6 +202,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/utils/CacheMap.hpp
 %{_prefix}/include/xtl/utils/Chronometer.hpp
 %{_prefix}/include/xtl/utils/Date.hpp
+%{_prefix}/include/xtl/utils/Heap.hpp
 %{_prefix}/include/xtl/utils/SimpleStringMatcher.hpp
 %{_prefix}/include/xtl/simple_template/SimpleTemplateWriter.hpp
 
