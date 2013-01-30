@@ -3,13 +3,13 @@
 
 #include <string.h>
 
+#include <algorithm>
 #include <stdexcept>
 
 #include "RecordPrototype.hpp"
 #include "../io/InputStream.hpp"
 #include "../io/OutputStream.hpp"
 #include "../io/Serializable.hpp"
-
 
 /*
 	TODO:
@@ -389,6 +389,23 @@ namespace PLAIN
 						::memset(this->data_, '\0', this->Size());
 					}
 
+					Rec(XTL::InputStream & stream)
+						: Ref(),
+						  prototypeHolder_(RecordType::Prototype())
+					{
+						this->data_ = new char[this->Size()];
+
+						try
+						{
+							this->Read(stream);
+						}
+						catch (...)
+						{
+							delete [] static_cast<char *>(this->data_);
+							throw;
+						}
+					};
+
 					~Rec() throw()
 					{
 						delete [] static_cast<char *>(this->data_);
@@ -422,6 +439,11 @@ namespace PLAIN
 					Rec & operator= (const Rec & other)
 					{
 						return operator=((ConstRef) other);
+					}
+
+					void Swap(Rec & other)
+					{
+						std::swap(this->data_, other.data_);
 					}
 
 				private:
