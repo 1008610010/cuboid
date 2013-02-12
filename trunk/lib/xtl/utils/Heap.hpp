@@ -6,6 +6,25 @@
 
 namespace XTL
 {
+	/*
+	 * Инверсия порядка, задаваемого функцией Compare.
+	 */
+	template <typename Compare>
+	class Inverse
+	{
+		public:
+
+			template <typename T>
+			bool operator() (const T & left, const T & right) const
+			{
+				return comp_(right, left);
+			}
+
+		private:
+
+			const Compare comp_;
+	};
+
 	/**
 	 * Класс-обертка над STL функциями работы с пирамидой.
 	 */
