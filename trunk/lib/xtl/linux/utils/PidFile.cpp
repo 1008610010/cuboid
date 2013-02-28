@@ -1,5 +1,7 @@
 #include "PidFile.hpp"
 
+#include <unistd.h>
+
 namespace XTL
 {
 	const XTL::PidFile::Mode XTL::PidFile::REMOVE(1);
