@@ -1,6 +1,7 @@
 #include "SocketAddressUnix.hpp"
 
 #include <string.h>
+#include <unistd.h>
 #include <sys/socket.h>
 
 #include "../../Exception.hpp"
@@ -63,4 +64,3 @@ namespace XTL
 		}
 	}
 }
-
