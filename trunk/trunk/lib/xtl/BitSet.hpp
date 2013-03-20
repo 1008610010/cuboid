@@ -78,6 +78,16 @@ namespace XTL
 				return NumberOfOneBits(bits_ & (OnlyOneBit<T>(bit) - T(1)));
 			}
 
+			int MinBit() const
+			{
+				return LeastOneBit(bits_);
+			}
+
+			int MaxBit() const
+			{
+				return GreatestOneBit(bits_);
+			}
+
 			const std::string ToString() const
 			{
 				std::vector<char> buffer(CAPACITY + 1);

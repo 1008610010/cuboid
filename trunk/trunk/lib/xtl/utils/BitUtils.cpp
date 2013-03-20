@@ -28,7 +28,7 @@ namespace XTL
 
 	int LeastOneBit(UINT_8 value)
 	{
-		static unsigned int COUNT[] = {
+		static int COUNT[] = {
 			-1, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
 			 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
 			 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
@@ -52,7 +52,7 @@ namespace XTL
 
 	int GreatestOneBit(UINT_8 value)
 	{
-		static unsigned int COUNT[] = {
+		static int COUNT[] = {
 			-1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
 			 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
 			 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
