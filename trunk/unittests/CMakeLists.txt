@@ -80,6 +80,7 @@ ADD_EXECUTABLE (
 	xtl_unittests
 		main.cpp
 		Base64Test.cpp
+		BitSetTest.cpp
 		DateTest.cpp
 		FormatStringTest.cpp
 		SimpleTemplateTest.cpp
