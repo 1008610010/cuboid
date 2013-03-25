@@ -1,0 +1,13 @@
+Source: nginx-leveldb
+Section: net
+Priority: extra
+Maintainer: Dmitry Nikolaev <dmitnin@gmail.com>
+Build-Depends: debhelper (>= 5), cmake (>= 2.4)
+Standards-Version: 3.7.2
+
+Package: nginx-leveldb
+Section: net
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Nginx server with LevelDB module
+ Nginx server with LevelDB module.
