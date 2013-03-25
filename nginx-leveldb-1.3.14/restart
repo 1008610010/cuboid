@@ -1,0 +1,5 @@
+#!/bin/bash
+
+./objs/nginx -s stop
+./objs/nginx
+
