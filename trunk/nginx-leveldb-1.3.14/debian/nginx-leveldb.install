@@ -1,2 +1,4 @@
 usr/lib/libnginx_leveldb.so
 usr/share/nginx-leveldb/sbin/nginx-leveldb
+usr/share/nginx-leveldb/conf/nginx-leveldb.conf.example
+usr/share/nginx-leveldb/conf/mime.types

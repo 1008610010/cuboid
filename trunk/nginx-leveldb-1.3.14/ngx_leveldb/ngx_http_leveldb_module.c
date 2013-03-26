@@ -245,7 +245,11 @@ static ngx_int_t ngx_http_leveldb_handler(ngx_http_request_t * r)
 		ngx_http_leveldb_value_t value = { r, ngx_string("DUMMY") };
 
 		int result = LevelDB_Get((const char *) key.data, key.len, ngx_http_leveldb_allocate_value, &value);
-		if (result == 1)
+		if (result < 1)
+		{
+			return NGX_HTTP_INTERNAL_SERVER_ERROR;
+		}
+		else if (result == 1)
 		{
 			return NGX_HTTP_NO_CONTENT;
 		}

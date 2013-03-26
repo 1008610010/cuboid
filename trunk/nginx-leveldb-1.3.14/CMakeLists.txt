@@ -59,3 +59,12 @@ INSTALL (
 	DESTINATION
 		lib
 )
+
+INSTALL (
+	FILES
+		conf/nginx-leveldb.conf
+	RENAME
+		nginx-leveldb.conf.example
+	DESTINATION
+		/usr/share/nginx-leveldb/conf
+)
