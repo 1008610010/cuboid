@@ -1,3 +1,4 @@
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -16,15 +17,69 @@ void PrintValue(const char * valueData, size_t valueSize, void * param)
 	printf("%s\n", valueData);
 }
 
+
+
+void * ThreadFunc(void * arg)
+{
+	pthread_t id = pthread_self();
+
+	printf("Process %u was started\n", (unsigned int) id);
+
+	printf("LastError = '%s'\n", LevelDB_LastError());
+	LevelDB_SetLastError("XYZ");
+	sleep(1);
+
+	printf("LastError = '%s'\n", LevelDB_LastError());
+
+	sleep(3);
+	printf("Process %u was finished\n", (unsigned int) id);
+
+	/*
+	ThreadMutexLock mutexLock(mutex);
+
+	printf("LastError = '%s'\n", lastError.Ref().c_str());
+	LastError::Code()++;
+	lastError.Ref() = "FUUUU!!!";
+	sleep(1);
+	printf("LastError = '%s'\n", lastError.Ref().c_str());
+	*/
+
+	return NULL;
+}
+
+
+
 int main(int argc, const char * argv[])
 {
-	LevelDB_Open("/tmp/nginx_leveldb1");
-	LevelDB_Close();
+	pthread_t tid[2];
+
+	unsigned int i = 0;
+	while (i < sizeof(tid) / sizeof(tid[0]))
+	{
+		int err = pthread_create(&(tid[i]), NULL, &ThreadFunc, NULL);
+		if (err != 0)
+		{
+			printf("Could not create thread :[%s]", strerror(err));
+		}
+		
+		sleep(2);
+
+		i++;
+	}
+
+	sleep(5);
+
+	pthread_join(tid[0], NULL);
+	pthread_join(tid[1], NULL);
+
 	return 0;
 
-	if (LevelDB_Open("/tmp/nginx_leveldb1") < 0)
+/*
+	printf("Ok!\n");
+
+	if (LevelDB_Open("/tmp/nginx_leveldb") < 0)
 	{
-		printf("Could not open database: %s\n", LevelDB_LastError());
+		printf("Could not open database\n");
 		return 1;
 	}
 
@@ -40,11 +95,7 @@ int main(int argc, const char * argv[])
 			PrintUsage(argc, argv);
 		}
 
-		if (LevelDB_Put(argv[2], strlen(argv[2]), argv[3], strlen(argv[3])) < 0)
-		{
-			printf("%s\n", LevelDB_LastError());
-			return 1;
-		}
+		LevelDB_Put(argv[2], strlen(argv[2]), argv[3], strlen(argv[3]));
 	}
 	else if (strcmp(argv[1], "get") == 0)
 	{
@@ -54,12 +105,7 @@ int main(int argc, const char * argv[])
 		}
 
 		int r = LevelDB_Get(argv[2], strlen(argv[2]), PrintValue, NULL);
-		if (r < 0)
-		{
-			printf("%s\n", LevelDB_LastError());
-			return 1;
-		}
-		else if (r == 1)
+		if (r == 1)
 		{
 			printf("Not found.\n");
 		}
@@ -68,9 +114,7 @@ int main(int argc, const char * argv[])
 	{
 		PrintUsage(argc, argv);
 	}
-
-	LevelDB_Close();
-
+*/
 /*
 	leveldb::Options options;
 	options.create_if_missing = true;

@@ -53,6 +53,18 @@ TARGET_LINK_LIBRARIES (
 
 #############################################################################################################
 
+ADD_EXECUTABLE (
+	test_threads
+		test_threads.c
+)
+
+TARGET_LINK_LIBRARIES (
+	test_threads
+		nginx_leveldb
+)
+
+#############################################################################################################
+
 INSTALL (
 	TARGETS
 		nginx_leveldb

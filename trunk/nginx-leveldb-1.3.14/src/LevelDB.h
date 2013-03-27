@@ -8,11 +8,15 @@ extern "C"
 {
 #endif
 
+typedef void (*LevelDB_GetCallback) (const char * valueData, size_t valueSize, void * param);
+
+const char * LevelDB_LastError();
+
+void LevelDB_SetLastError(const char * message);
+
 int LevelDB_Open(const char * dirPath);
 
 void LevelDB_Close();
-
-typedef void (*LevelDB_GetCallback) (const char * valueData, size_t valueSize, void * param);
 
 int LevelDB_Get(const char * keyData, size_t keySize, LevelDB_GetCallback callback, void * param);
 
