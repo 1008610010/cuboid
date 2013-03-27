@@ -18,11 +18,7 @@ void PrintValue(const char * valueData, size_t valueSize, void * param)
 
 int main(int argc, const char * argv[])
 {
-	LevelDB_Open("/tmp/nginx_leveldb1");
-	LevelDB_Close();
-	return 0;
-
-	if (LevelDB_Open("/tmp/nginx_leveldb1") < 0)
+	if (LevelDB_Open("/tmp/nginx_leveldb") < 0)
 	{
 		printf("Could not open database: %s\n", LevelDB_LastError());
 		return 1;
