@@ -6,6 +6,8 @@
 
 #include <leveldb/db.h>
 
+#include "ThreadLocalVariable.hpp"
+
 namespace
 {
 	class LevelDB
@@ -107,10 +109,27 @@ namespace
 
 			leveldb::DB * db_;
 	};
+
+	XTL::ThreadLocalVariable<std::string> LAST_ERROR;
+
+	void SetLastError(const std::string & value)
+	{
+		LAST_ERROR.Ref() = value;
+	}
 }
 
 extern "C"
 {
+	const char * LevelDB_LastError()
+	{
+		return LAST_ERROR.Ref().c_str();
+	}
+
+	void LevelDB_SetLastError(const char * message)
+	{
+		SetLastError(message);
+	}
+
 	int LevelDB_Open(const char * dirPath)
 	{
 		try
@@ -120,6 +139,7 @@ extern "C"
 		}
 		catch (const std::runtime_error & e)
 		{
+			SetLastError(e.what());
 			return -1;
 		}
 	}
@@ -150,6 +170,7 @@ extern "C"
 		}
 		catch (const std::runtime_error & e)
 		{
+			SetLastError(e.what());
 			return -1;
 		}
 	}
@@ -163,6 +184,7 @@ extern "C"
 		}
 		catch (const std::runtime_error & e)
 		{
+			SetLastError(e.what());
 			return -1;
 		}
 	}
