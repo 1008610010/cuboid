@@ -6,61 +6,61 @@
 
 namespace XTL
 {
-		class FilePathCreator : public FilePathTokenListener
-		{
-			public:
+	class FilePathCreator : public FilePathTokenListener
+	{
+		public:
 
-				explicit FilePathCreator(FilePath & target)
-					: target_(target) { ;; }
+			explicit FilePathCreator(FilePath & target)
+				: target_(target) { ;; }
 
-				virtual ~FilePathCreator() throw()
-				{
-					;;
-				}
+			virtual ~FilePathCreator() throw()
+			{
+				;;
+			}
 
-				virtual void OnRootDir()
-				{
-					target_.SetAbsolute();
-				}
+			virtual void OnRootDir()
+			{
+				target_.SetAbsolute();
+			}
 
-				virtual void OnCurrentDir()
-				{
-					;;
-				}
+			virtual void OnCurrentDir()
+			{
+				;;
+			}
 
-				virtual void OnParentDir()
-				{
-					target_.AppendParentDir();
-				}
+			virtual void OnParentDir()
+			{
+				target_.AppendParentDir();
+			}
 
-				virtual void OnPathPart(const std::string & part)
-				{
+			virtual void OnPathPart(const std::string & part)
+			{
 
-					target_.AppendPathPart(part);
-				}
+				target_.AppendPathPart(part);
+			}
 
-			private:
+		private:
 
-				FilePath & target_;
-		};
+			FilePath & target_;
+	};
 
-		class FilePathAppender : public FilePathCreator
-		{
-			public:
+	class FilePathAppender : public FilePathCreator
+	{
+		public:
 
-				explicit FilePathAppender(FilePath & target)
-					: FilePathCreator(target) { ;; }
+			explicit FilePathAppender(FilePath & target)
+				: FilePathCreator(target) { ;; }
 
-				virtual ~FilePathAppender() throw()
-				{
-					;;
-				}
+			virtual ~FilePathAppender() throw()
+			{
+				;;
+			}
 
-				virtual void OnRootDir()
-				{
-					// Do nothing or throw exception?
-				}
-		};
+			virtual void OnRootDir()
+			{
+				// Do nothing or throw exception?
+			}
+	};
 
 	FilePath::FilePath(const std::string & filePath)
 		: parts_(),
@@ -133,27 +133,27 @@ namespace XTL
 
 	void FilePath::ConvertToAbsolute()
 	{
-		if (IsAbsolute())
-		{
-			return;
-		}
-
 		ConvertToAbsolute(FileUtils::GetCurrentDirectory());
 	}
 
 	void FilePath::ConvertToAbsolute(const std::string & baseDir)
+	{
+		ConvertToAbsolute(FilePath(baseDir));
+	}
+
+	void FilePath::ConvertToAbsolute(const FilePath & basePath)
 	{
 		if (IsAbsolute())
 		{
 			return;
 		}
 
-		FilePath tempFilePath(baseDir);
-		if (!tempFilePath.IsAbsolute())
+		if (!basePath.IsAbsolute())
 		{
-			throw ILLEGAL_ARGUMENT_ERROR("FilePath::ConvertToAbsolute() - baseDir is not absolute");
+			throw ILLEGAL_ARGUMENT_ERROR("FilePath::ConvertToAbsolute() - basePath is not absolute");
 		}
 
+		FilePath tempFilePath(basePath);
 		tempFilePath.Append(*this);
 		std::swap(parts_, tempFilePath.parts_);
 
