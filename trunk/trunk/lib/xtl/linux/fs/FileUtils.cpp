@@ -7,6 +7,7 @@
 
 #include <vector>
 
+#include "File.hpp"
 #include "FilePath.hpp"
 #include "FileStats.hpp"
 #include "../../FormatString.hpp"
@@ -208,5 +209,18 @@ namespace XTL
 
 		return CreatePath(fp, accessMode);
 	}
-}
 
+	void FileUtils::SlurpFile(const std::string & filePath, std::vector<char> & content)
+	{
+		File file(filePath);
+		file.Open(File::OPEN_READ_ONLY);
+
+		FileCloseSentinel sentinel(file);
+
+		const FileSize size = file.Size();
+		content.reserve(size + 1); // Reserve one byte for NULL character
+		content.resize(size);
+
+		file.Read(&content[0], size);
+	}
+}
