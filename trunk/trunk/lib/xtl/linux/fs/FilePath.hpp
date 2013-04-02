@@ -1,8 +1,8 @@
 #ifndef XTL__FILE_PATH_HPP__
 #define XTL__FILE_PATH_HPP__ 1
 
-#include <deque>
 #include <string>
+#include <vector>
 
 namespace XTL
 {
@@ -10,8 +10,7 @@ namespace XTL
 
 	class FilePath
 	{
-		// TODO: replace this with std::vector
-		typedef std::deque<std::string> ListOfParts;
+		typedef std::vector<std::string> ListOfParts;
 
 		public:
 
@@ -37,6 +36,8 @@ namespace XTL
 			void ConvertToAbsolute();
 
 			void ConvertToAbsolute(const std::string & baseDir);
+
+			void ConvertToAbsolute(const FilePath & basePath);
 
 			class Iterator
 			{
