@@ -284,10 +284,11 @@ namespace XTL
 			void Rename(const std::string & newFilePath);
 
 			/**
-			 * @throw IllegalOperationError  Файл не открыт.
 			 * @throw UnixError              Системная ошибка.
 			 */
-			void GetStats(FileStats & stats);
+			void GetStats(FileStats & stats) const;
+
+			FileSize Size() const;
 
 		protected:
 
@@ -297,6 +298,29 @@ namespace XTL
 				TODO: Путь к файлу необходим для указания его в выбрасываемых исключениях, типа UnixError.
 			*/
 			std::string filePath_; // Должен быть модификатор const, но убран, чтобы работал оператор присваивания. Нафига нам оператор присваивания?
+	};
+
+	class FileCloseSentinel
+	{
+		public:
+
+			explicit FileCloseSentinel(File & file)
+				: file_(file)
+			{
+				;;
+			}
+
+			~FileCloseSentinel() throw()
+			{
+				file_.Close();
+			}
+
+		private:
+
+			FileCloseSentinel(const FileCloseSentinel &);
+			FileCloseSentinel & operator= (const FileCloseSentinel &);
+
+			File & file_;
 	};
 }
 

@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 
 #include <string>
+#include <vector>
 
 #include "../AccessMode.hpp"
 
@@ -77,6 +78,8 @@ namespace XTL
 		 * @throw UnixError - Системная ошибка.
 		 */
 		static bool CreatePathForFile(const std::string & filePath, AccessMode accessMode = AccessMode::DEFAULT_DIRECTORY);
+
+		static void SlurpFile(const std::string & filePath, std::vector<char> & content);
 	};
 }
 

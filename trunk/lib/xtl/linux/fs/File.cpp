@@ -354,14 +354,14 @@ namespace XTL
 		filePath_ = newFilePath;
 	}
 
-	void File::GetStats(FileStats & stats)
+	void File::GetStats(FileStats & stats) const
 	{
-		if (IsClosed())
-		{
-			throw ILLEGAL_OPERATION_ERROR(ERROR_FILE_IS_CLOSED);
-		}
+		return stats.Init(filePath_);
+	}
 
-		return stats.Init(desc_);
+	FileSize File::Size() const
+	{
+		return FileStats(filePath_).Size();
 	}
 }
 
