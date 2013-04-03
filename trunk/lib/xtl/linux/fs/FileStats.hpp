@@ -48,11 +48,11 @@ namespace XTL
 
 			FileStats();
 
-			explicit FileStats(const std::string & fileName);
+			FileStats(const std::string & fileName, bool followLinks);
 
 			explicit FileStats(int fd);
 
-			void Init(const std::string & fileName);
+			void Init(const std::string & fileName, bool followLinks);
 
 			void Init(int fd);
 
