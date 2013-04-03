@@ -177,7 +177,7 @@ namespace XTL
 			{
 				if (errno == EEXIST)
 				{
-					if (FileStats(itr.CurrentPath()).IsDirectory())
+					if (FileStats(itr.CurrentPath(), true).IsDirectory())
 					{
 						created = false;
 						continue;

@@ -36,7 +36,7 @@ namespace XTL
 					continue;
 				}
 
-				const XTL::FileStats fileStats(baseDir + "/" + fileName);
+				const XTL::FileStats fileStats(baseDir + "/" + fileName, true);
 
 				if (fileStats.IsDirectory())
 				{

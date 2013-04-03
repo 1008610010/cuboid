@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 #include <xtl/Exception.hpp>
+#include <xtl/FormatString.hpp>
 #include <xtl/io/SeekableInputStream.hpp>
 
 #include "Record.hpp"
@@ -30,7 +31,7 @@ namespace PLAIN
 
 		if (inputStream.Size() % recordSize != 0)
 		{
-			throw std::runtime_error("Input stream size is not a multiple of the record size");
+			throw std::runtime_error(XTL::FormatString("Input stream size (%u) is not a multiple of the record size (%u)", inputStream.Size(), recordSize));
 		}
 
 		unsigned int left = 0;

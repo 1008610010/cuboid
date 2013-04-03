@@ -37,9 +37,9 @@ namespace XTL
 		;;
 	}
 
-	FileStats::FileStats(const std::string & fileName)
+	FileStats::FileStats(const std::string & fileName, bool followLinks)
 	{
-		Init(fileName);
+		Init(fileName, followLinks);
 	}
 
 	FileStats::FileStats(int fd)
@@ -47,14 +47,16 @@ namespace XTL
 		Init(fd);
 	}
 
-	void FileStats::Init(const std::string & fileName)
+	void FileStats::Init(const std::string & fileName, bool followLinks)
 	{
 		if (fileName.empty())
 		{
 			throw ILLEGAL_ARGUMENT_ERROR("fileName");
 		}
 
-		if (::lstat64(fileName.c_str(), &stats_) != 0)
+		int res = followLinks ? ::stat64(fileName.c_str(), &stats_)
+		                      : ::lstat64(fileName.c_str(), &stats_);
+		if (res != 0)
 		{
 			throw UnixError();
 		}

@@ -356,12 +356,12 @@ namespace XTL
 
 	void File::GetStats(FileStats & stats) const
 	{
-		return stats.Init(filePath_);
+		return stats.Init(filePath_, true);
 	}
 
 	FileSize File::Size() const
 	{
-		return FileStats(filePath_).Size();
+		return FileStats(filePath_, true).Size();
 	}
 }
 
