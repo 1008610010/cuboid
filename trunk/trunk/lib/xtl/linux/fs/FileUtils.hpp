@@ -41,6 +41,11 @@ namespace XTL
 		 */
 		static void RecreateSymlink(const std::string & linkPath, const std::string & destination);
 
+		/**
+		 * Получить цель символической ссылки, т.е. файл, на который она указывает.
+		 */
+		static const std::string ReadSymlink(const std::string & linkPath);
+
 		static const std::string GetCurrentDirectory();
 
 		static const std::string NormalizeFilePath(const std::string & filePath);

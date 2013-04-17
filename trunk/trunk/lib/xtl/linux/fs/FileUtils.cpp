@@ -102,6 +102,29 @@ namespace XTL
 		}
 	}
 
+	const std::string FileUtils::ReadSymlink(const std::string & linkPath)
+	{
+		static const unsigned int MAX_BUFFER_SIZE = 65536;
+		std::vector<char> buffer(1);
+
+		while (true)
+		{
+			int length = ::readlink(linkPath.c_str(), &buffer[0], buffer.size());
+			if (length < 0)
+			{
+				throw XTL::UnixError();
+			}
+			else if (length < static_cast<int>(buffer.size()) || buffer.size() >= MAX_BUFFER_SIZE)
+			{
+				return std::string(&buffer[0], length);
+			}
+			else
+			{
+				buffer.resize(buffer.size() << 1);
+			}
+		}
+	}
+
 	const std::string FileUtils::GetCurrentDirectory()
 	{
 		static const unsigned int MIN_BUFFER_SIZE = 256;
