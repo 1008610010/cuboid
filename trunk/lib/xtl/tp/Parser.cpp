@@ -33,6 +33,30 @@ namespace XTL
 		throw EndOfFile();
 	}
 
+	bool Parser::SkipChar(char c)
+	{
+		if (AtEnd() || GetChar() != c)
+		{
+			return false;
+		}
+
+		Advance();
+		return true;
+	}
+
+	bool Parser::SkipString(const char * s)
+	{
+		for (; *s != '\0'; ++s)
+		{
+			if (!SkipChar(*s))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	void Parser::SkipChars(char c)
 	{
 		while (NotAtEnd())

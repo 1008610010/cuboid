@@ -1,6 +1,6 @@
-﻿??* Program
+﻿  * Program
 
-  * Code Style
+  * Coding Style
   * VIM Cheat Sheet
 
   * Documenting Tool
@@ -151,41 +151,38 @@
 
 
 
+XTL::PLAIN
 
+idx : [
+	{
+		journal_id  : UINT_32,
+		_reserved   : ZERO_32,
+		data_offset : UINT_64,
+	},
+	...
+]
 
+dat : [
+	complex(
+		{
+			journal_id : UINT_32,
+		},
+		{
+			hits       : UINT_32,
+			visitors   : UINT_32,
+			readers    : UINT_32,
+		},
+	)
+]
 
-
-
-
-* PC Games
-  - Serious Sam
-  - Heroes of Might and Magic I
-  - Heroes of Might and Magic II
-  - Heroes of Might and Magic III
-  - Heroes of Might and Magic IV
-  - Heroes of Might and Magic V
-
-* Console Games
-  - Nintendo
-  - Super Nintendo
-  - Nintendo 64
-  - Sega Genesis
-  - Gameboy
-  - Gameboy Advance
-  - Panasonic 3DO
-  - Atari ...
-  - Sega Saturn
-  - Nintendo DS
-
-
-* Vim cheat sheet
-* Apache configs manual
-
-
-
-
-
-
+xtr : [
+	array(
+		{
+			unique     : CHAR[16],
+		},
+		
+	)
+]
 
 
 

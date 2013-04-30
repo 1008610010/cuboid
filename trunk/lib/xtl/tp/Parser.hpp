@@ -110,6 +110,18 @@ namespace XTL
 			void WaitChar(char c);
 
 			/**
+			 * @return true, if specified char was skipped.
+			 **/
+			bool SkipChar(char c);
+
+			/**
+			 * После выполнения позиция парсера будет либо за концом прочитанной строки, либо где-то в ее середине на первом несовпавшем символе.
+			 * @return true,  если указанная строка была полностью прочитана.
+			 * @return false, в противном случае
+			 **/
+			bool SkipString(const char * s);
+
+			/**
 			 * @throws EndOfFile - if end of char source was reached;
 			 */
 			void SkipChars(char c);
@@ -122,7 +134,7 @@ namespace XTL
 			/**
 			 * Если текущий символ c, то сдвигаем позицию.
 			 * @return true  если текущий символ c
-			 * @return false и противном случае
+			 * @return false в противном случае
 			 */
 			bool ReadChar(char c)
 			{
