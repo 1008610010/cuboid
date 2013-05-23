@@ -1,6 +1,7 @@
 #ifndef XTL__AUTO_PTR_VECTOR_HPP__
 #define XTL__AUTO_PTR_VECTOR_HPP__ 1
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -134,6 +135,15 @@ namespace XTL
 				{
 					items_.resize(newSize, 0);
 				}
+			}
+
+			/**
+			 * bool comp(const T *, const T *)
+			 */
+			template <class Compare>
+			void Sort(Compare comp)
+			{
+				std::sort(items_.begin(), items_.end(), comp);
 			}
 
 		private:
