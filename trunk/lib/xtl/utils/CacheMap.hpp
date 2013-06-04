@@ -3,6 +3,7 @@
 
 #include <list>
 #include <map>
+#include <memory>
 
 namespace XTL
 {
