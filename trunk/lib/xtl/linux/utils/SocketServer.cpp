@@ -182,8 +182,8 @@ namespace XTL
 
 		std::vector<ClientSocket> disconnected;
 
-		const AutoPtrMap<ClientSocket, Client>::Iterator end = clients_.End();
-		for (AutoPtrMap<ClientSocket, Client>::Iterator itr = clients_.Begin(); itr != end; ++itr)
+		const AutoPtrMap<ClientSocket, Client>::iterator end = clients_.end();
+		for (AutoPtrMap<ClientSocket, Client>::iterator itr = clients_.begin(); itr != end; ++itr)
 		{
 			if (readable.Contains(itr.Key()))
 			{

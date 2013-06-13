@@ -2,7 +2,8 @@
 #define XTL__AUTO_PTR_MAP_HPP__ 1
 
 #include <map>
-#include <memory>
+
+#include "AutoPtr.hpp"
 
 namespace XTL
 {
@@ -14,22 +15,21 @@ namespace XTL
 			typedef KeyType_   KeyType;
 			typedef ValueType_ ValueType;
 
-			typedef typename std::map<KeyType, ValueType *>::iterator       map_iterator;
-			typedef typename std::map<KeyType, ValueType *>::const_iterator map_const_iterator;
+			typedef std::map<KeyType, ValueType *> Map;
 
-			class ConstIterator
+			class const_iterator
 			{
 				public:
 
-					ConstIterator & operator++ ()
+					const_iterator & operator++ ()
 					{
 						++itr_;
 						return *this;
 					}
 
-					ConstIterator & operator++ (int)
+					const_iterator & operator++ (int)
 					{
-						ConstIterator temp(*this);
+						const_iterator temp(*this);
 						++(*this);
 						return temp;
 					}
@@ -49,12 +49,12 @@ namespace XTL
 						return itr_->second;
 					}
 
-					bool operator== (ConstIterator other) const
+					bool operator== (const_iterator other) const
 					{
 						return itr_ == other.itr_;
 					}
 
-					bool operator!= (ConstIterator other) const
+					bool operator!= (const_iterator other) const
 					{
 						return itr_ != other.itr_;
 					}
@@ -62,37 +62,42 @@ namespace XTL
 				private:
 
 					friend class AutoPtrMap;
-					friend class Iterator;
+					friend class iterator;
 
-					explicit ConstIterator(map_const_iterator itr)
+					explicit const_iterator(typename Map::const_iterator itr)
 						: itr_(itr)
 					{
 						;;
 					}
 
-					map_const_iterator itr_;
+					typename Map::const_iterator itr_;
 			};
 
-			class Iterator
+			class iterator
 			{
 				public:
 
-					operator ConstIterator () const
+					operator const_iterator () const
 					{
-						return ConstIterator(itr_);
+						return const_iterator(itr_);
 					}
 
-					Iterator & operator++ ()
+					iterator & operator++ ()
 					{
 						++itr_;
 						return *this;
 					}
 
-					Iterator & operator++ (int)
+					iterator & operator++ (int)
 					{
-						Iterator temp(*this);
+						iterator temp(*this);
 						++(*this);
 						return temp;
+					}
+
+					std::pair<const KeyType &, const ValueType * const> operator* () const
+					{
+						return std::pair<const KeyType &, const ValueType *>(itr_->first, itr_->second);
 					}
 
 					const KeyType & Key() const
@@ -100,12 +105,17 @@ namespace XTL
 						return itr_->first;
 					}
 
-					ValueType * operator-> () const
+					const ValueType * Value() const
 					{
 						return itr_->second;
 					}
 
 					ValueType * Value()
+					{
+						return itr_->second;
+					}
+
+					ValueType * operator-> () const
 					{
 						return itr_->second;
 					}
@@ -122,12 +132,12 @@ namespace XTL
 						itr_->second = value;
 					}
 
-					bool operator== (Iterator other) const
+					bool operator== (iterator other) const
 					{
 						return itr_ == other.itr_;
 					}
 
-					bool operator!= (Iterator other) const
+					bool operator!= (iterator other) const
 					{
 						return itr_ != other.itr_;
 					}
@@ -136,13 +146,13 @@ namespace XTL
 
 					friend class AutoPtrMap;
 
-					explicit Iterator(map_iterator itr)
+					explicit iterator(typename Map::iterator itr)
 						: itr_(itr)
 					{
 						;;
 					}
 
-					map_iterator itr_;
+					typename Map::iterator itr_;
 			};
 
 			AutoPtrMap()
@@ -163,8 +173,8 @@ namespace XTL
 
 			void Clear()
 			{
-				const map_iterator end = map_.end();
-				for (map_iterator itr = map_.begin(); itr != end; ++itr)
+				const typename Map::iterator end = map_.end();
+				for (typename Map::iterator itr = map_.begin(); itr != end; ++itr)
 				{
 					delete itr->second;
 				}
@@ -172,9 +182,9 @@ namespace XTL
 				map_.clear();
 			}
 
-			Iterator Set(const KeyType & key, std::auto_ptr<ValueType> value)
+			iterator Set(const KeyType & key, std::auto_ptr<ValueType> value)
 			{
-				map_iterator itr = map_.find(key);
+				typename Map::iterator itr = map_.find(key);
 
 				if (itr != map_.end())
 				{
@@ -187,55 +197,68 @@ namespace XTL
 
 				itr->second = value.release();
 
-				return Iterator(itr);
+				return iterator(itr);
 			}
 
 			ValueType * const operator[] (const KeyType & key) const
 			{
-				map_const_iterator itr = map_.find(key);
+				const typename Map::const_iterator itr = map_.find(key);
 
 				return itr == map_.end() ? 0 : itr->second;
 			}
 
-			ConstIterator Begin() const
+			const_iterator begin() const
 			{
-				return ConstIterator(map_.begin());
+				return const_iterator(map_.begin());
 			}
 
-			ConstIterator End() const
+			const_iterator end() const
 			{
-				return ConstIterator(map_.end());
+				return const_iterator(map_.end());
 			}
 
-			Iterator Begin()
+			iterator begin()
 			{
-				return Iterator(map_.begin());
+				return iterator(map_.begin());
 			}
 
-			Iterator End()
+			iterator end()
 			{
-				return Iterator(map_.end());
+				return iterator(map_.end());
 			}
 
-			ConstIterator Find(const KeyType & key) const
+			const_iterator Find(const KeyType & key) const
 			{
-				return ConstIterator(map_.find(key));
+				return const_iterator(map_.find(key));
 			}
 
-			Iterator Find(const KeyType & key)
+			iterator Find(const KeyType & key)
 			{
-				return Iterator(map_.find(key));
+				return iterator(map_.find(key));
 			}
 
-			void Erase(Iterator itr)
+			template <typename Creator_>
+			iterator FindOrCreate(const KeyType & key, const Creator_ & creator)
+			{
+				iterator itr = Find(key);
+				if (itr == end())
+				{
+					itr = Set(key, creator());
+				}
+
+				return itr;
+			}
+
+			iterator Erase(iterator itr)
 			{
 				delete itr.itr_->second;
-				map_.erase(itr.itr_);
+				map_.erase(itr.itr_++);
+				return itr;
 			}
 
 			bool Erase(const KeyType & key)
 			{
-				map_iterator itr = map_.find(key);
+				typename Map::iterator itr = map_.find(key);
 
 				if (itr == map_.end())
 				{
@@ -253,7 +276,7 @@ namespace XTL
 			AutoPtrMap(const AutoPtrMap &);
 			AutoPtrMap & operator= (const AutoPtrMap &);
 
-			std::map<KeyType, ValueType *> map_;
+			Map map_;
 	};
 }
 
