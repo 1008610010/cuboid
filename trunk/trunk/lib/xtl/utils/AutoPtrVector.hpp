@@ -2,8 +2,9 @@
 #define XTL__AUTO_PTR_VECTOR_HPP__ 1
 
 #include <algorithm>
-#include <memory>
 #include <vector>
+
+#include "AutoPtr.hpp"
 
 namespace XTL
 {
