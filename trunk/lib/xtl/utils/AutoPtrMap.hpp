@@ -105,12 +105,10 @@ namespace XTL
 						return itr_->second;
 					}
 
-					/*
 					ValueType * Value()
 					{
 						return itr_->second;
 					}
-					*/
 
 					std::auto_ptr<ValueType> ReleaseValue()
 					{
