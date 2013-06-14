@@ -193,6 +193,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/tp/TextCursor.hpp
 
 %{_prefix}/include/xtl/utils/Algorithm.hpp
+%{_prefix}/include/xtl/utils/AutoPtr.hpp
 %{_prefix}/include/xtl/utils/AutoPtrPair.hpp
 %{_prefix}/include/xtl/utils/AutoPtrMap.hpp
 %{_prefix}/include/xtl/utils/AutoPtrStack.hpp
