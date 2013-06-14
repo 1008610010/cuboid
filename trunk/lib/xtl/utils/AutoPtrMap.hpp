@@ -34,6 +34,11 @@ namespace XTL
 						return temp;
 					}
 
+					const std::pair<KeyType, const ValueType *> operator* () const
+					{
+						return *itr_;
+					}
+
 					const KeyType & Key() const
 					{
 						return itr_->first;
@@ -95,9 +100,9 @@ namespace XTL
 						return temp;
 					}
 
-					std::pair<const KeyType &, const ValueType * const> operator* () const
+					std::pair<const KeyType &, ValueType * const> operator* () const
 					{
-						return std::pair<const KeyType &, const ValueType *>(itr_->first, itr_->second);
+						return std::pair<const KeyType &, ValueType * const>(itr_->first, itr_->second);
 					}
 
 					const KeyType & Key() const
