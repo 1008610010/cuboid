@@ -17,7 +17,8 @@ namespace PGSQL
 				  size_(0),
 				  index_(0)
 			{
-				if (result_.Success()) {
+				if (result_.Success())
+				{
 					size_ = result_.RowsCount();
 				}
 			}

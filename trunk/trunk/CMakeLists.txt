@@ -94,6 +94,15 @@ TARGET_LINK_LIBRARIES (
 		xtl
 )
 
+ADD_EXECUTABLE (
+	html_tokenizer
+		tests/html_tokenizer.cpp
+)
+
+TARGET_LINK_LIBRARIES (
+	html_tokenizer
+		xtl
+)
 
 #ADD_EXECUTABLE (
 #	mysql_test
