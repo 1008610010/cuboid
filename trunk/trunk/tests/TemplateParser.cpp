@@ -31,7 +31,7 @@ namespace XTL
 			Mark();
 			Advance();
 
-			if (!ReadChar('{'))
+			if (!SkipChar('{'))
 			{
 				Advance();
 				continue;
@@ -51,7 +51,7 @@ namespace XTL
 
 				const std::string variableName = ReadIdentifier();
 
-				if (!ReadString("}}"))
+				if (!SkipString("}}"))
 				{
 					ThrowError("Syntax error");
 				}
@@ -61,7 +61,7 @@ namespace XTL
 			else
 			{
 				bool closing = false;
-				if (ReadChar('/'))
+				if (SkipChar('/'))
 				{
 					closing = true;
 				}
@@ -136,7 +136,7 @@ namespace XTL
 
 				SkipWhitespaces();
 
-				if (!ReadString("}}"))
+				if (!SkipString("}}"))
 				{
 					ThrowError("Syntax error");
 				}

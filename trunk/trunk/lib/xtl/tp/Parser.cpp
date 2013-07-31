@@ -2,6 +2,35 @@
 
 namespace XTL
 {
+	Parser::Error::Error(const TextCursor & cursor, const std::string & what)
+		: cursor_(cursor),
+		  what_(what)
+	{
+		;;
+	}
+
+	Parser::Error::~Error() throw()
+	{
+		;;
+	}
+
+	const TextCursor & Parser::Error::Cursor() const throw()
+	{
+		return cursor_;
+	}
+
+	const char * Parser::Error::What() const throw()
+	{
+		return what_.c_str();
+	}
+
+
+	Parser::EndOfFile::~EndOfFile() throw()
+	{
+		;;
+	}
+
+
 	Parser::Parser(CharSource & charSource)
 		: charSource_(charSource)
 	{
@@ -72,7 +101,7 @@ namespace XTL
 		throw EndOfFile();
 	}
 
-	void Parser::SkipCharClass(const CharClass & charClass)
+	void Parser::SkipCharClass2(const CharClass & charClass)
 	{
 		while (NotAtEnd())
 		{
