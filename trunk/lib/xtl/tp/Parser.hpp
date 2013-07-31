@@ -36,22 +36,13 @@ namespace XTL
 			{
 				public:
 
-					Error(const TextCursor & cursor, const std::string & what)
-						: cursor_(cursor),
-						  what_(what)
-					{
-						;;
-					}
+					Error(const TextCursor & cursor, const std::string & what);
 
-					const TextCursor & Cursor() const throw()
-					{
-						return cursor_;
-					}
+					virtual ~Error() throw();
 
-					const char * What() const throw()
-					{
-						return what_.c_str();
-					}
+					const TextCursor & Cursor() const throw();
+
+					const char * What() const throw();
 
 				private:
 
@@ -61,6 +52,9 @@ namespace XTL
 
 			class EndOfFile
 			{
+				public:
+
+					virtual ~EndOfFile() throw();
 			};
 
 			static const CharClass CreateCommonClass(CharClassBits classBits)
@@ -110,7 +104,9 @@ namespace XTL
 			void WaitChar(char c);
 
 			/**
-			 * @return true, if specified char was skipped.
+			 * Если текущий символ c, то сдвигаем позицию.
+			 * @return true,  если текущий символ c.
+			 * @return false, в противном случае.
 			 **/
 			bool SkipChar(char c);
 
@@ -129,38 +125,7 @@ namespace XTL
 			/**
 			 * @throws EndOfFile - if end of char source was reached;
 			 */
-			void SkipCharClass(const CharClass & charClass);
-
-			/**
-			 * Если текущий символ c, то сдвигаем позицию.
-			 * @return true  если текущий символ c
-			 * @return false в противном случае
-			 */
-			bool ReadChar(char c)
-			{
-				if (AtEnd() || GetChar() != c)
-				{
-					return false;
-				}
-
-				Advance();
-				return true;
-			}
-
-			bool ReadString(const char * s)
-			{
-				for (; *s != '\0'; ++s)
-				{
-					if (AtEnd() || GetChar() != *s)
-					{
-						return false;
-					}
-
-					Advance();
-				}
-
-				return true;
-			}
+			void SkipCharClass2(const CharClass & charClass);
 
 			/**
 			 * Precondition: NotAtEnd() && CharClass::IDENTIFIER_HEAD.Contains(GetChar())
