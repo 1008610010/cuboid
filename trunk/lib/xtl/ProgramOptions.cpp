@@ -624,12 +624,21 @@ namespace XTL
 		{
 			public:
 
+				ProgramOption_Integer(const char * label, const char * text, unsigned int flags, T & ref)
+					: ProgramOption(label, text, flags),
+					  ref_(ref)
+				{
+					;;
+				}
+
+				/*
 				ProgramOption_Integer(const char * label, const char * text, unsigned int flags, T & ref, const T & defaultValue)
 					: ProgramOption(label, text, flags),
 					  ref_(ref)
 				{
 					ref_ = defaultValue;
 				}
+				*/
 
 				virtual bool IsArray() const
 				{
@@ -800,22 +809,22 @@ namespace XTL
 
 		std::auto_ptr<XTL::ProgramOption> Integer(const char * label, const char * text, int & result, unsigned int flags)
 		{
-			return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<int>(label, text, flags, result, 0));
+			return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<int>(label, text, flags, result));
 		}
 
 		std::auto_ptr<XTL::ProgramOption> Integer(const char * label, const char * text, unsigned int & result, unsigned int flags)
 		{
-			return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<unsigned int>(label, text, flags, result, 0));
+			return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<unsigned int>(label, text, flags, result));
 		}
 
 		std::auto_ptr<XTL::ProgramOption> LongLong(const char * label, const char * text, long long int & result, unsigned int flags)
 		{
-			return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<long long int>(label, text, flags, result, 0));
+			return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<long long int>(label, text, flags, result));
 		}
 
 		std::auto_ptr<XTL::ProgramOption> LongLong(const char * label, const char * text, unsigned long long int & result, unsigned int flags)
 		{
-			return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<unsigned long long int>(label, text, flags, result, 0));
+			return std::auto_ptr<XTL::ProgramOption>(new ProgramOption_Integer<unsigned long long int>(label, text, flags, result));
 		}
 
 		std::auto_ptr<XTL::ProgramOption> Choice(const char * label, const char * text, unsigned int & result, const char * const * options, unsigned int flags)
