@@ -11,22 +11,13 @@ namespace SQLITE
 	{
 		public:
 
-			Exception(int code, const char * message)
-				: code_(code),
-				  message_(message)
-			{
-				;;
-			}
+			Exception(int code, const char * message);
 
-			int Code() const
-			{
-				return code_;
-			}
+			virtual ~Exception() throw();
 
-			const std::string & Message() const
-			{
-				return message_;
-			}
+			int Code() const;
+
+			const std::string & Message() const;
 
 		private:
 
@@ -38,17 +29,11 @@ namespace SQLITE
 	{
 		public:
 
-			QueryError(int code, const char * message, const std::string & query)
-				: Exception(code, message),
-				  query_(query)
-			{
-				;;
-			}
+			QueryError(int code, const char * message, const std::string & query);
 
-			const std::string & Query() const
-			{
-				return query_;
-			}
+			virtual ~QueryError() throw();
+
+			const std::string & Query() const;
 
 		private:
 

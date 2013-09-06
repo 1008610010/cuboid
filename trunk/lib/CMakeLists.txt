@@ -229,6 +229,7 @@ FIND_LIBRARY (
 SET (
 	XTL_SQLITE_SOURCES
 		xtl/sqlite/Database.cpp
+		xtl/sqlite/Exception.cpp
 		xtl/sqlite/Statement.cpp
 )
 
