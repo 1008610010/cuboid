@@ -1,10 +1,10 @@
-#ifndef XTL_SQLITE__DATABASE_HPP__
-#define XTL_SQLITE__DATABASE_HPP__ 1
+#ifndef XTL__SQLITE__DATABASE_HPP__
+#define XTL__SQLITE__DATABASE_HPP__ 1
 
 #include <string>
 
 #include "Exception.hpp"
-#include "QueryResult.hpp"
+#include "Statement.hpp"
 
 namespace XTL
 {
@@ -47,15 +47,35 @@ namespace SQLITE
 			 */
 			int Execute(const std::string & query);
 
+			template <typename T1>
+			int Execute(const std::string & query, const T1 & t1)
+			{
+				Statement statement(Prepare(query));
+				statement.Bind(1, t1);
+				return statement.Execute();
+			}
+
+			template <typename T1, typename T2>
+			int Execute(const std::string & query, const T1 & t1, const T2 & t2)
+			{
+				Statement statement(Prepare(query));
+				statement.Bind(1, t1);
+				statement.Bind(2, t2);
+				return statement.Execute();
+			}
+
+			int AffectedRows();
+
 			/**
 			 * @throw XTL::SQLITE::QueryError
 			 * @throw XTL::IllegalOperationError - база данных не была открыта
 			 */
-			QueryResult Select(const std::string & query);
+			Statement Prepare(const std::string & query);
 
 		private:
 
 			friend class QueryResult;
+			friend class Statement;
 
 			Database(const Database &);
 

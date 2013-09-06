@@ -229,7 +229,7 @@ FIND_LIBRARY (
 SET (
 	XTL_SQLITE_SOURCES
 		xtl/sqlite/Database.cpp
-		xtl/sqlite/QueryResult.cpp
+		xtl/sqlite/Statement.cpp
 )
 
 ADD_LIBRARY (
