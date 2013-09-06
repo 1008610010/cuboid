@@ -80,7 +80,17 @@ namespace SQLITE
 		return ::sqlite3_changes(DB_);
 	}
 
-	QueryResult Database::Select(const std::string & query)
+	int Database::AffectedRows()
+	{
+		if (db_ == 0)
+		{
+			throw ILLEGAL_OPERATION_ERROR("Database has not been opened");
+		}
+
+		return ::sqlite3_changes(DB_);
+	}
+
+	Statement Database::Prepare(const std::string & query)
 	{
 		if (db_ == 0)
 		{
@@ -101,7 +111,7 @@ namespace SQLITE
 			ThrowQueryError(query);
 		}
 
-		return QueryResult(this, stmt);
+		return Statement(this, stmt);
 	}
 
 	void Database::ThrowException()

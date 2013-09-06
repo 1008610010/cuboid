@@ -25,6 +25,6 @@ namespace XTL
 
 int main(int argc, const char * argv[])
 {
-	printf("Ok!\n");
+	printf("%u\n", sizeof(wchar_t));
 }
 

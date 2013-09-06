@@ -18,7 +18,7 @@
       - const unsigned int   line_;
       - const std::string    what_;
     - #define THROW(EXCEPTION_CLASS, WHAT) throw EXCEPTION_CLASS(__FILE__, __LINE__, WHAT)
-    
+
   * class Status
     - Status(const char * what);
     - Status(const std::string & what);
@@ -30,7 +30,7 @@
       - ILLEGAL_ARGUMENT
     - const bool Success() const;
     - const bool Failed() const;
-    
+
   * CharSource
     - const bool HasChar() const;
     - const bool AtEnd() const;
@@ -54,7 +54,7 @@
       required posts : Post[];
 
       TYPE := int32 | uint32 | int64 | uint64 | string | TYPE[]
-      
+
 
 
   * CharBuffer
@@ -180,10 +180,13 @@ xtr : [
 		{
 			unique     : CHAR[16],
 		},
-		
+
 	)
 ]
 
+
+
+curl -i 'http://127.0.0.1/post_stats?date=2013-06-14&journal_id=20873136&post_id=8188&type=1'
 
 
 

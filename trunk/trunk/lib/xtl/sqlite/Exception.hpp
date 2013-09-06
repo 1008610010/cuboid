@@ -1,5 +1,5 @@
-#ifndef XTL_SQLITE__EXCEPTION_HPP__
-#define XTL_SQLITE__EXCEPTION_HPP__ 1
+#ifndef XTL__SQLITE__EXCEPTION_HPP__
+#define XTL__SQLITE__EXCEPTION_HPP__ 1
 
 #include <string>
 
