@@ -266,7 +266,7 @@ XTL C++ Library development files - SQLite
 %defattr(-,root,root,-)
 %{_prefix}/include/xtl/sqlite/Database.hpp
 %{_prefix}/include/xtl/sqlite/Exception.hpp
-
+%{_prefix}/include/xtl/sqlite/Statement.hpp
 
 
 %prep
