@@ -134,7 +134,8 @@ namespace SQLITE
 
 	void Statement::Reset()
 	{
-		::sqlite3_clear_bindings(STMT_);
+		// This shit is not working, because function with this name can not be found.
+		// ::sqlite3_clear_bindings(STMT_);
 		::sqlite3_reset(STMT_);
 	}
 
