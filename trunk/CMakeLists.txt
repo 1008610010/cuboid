@@ -115,6 +115,17 @@ TARGET_LINK_LIBRARIES (
 #		xtl-mysql
 #)
 
+ADD_EXECUTABLE (
+	sqlite_test
+		tests/sqlite_test.cpp
+)
+
+TARGET_LINK_LIBRARIES (
+	sqlite_test
+		xtl
+		xtl-sqlite
+)
+
 
 ADD_EXECUTABLE (
 	ljstatsd
