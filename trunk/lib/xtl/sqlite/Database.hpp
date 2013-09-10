@@ -72,6 +72,14 @@ namespace SQLITE
 			 */
 			Statement Prepare(const std::string & query);
 
+			template <typename T1>
+			const std::string SelectString(const std::string & query, const T1 & t1)
+			{
+				XTL::SQLITE::Statement statement = Prepare(query);
+				statement.Bind(1, t1);
+				return statement.FetchString("");
+			}
+
 		private:
 
 			friend class QueryResult;
