@@ -179,6 +179,11 @@ namespace SQLITE
 		return reinterpret_cast<const char *>(::sqlite3_column_text(STMT_, columnIndex));
 	}
 
+	int Statement::GetInteger(unsigned int columnIndex) const
+	{
+		return ::sqlite3_column_int(STMT_, columnIndex);
+	}
+
 	const std::string Statement::FetchString(const char * defaultValue)
 	{
 		return Fetch() ? GetText(0) : defaultValue;
