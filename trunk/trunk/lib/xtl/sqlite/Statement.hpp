@@ -79,6 +79,8 @@ namespace SQLITE
 
 			const char * GetText(unsigned int columnIndex) const;
 
+			int GetInteger(unsigned int columnIndex) const;
+
 			const std::string FetchString(const char * defaultValue = "");
 
 		private:
