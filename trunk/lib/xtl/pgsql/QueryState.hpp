@@ -12,7 +12,15 @@ namespace PGSQL
 		public:
 
 			QueryState(const char * state)
-				: state_(state) { ;; }
+				: state_(state)
+			{
+				;;
+			}
+
+			bool IsUniqueViolation() const
+			{
+				return state_ == "23505";
+			}
 
 		private:
 
