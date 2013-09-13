@@ -2,6 +2,8 @@
 
 #include <libpq-fe.h>
 
+#include <vector>
+
 //#include "QueryParameters.hpp"
 #include "QueryResult.hpp"
 #include "Exception.hpp"
@@ -142,19 +144,44 @@ namespace PGSQL
 		}
 	}
 
-	bool Connection::BeginTransaction()
+	void Connection::BeginTransaction()
 	{
-		return Execute("BEGIN TRANSACTION;").Success();
+		Execute("BEGIN TRANSACTION;");
 	}
 
-	bool Connection::CommitTransaction()
+	void Connection::CommitTransaction()
 	{
-		return Execute("COMMIT TRANSACTION;").Success();
+		Execute("COMMIT TRANSACTION;");
 	}
 
-	bool Connection::RollbackTransaction()
+	void Connection::RollbackTransaction()
 	{
-		return Execute("ROLLBACK TRANSACTION;").Success();
+		Execute("ROLLBACK TRANSACTION;");
+	}
+
+	const std::string Connection::Escape(const std::string & value)
+	{
+		if (value.empty())
+		{
+			return std::string();
+		}
+
+		if (!IsOpened())
+		{
+			throw Exception("Connection was not opened");
+		}
+
+		std::vector<char> result(value.size() * 2 + 1);
+		int err = 0;
+		const int length = ::PQescapeStringConn(HANDLE_, &(result[0]), value.c_str(), value.size(), &err);
+		if (length > 0 && err == 0)
+		{
+			return std::string(result.begin(), result.begin() + length);
+		}
+		else
+		{
+			throw Exception("Error in PQescapeStringConn");
+		}
 	}
 
 /*
@@ -198,24 +225,7 @@ namespace PGSQL
 		return success;
 	}
 
-	const std::string Connection::Escape(const std::string & value)
-	{
-		if (!value.empty())
-		{
-			if (IsOpened() || Open())
-			{
-				std::vector<char> out(value.size() * 2 + 1);
-				int err = 0;
-				const int result = ::PQescapeStringConn(handle_, &*out.begin(), value.c_str(), value.size(), &err);
-				if (0 < result && 0 == err)
-				{
-					std::vector<char>::iterator it = out.begin() + result;
-					return std::string(out.begin(), it);
-				}
-			}
-		}
-		return std::string();
-	}
+
 */
 /*
 	const long long int PostgreSqlConnection::SelectInteger(const std::string & query,

@@ -19,7 +19,7 @@ namespace PGSQL
 		public:
 
 			/*
-			 * "host=172.16.11.250 port=5432 dbname=stats user=stats"
+			 * "host=172.16.11.250 port=5432 dbname=usersdb user=stats"
 			 */
 			explicit Connection(const std::string & connectionString);
 
@@ -62,11 +62,13 @@ namespace PGSQL
 
 			void CopyTable(const char * tableName, CopyDataConsumer & dataConsumer);
 
-			bool BeginTransaction();
+			void BeginTransaction();
 
-			bool CommitTransaction();
+			void CommitTransaction();
 
-			bool RollbackTransaction();
+			void RollbackTransaction();
+
+			const std::string Escape(const std::string & value);
 
 //			QueryResult ExecutePrepared(const std::string      & name,
 //			                            const QueryParameters & params);
@@ -83,8 +85,6 @@ namespace PGSQL
 //			bool Prepare(const std::string     & name,
 //			             const std::string     & query,
 //			             const QueryParameters & params);
-
-//			const std::string Escape(const std::string & value);
 
 		private:
 
