@@ -27,6 +27,12 @@ namespace XTL
 				;;
 			}
 
+			explicit AutoPtrVector(AutoPtrVector & other)
+				: items_()
+			{
+				items_.swap(other.items_);
+			}
+
 			~AutoPtrVector() throw()
 			{
 				Clear();
