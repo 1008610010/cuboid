@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "io/InputStream.hpp"
+
 namespace XTL
 {
 	class CharBuffer
@@ -66,9 +68,53 @@ namespace XTL
 				return Append(ptr, ::strlen(ptr));
 			}
 
+			CharBuffer & Append(InputStream & inputStream, unsigned int size)
+			{
+				if (size == 0)
+				{
+					return *this;
+				}
+
+				const unsigned int currentSize = chars_.size();
+
+				try
+				{
+					chars_.resize(currentSize + size);
+					inputStream.Read(&(chars_[currentSize]), size);
+				}
+				catch (...)
+				{
+					chars_.resize(currentSize);
+					throw;
+				}
+
+				return *this;
+			}
+
 			const std::string ToString() const
 			{
 				return std::string(chars_.data(), chars_.size());
+			}
+
+			void Clear()
+			{
+				chars_.clear();
+			}
+
+			void Shift(unsigned int size)
+			{
+				if (size == 0)
+				{
+					return;
+				}
+				else if (size >= chars_.size())
+				{
+					chars_.clear();
+				}
+				else
+				{
+					chars_.erase(chars_.begin(), chars_.begin() + size);
+				}
 			}
 
 		private:
