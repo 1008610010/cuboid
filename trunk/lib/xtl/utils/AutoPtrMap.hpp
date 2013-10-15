@@ -276,6 +276,16 @@ namespace XTL
 				return true;
 			}
 
+			template <typename Func_>
+			void ForEach(Func_ func) const
+			{
+				const typename Map::const_iterator end = map_.end();
+				for (typename Map::const_iterator itr = map_.begin(); itr != end; ++itr)
+				{
+					func(itr->first, itr->second);
+				}
+			}
+
 		private:
 
 			AutoPtrMap(const AutoPtrMap &);
