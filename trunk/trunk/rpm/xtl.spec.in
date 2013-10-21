@@ -168,9 +168,6 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/plain/RecordArrayReader.hpp
 %{_prefix}/include/xtl/plain/RecordPrototype.hpp
 %{_prefix}/include/xtl/plain/RecordPrototypeBuilder.hpp
-%{_prefix}/include/xtl/plain/Struct.hpp
-%{_prefix}/include/xtl/plain/StructPrototype.hpp
-%{_prefix}/include/xtl/plain/StructPrototypeBuilder.hpp
 %{_prefix}/include/xtl/simple_template/SimpleTemplate.hpp
 %{_prefix}/include/xtl/simple_template/SimpleTemplateItem.hpp
 %{_prefix}/include/xtl/simple_template/SimpleTemplateItemVisitor.hpp

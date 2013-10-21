@@ -81,9 +81,6 @@ SET (
 		xtl/plain/RecordPrototype.cpp
 		xtl/plain/RecordPrototypeBuilder.cpp
 		xtl/plain/RecordArray.cpp
-		xtl/plain/Struct.cpp
-		xtl/plain/StructPrototype.cpp
-		xtl/plain/StructPrototypeBuilder.cpp
 
 		xtl/utils/Base64.cpp
 		xtl/utils/BitUtils.cpp

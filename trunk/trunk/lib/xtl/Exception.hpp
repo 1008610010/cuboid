@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <string>
 
-#define ILLEGAL_ARGUMENT_ERROR(WHAT)  XTL::IllegalArgumentError(__FILE__, __LINE__, WHAT)
+#define ILLEGAL_ARGUMENT_ERROR(WHAT)  XTL::InvalidArgumentError(__FILE__, __LINE__, WHAT)
 #define ILLEGAL_OPERATION_ERROR(WHAT) XTL::IllegalOperationError(__FILE__, __LINE__, WHAT)
 
 namespace XTL
@@ -38,15 +38,15 @@ namespace XTL
 			const std::string what_;
 	};
 
-	class IllegalArgumentError : public LogicError
+	class InvalidArgumentError : public LogicError
 	{
 		public:
 
-			IllegalArgumentError(const char * file, unsigned int line, const char * what);
+			InvalidArgumentError(const char * file, unsigned int line, const char * what);
 
-			IllegalArgumentError(const char * file, unsigned int line, const std::string & what);
+			InvalidArgumentError(const char * file, unsigned int line, const std::string & what);
 
-			virtual ~IllegalArgumentError() throw();
+			virtual ~InvalidArgumentError() throw();
 	};
 
 	class IllegalOperationError : public LogicError
@@ -62,16 +62,11 @@ namespace XTL
 	{
 		public:
 
-			explicit TerminateProgram(int exitCode)
-				: exitCode_(exitCode)
-			{
-				;;
-			}
+			explicit TerminateProgram(int exitCode);
 
-			int ExitCode() const
-			{
-				return exitCode_;
-			}
+			virtual ~TerminateProgram() throw();
+
+			int ExitCode() const;
 
 		private:
 

@@ -9,6 +9,7 @@ namespace XTL
 		;;
 	}
 
+
 	LogicError::LogicError(const char * file, unsigned int line, const char * what)
 		: file_(file),
 		  line_(line),
@@ -35,22 +36,24 @@ namespace XTL
 		return XTL::FormatString("%s (file: %s, line: %u)", what_, file_, line_);
 	}
 
-	IllegalArgumentError::IllegalArgumentError(const char * file, unsigned int line, const char * what)
+
+	InvalidArgumentError::InvalidArgumentError(const char * file, unsigned int line, const char * what)
 		: LogicError(file, line, what)
 	{
 		;;
 	}
 
-	IllegalArgumentError::IllegalArgumentError(const char * file, unsigned int line, const std::string & what)
+	InvalidArgumentError::InvalidArgumentError(const char * file, unsigned int line, const std::string & what)
 		: LogicError(file, line, what)
 	{
 		;;
 	}
 
-	IllegalArgumentError::~IllegalArgumentError() throw()
+	InvalidArgumentError::~InvalidArgumentError() throw()
 	{
 		;;
 	}
+
 
 	IllegalOperationError::IllegalOperationError(const char * file, unsigned int line, const char * what)
 		: LogicError(file, line, what)
@@ -61,6 +64,23 @@ namespace XTL
 	IllegalOperationError::~IllegalOperationError() throw()
 	{
 		;;
+	}
+
+
+	TerminateProgram::TerminateProgram(int exitCode)
+		: exitCode_(exitCode)
+	{
+		;;
+	}
+
+	TerminateProgram::~TerminateProgram() throw()
+	{
+		;;
+	}
+
+	int TerminateProgram::ExitCode() const
+	{
+		return exitCode_;
 	}
 }
 
