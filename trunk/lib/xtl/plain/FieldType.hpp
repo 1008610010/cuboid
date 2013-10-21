@@ -137,6 +137,18 @@ namespace PLAIN
 
 			unsigned int capacity_;
 	};
+
+	class FieldType_STRUCT : public FieldType
+	{
+		public:
+
+
+
+		private:
+
+			FieldType_STRUCT(const FieldType_STRUCT &);
+			FieldType_STRUCT & operator= (const FieldType_STRUCT &);
+	};
 }
 }
 

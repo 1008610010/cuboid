@@ -964,41 +964,6 @@ class LinearHash
 };
 */
 
-/*
-class StructComparator
-{
-	public:
-
-		StructComparator(const StructPrototype * prototype)
-			: prototype_(prototype)
-			  fields_(prototype->FieldsCount())
-		{
-			;;
-		}
-
-		int Compare(StructConstRef left, StructConstRef right)
-		{
-			// ASSERT: left->Prototype() == right->Prototype()
-
-			for (unsigned int i = 0; i < prototype->FieldsCount(); ++i)
-			{
-				int result = prototype_->GetField(fields_[i]).Type().Compare(left, right);
-				if (result != 0)
-				{
-					return result;
-				}
-			}
-
-			return 0;
-		}
-
-	private:
-
-		const StructPrototype * prototype_;
-		std::vector<unsigned int> fields;
-};
-*/
-
 #include <xtl/linux/net/SocketAddressInet.hpp>
 #include <xtl/linux/net/TcpClientSocket.hpp>
 #include <xtl/linux/net/TcpServerSocket.hpp>
@@ -1068,9 +1033,6 @@ class AutoChronometer
 
 #include <xtl/plain/FieldType.hpp>
 #include <xtl/plain/Field.hpp>
-#include <xtl/plain/Struct.hpp>
-#include <xtl/plain/StructPrototype.hpp>
-#include <xtl/plain/StructPrototypeBuilder.hpp>
 
 struct S
 {
