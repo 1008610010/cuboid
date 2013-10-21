@@ -135,19 +135,80 @@ namespace PLAIN
 			FieldType_CHARS(const FieldType_CHARS &);
 			FieldType_CHARS & operator= (const FieldType_CHARS &);
 
-			unsigned int capacity_;
+			const unsigned int capacity_;
 	};
 
+	template <typename RecordType_>
 	class FieldType_STRUCT : public FieldType
 	{
 		public:
 
+			static SharedPtr<FieldType_STRUCT> Instance()
+			{
+				static SharedPtr<const FieldType_STRUCT> instance(new FieldType_STRUCT());
+				return instance;
+			};
 
+			virtual ~FieldType_STRUCT() throw()
+			{
+				;;
+			}
+
+			virtual unsigned int Size() const
+			{
+				return RecordType_::Prototype()->Size();
+			}
+
+			virtual unsigned int Alignment() const
+			{
+				return RecordType_::Prototype()->Alignment();
+			}
 
 		private:
 
+			FieldType_STRUCT()
+			{
+				;;
+			}
+
 			FieldType_STRUCT(const FieldType_STRUCT &);
 			FieldType_STRUCT & operator= (const FieldType_STRUCT &);
+	};
+
+	template <typename RecordType_>
+	class FieldType_STRUCT_TUPLE : public FieldType
+	{
+		public:
+
+			static SharedPtr<const FieldType_STRUCT_TUPLE<RecordType_> > Create(unsigned int capacity)
+			{
+				return SharedPtr<const FieldType_STRUCT_TUPLE<RecordType_> >(new FieldType_STRUCT_TUPLE<RecordType_>(capacity));
+			}
+
+			virtual unsigned int Size() const
+			{
+				return size_;
+			}
+
+			virtual unsigned int Alignment() const
+			{
+				return RecordType_::Prototype()->Alignment();
+			}
+
+		private:
+
+			explicit FieldType_STRUCT_TUPLE(unsigned int capacity)
+				: capacity_(capacity),
+				  size_(capacity_ * RecordType_::Prototype()->AlignedSize())
+			{
+				;;
+			}
+
+			FieldType_STRUCT_TUPLE(const FieldType_STRUCT_TUPLE &);
+			FieldType_STRUCT_TUPLE & operator= (const FieldType_STRUCT_TUPLE &);
+
+			const unsigned int capacity_;
+			const unsigned int size_;
 	};
 }
 }

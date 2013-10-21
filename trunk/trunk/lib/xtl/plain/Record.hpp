@@ -494,8 +494,29 @@ namespace PLAIN
 #define DECLARE_FIELD(TYPE, NAME) \
 	static unsigned int _field_index_##NAME() { static const unsigned int index = Prototype()->GetFieldIndex("" #NAME, sizeof(TYPE)); return index; } \
 	static unsigned int _field_offset_##NAME() { static const unsigned int offset = Prototype()->GetField(_field_index_##NAME())->Offset(); return offset; } \
-	TYPE NAME() const { return *reinterpret_cast<const TYPE *>(static_cast<const char *>(Data()) + _field_offset_##NAME()); } \
-	TYPE & NAME() { return *reinterpret_cast<TYPE *>(static_cast<char *>(Data()) + _field_offset_##NAME()); } \
-	void NAME(TYPE value) { *reinterpret_cast<TYPE *>(static_cast<char *>(Data()) + _field_offset_##NAME()) = value; }
-#endif
+	TYPE NAME() const { return *reinterpret_cast<const TYPE *>(static_cast<const char *>(this->Data()) + _field_offset_##NAME()); } \
+	TYPE & NAME() { return *reinterpret_cast<TYPE *>(static_cast<char *>(this->Data()) + _field_offset_##NAME()); } \
+	void NAME(TYPE value) { *reinterpret_cast<TYPE *>(static_cast<char *>(this->Data()) + _field_offset_##NAME()) = value; }
 
+#define DECLARE_FIELD_STRUCT(TYPE, NAME) \
+	static unsigned int _field_index_##NAME() { static const unsigned int index = Prototype()->GetFieldIndex("" #NAME, TYPE::Prototype()->Size()); return index; } \
+	static unsigned int _field_offset_##NAME() { static const unsigned int offset = Prototype()->GetField(_field_index_##NAME())->Offset(); return offset; } \
+	typename TYPE::ConstRef NAME() const { return typename TYPE::ConstRef(static_cast<const char *>(this->Data()) + _field_offset_##NAME()); } \
+	typename TYPE::Ref      NAME()       { return typename TYPE::Ref(static_cast<char *>(this->Data()) + _field_offset_##NAME()); } \
+	// void NAME(TYPE value) { *reinterpret_cast<TYPE *>(static_cast<char *>(Data()) + _field_offset_##NAME()) = value; }
+
+#define DECLARE_FIELD_STRUCT_TUPLE(TYPE, NAME, CAPACITY) \
+	static unsigned int _field_index_##NAME() { static const unsigned int index = Prototype()->GetFieldIndex("" #NAME, TYPE::Prototype()->AlignedSize() * CAPACITY); return index; } \
+	static unsigned int _field_offset_##NAME() { static const unsigned int offset = Prototype()->GetField(_field_index_##NAME())->Offset(); return offset; } \
+	typename TYPE::ConstRef NAME(unsigned int index) const { \
+		return typename TYPE::ConstRef( \
+			static_cast<const char *>(this->Data()) + \
+			_field_offset_##NAME() + \
+			TYPE::Prototype()->AlignedSize() * index \
+		); \
+	} \
+	//
+	// typename TYPE::Ref      NAME(unsigned int index)       { return typename TYPE::Ref(static_cast<char *>(this->Data()) + _field_offset_##NAME()); }
+	// void NAME(TYPE value) { *reinterpret_cast<TYPE *>(static_cast<char *>(Data()) + _field_offset_##NAME()) = value; }
+
+#endif
