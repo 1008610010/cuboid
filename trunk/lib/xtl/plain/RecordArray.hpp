@@ -1,5 +1,5 @@
-#ifndef XTL_PLAIN__RECORD_ARRAY_HPP__
-#define XTL_PLAIN__RECORD_ARRAY_HPP__ 1
+#ifndef XTL__PLAIN__RECORD_ARRAY_HPP__
+#define XTL__PLAIN__RECORD_ARRAY_HPP__ 1
 
 #include <deque>
 

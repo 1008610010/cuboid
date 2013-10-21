@@ -1,5 +1,5 @@
-#ifndef XTL_PLAIN__RECORD_PROTOTYPE_BUILDER_HPP__
-#define XTL_PLAIN__RECORD_PROTOTYPE_BUILDER_HPP__ 1
+#ifndef XTL__PLAIN__RECORD_PROTOTYPE_BUILDER_HPP__
+#define XTL__PLAIN__RECORD_PROTOTYPE_BUILDER_HPP__ 1
 
 #include <string>
 
@@ -78,6 +78,18 @@ namespace PLAIN
 			RecordPrototypeBuilder & AddField_CHARS(const std::string & fieldName, unsigned int capacity)
 			{
 				return AddField(fieldName, FieldType_CHARS::Create(capacity));
+			}
+
+			template <typename RecordType_>
+			RecordPrototypeBuilder & AddField_STRUCT(const std::string & fieldName)
+			{
+				return AddField(fieldName, FieldType_STRUCT<RecordType_>::Instance());
+			}
+
+			template <typename RecordType_>
+			RecordPrototypeBuilder & AddField_STRUCT_TUPLE(const std::string & fieldName, unsigned int capacity)
+			{
+				return AddField(fieldName, FieldType_STRUCT_TUPLE<RecordType_>::Create(capacity));
 			}
 
 		private:

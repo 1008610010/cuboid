@@ -37,6 +37,11 @@ namespace PLAIN
 				return alignment_;
 			}
 
+			unsigned int AlignedSize() const
+			{
+				return ((size_ - 1) / alignment_ + 1) * alignment_;
+			}
+
 			unsigned int FieldsCount() const
 			{
 				return fields_.Size();
