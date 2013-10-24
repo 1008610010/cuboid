@@ -9,7 +9,7 @@ namespace XTL
 	{
 		public:
 
-			virtual ~Logger() throw() { ;; }
+			virtual ~Logger() throw();
 
 			virtual void Log(const std::string & message) = 0;
 	};
@@ -18,37 +18,17 @@ namespace XTL
 	{
 		public:
 
-			virtual ~FileLogger() throw()
-			{
-				;;
-			}
+			virtual ~FileLogger() throw();
 
-			static FileLogger * StdOut()
-			{
-				static FileLogger instance(stdout);
+			static FileLogger * StdOut();
 
-				return &instance;
-			}
+			static FileLogger * StdErr();
 
-			static FileLogger * StdErr()
-			{
-				static FileLogger instance(stderr);
-
-				return &instance;
-			}
-
-			virtual void Log(const std::string & message)
-			{
-				fprintf(file_, "%s", message.c_str());
-			}
+			virtual void Log(const std::string & message);
 
 		private:
 
-			explicit FileLogger(FILE * file)
-				: file_(file)
-			{
-				;;
-			}
+			explicit FileLogger(FILE * file);
 
 			FILE * file_;
 	};
@@ -57,51 +37,20 @@ namespace XTL
 	{
 		public:
 
-			static Logger * SetLogger(Logger * logger)
-			{
-				Logger * oldLogger = Instance().logger_;
-				Instance().logger_ = logger;
-				return oldLogger;
-			}
+			static Logger * SetLogger(Logger * logger);
 
-			static void Log(const std::string & message)
-			{
-				Logger * logger = Instance().logger_;
-				if (logger == 0)
-				{
-					return;
-				}
-
-				logger->Log("[WARN] ");
-				logger->Log(message);
-				if (message.length() == 0 || message[message.length() - 1] != '\n')
-				{
-					logger->Log("\n");
-				}
-			}
+			static void Log(const std::string & message);
 
 		private:
 
-			Warner()
-				: logger_(FileLogger::StdErr())
-			{
-				;;
-			}
+			Warner();
 
-			static Warner & Instance()
-			{
-				static Warner instance;
-
-				return instance;
-			}
+			static Warner & Instance();
 
 			Logger * logger_;
 	};
 
-	void Warn(const char * message)
-	{
-		Warner::Log(message);
-	}
+	void Warn(const char * message);
 
 	template <typename T1>
 	void Warn(const char * format, const T1 & t1)
@@ -121,7 +70,11 @@ namespace XTL
 		Warner::Log(FormatString(format, t1, t2, t3));
 	}
 
+	template <typename T1, typename T2, typename T3, typename T4>
+	void Warn(const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4)
+	{
+		Warner::Log(FormatString(format, t1, t2, t3, t4));
+	}
 }
 
 #endif
-
