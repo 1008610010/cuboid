@@ -29,9 +29,10 @@ SET (
 	XTL_SOURCES
 		xtl/Exception.cpp
 		xtl/FormatString.cpp
-		xtl/StringUtils.cpp
+		xtl/Logger.cpp
 		xtl/PrintStream.cpp
 		xtl/ProgramOptions.cpp
+		xtl/StringUtils.cpp
 		xtl/Variant.cpp
 		xtl/VariantArray.cpp
 		xtl/VariantPtr.cpp
