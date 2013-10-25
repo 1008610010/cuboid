@@ -33,6 +33,11 @@ namespace XTL
 				;;
 			}
 
+			void Assign(T bits)
+			{
+				bits_ = bits;
+			}
+
 			static unsigned int Capacity()
 			{
 				return CAPACITY;
@@ -130,6 +135,12 @@ namespace XTL
 						FindNextBit();
 					}
 
+					void Reset()
+					{
+						current_ = 0;
+						FindNextBit();
+					}
+
 					bool AtEnd() const
 					{
 						return current_ == -1;
@@ -171,6 +182,91 @@ namespace XTL
 					const BitSet & set_;
 					int current_;
 			};
+
+			template <typename Func_>
+			void ForEach(Func_ func)
+			{
+				const const_iterator theEnd = end();
+				for (const_iterator itr(begin()); itr != theEnd; ++itr)
+				{
+					func(*itr);
+				}
+			}
+
+			typedef unsigned int value_type;
+
+			class const_iterator
+			{
+				public:
+
+					const_iterator(const BitSet & bitSet, unsigned int bitFrom)
+						: bitSet_(bitSet),
+						  currentBit_(bitFrom)
+					{
+						FindNextBit();
+					}
+
+					unsigned int operator* ()
+					{
+						return currentBit_;
+					}
+
+					const_iterator & operator++ ()
+					{
+						if (currentBit_ < CAPACITY)
+						{
+							++currentBit_;
+							FindNextBit();
+						}
+						return *this;
+					}
+
+					const_iterator & operator++ (int)
+					{
+						const_iterator temp(*this);
+						++(*this);
+						return temp;
+					}
+
+					bool operator== (const const_iterator & other) const
+					{
+						// WARNING: We does not test, if bitSet_ members are equal.
+						return currentBit_ == other.currentBit_;
+					}
+
+					bool operator!= (const const_iterator & other) const
+					{
+						return currentBit_ != other.currentBit_;
+					}
+
+				private:
+
+					void FindNextBit()
+					{
+						while (currentBit_ < CAPACITY)
+						{
+							if (bitSet_.Includes(currentBit_))
+							{
+								return;
+							}
+							++currentBit_;
+						}
+						currentBit_ = CAPACITY;
+					}
+
+					const BitSet & bitSet_;
+					unsigned int   currentBit_;
+			};
+
+			const_iterator begin() const
+			{
+				return const_iterator(*this, 0);
+			}
+
+			const_iterator end() const
+			{
+				return const_iterator(*this, CAPACITY);
+			}
 
 		protected:
 
