@@ -236,6 +236,8 @@ namespace PLAIN
 	{
 		public:
 
+			typedef RecordType ThisType;
+
 			class ConstRef : public RecordType
 			{
 				public:
@@ -282,6 +284,11 @@ namespace PLAIN
 						return Prototype()->Size();
 					}
 
+					void Write(XTL::OutputStream & stream) const
+					{
+						stream.Write(Data(), this->Size());
+					}
+
 				protected:
 
 					static const RecordPrototype * Prototype()
@@ -298,7 +305,7 @@ namespace PLAIN
 					}
 			};
 
-			class Ref : public ConstRef, XTL::Serializable
+			class Ref : public ConstRef
 			{
 				public:
 
@@ -324,14 +331,9 @@ namespace PLAIN
 						::memset(Data(), '\0', this->Size());
 					}
 
-					virtual void Read(XTL::InputStream & stream)
+					void Read(XTL::InputStream & stream)
 					{
 						stream.Read(Data(), this->Size());
-					}
-
-					virtual void Write(XTL::OutputStream & stream) const
-					{
-						stream.Write(Data(), this->Size());
 					}
 
 					operator RecordConstRef() const
@@ -458,6 +460,12 @@ namespace PLAIN
 				return data_ == 0;
 			}
 
+			static RecordPrototype::SharedConstPtr Prototype()
+			{
+				static RecordPrototype::SharedConstPtr prototype = RecordType::BuildPrototype();
+				return prototype;
+			}
+
 		protected:
 
 			RecordBase()
@@ -503,7 +511,6 @@ namespace PLAIN
 	static unsigned int _field_offset_##NAME() { static const unsigned int offset = Prototype()->GetField(_field_index_##NAME())->Offset(); return offset; } \
 	typename TYPE::ConstRef NAME() const { return typename TYPE::ConstRef(static_cast<const char *>(this->Data()) + _field_offset_##NAME()); } \
 	typename TYPE::Ref      NAME()       { return typename TYPE::Ref(static_cast<char *>(this->Data()) + _field_offset_##NAME()); } \
-	// void NAME(TYPE value) { *reinterpret_cast<TYPE *>(static_cast<char *>(Data()) + _field_offset_##NAME()) = value; }
 
 #define DECLARE_FIELD_STRUCT_TUPLE(TYPE, NAME, CAPACITY) \
 	static unsigned int _field_index_##NAME() { static const unsigned int index = Prototype()->GetFieldIndex("" #NAME, TYPE::Prototype()->AlignedSize() * CAPACITY); return index; } \
@@ -515,8 +522,12 @@ namespace PLAIN
 			TYPE::Prototype()->AlignedSize() * index \
 		); \
 	} \
-	//
-	// typename TYPE::Ref      NAME(unsigned int index)       { return typename TYPE::Ref(static_cast<char *>(this->Data()) + _field_offset_##NAME()); }
-	// void NAME(TYPE value) { *reinterpret_cast<TYPE *>(static_cast<char *>(Data()) + _field_offset_##NAME()) = value; }
+	typename TYPE::Ref NAME(unsigned int index) { \
+		return typename TYPE::Ref( \
+			static_cast<char *>(this->Data()) + \
+			_field_offset_##NAME() + \
+			TYPE::Prototype()->AlignedSize() * index \
+		); \
+	}
 
 #endif
