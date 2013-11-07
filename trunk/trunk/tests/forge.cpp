@@ -2892,8 +2892,29 @@ namespace XTL
 	}
 }
 
+void PrintBit(unsigned int bit)
+{
+	printf("%u\n", bit);
+}
+
 int main(int argc, const char * argv[])
 {
+	{
+		XTL::BitSet32 s;
+		s.Add(4);
+		s.Add(3);
+		s.Add(0);
+		s.Add(24);
+		s.ForEach(PrintBit);
+
+		for (XTL::BitSet32::const_iterator itr = s.begin(); itr != s.end(); ++itr)
+		{
+			printf(">>> %u\n", *itr);
+		}
+
+		return 0;
+	}
+
 	{
 		XTL::VariantMap vm;
 		vm.Set("abc", XTL::Variant::Null());
