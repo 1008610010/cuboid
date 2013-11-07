@@ -146,6 +146,23 @@ namespace XTL
 				}
 			}
 
+			template <typename U>
+			void Reset(U * ptr)
+			{
+				if (ptr_ == ptr)
+				{
+					return;
+				}
+
+				Release();
+
+				ptr_ = ptr;
+				if (ptr_ != 0)
+				{
+					counter_ = new SharedPtrCounter();
+				}
+			}
+
 		private:
 
 			template <typename U> friend class SharedPtr;
@@ -161,6 +178,12 @@ namespace XTL
 			T * ptr_;
 			SharedPtrCounter * counter_;
 	};
+
+	template <typename T>
+	SharedPtr<T> MakeShared(T * ptr)
+	{
+		return SharedPtr<T>(ptr);
+	}
 }
 
 #endif
