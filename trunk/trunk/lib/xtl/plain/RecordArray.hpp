@@ -1,9 +1,11 @@
 #ifndef XTL__PLAIN__RECORD_ARRAY_HPP__
 #define XTL__PLAIN__RECORD_ARRAY_HPP__ 1
 
+#include <algorithm>
 #include <deque>
 
 #include "Record.hpp"
+#include "../Logger.hpp"
 #include "../io/Serializable.hpp"
 
 namespace XTL
@@ -130,6 +132,81 @@ namespace PLAIN
 
 		return RecordConstRef(array.Prototype());
 	}
+
+
+	template <typename RecordType_>
+	class RecordFixedArray
+	{
+		public:
+
+			typedef RecordType_ RecordType;
+
+			RecordFixedArray(unsigned int capacity)
+				: capacity_(capacity_),
+				  data_(new char[ItemSize() * capacity])
+			{
+				::memset(data_, '\0', ItemSize() * capacity);
+			}
+
+			~RecordFixedArray() throw()
+			{
+				delete [] static_cast<char *>(data_);
+			}
+
+			static unsigned int ItemSize()
+			{
+				static const unsigned int itemSize = CalcItemSize();
+				return itemSize;
+			}
+
+			static unsigned int Alignment()
+			{
+				return RecordType::Prototype()->Alignment();
+			}
+
+			unsigned int Capacity() const
+			{
+				return capacity_;
+			}
+
+			typename RecordType::ConstRef operator[] (unsigned int index) const
+			{
+				return static_cast<const char *>(data_) + index * ItemSize();
+			}
+
+			typename RecordType::Ref operator[] (unsigned int index)
+			{
+				return static_cast<char *>(data_) + index * ItemSize();
+			}
+
+			void Swap(RecordFixedArray & other)
+			{
+				std::swap(capacity_, other.capacity_);
+				std::swap(data_, other.data_);
+			}
+
+		private:
+
+			RecordFixedArray(const RecordFixedArray &);
+			RecordFixedArray & operator= (const RecordFixedArray &);
+
+			static unsigned int CalcItemSize()
+			{
+				if (RecordType::Prototype()->Size() % RecordType::Prototype()->Alignment())
+				{
+					Warn(
+						"Using record prototype '%s' with size (%u), that is not a multiple of its alignment (%u), in RecordFixedArray",
+						RecordType::Prototype()->Name(),
+						RecordType::Prototype()->Size(),
+						RecordType::Prototype()->Alignment()
+					);
+				}
+				return RecordType::Prototype()->AlignedSize();
+			}
+
+			unsigned int capacity_;
+			void * data_;
+	};
 }
 }
 

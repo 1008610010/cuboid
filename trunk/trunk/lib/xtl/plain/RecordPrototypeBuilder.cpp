@@ -23,11 +23,6 @@ namespace PLAIN
 			return prototype_;
 		}
 
-		if (prototype_->Size() % prototype_->Alignment())
-		{
-			Warn("Record prototype '%s' has size (%u), that is not a multiple of its alignment (%u)", prototype_->Name(), prototype_->Size(), prototype_->Alignment());
-		}
-
 		SharedPtr<const RecordPrototype> temp(prototype_);
 		prototype_.Release();
 		return temp;
