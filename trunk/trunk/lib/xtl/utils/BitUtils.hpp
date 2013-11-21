@@ -1,6 +1,9 @@
 #ifndef XTL__BIT_UTILS_HPP__
 #define XTL__BIT_UTILS_HPP__ 1
 
+#include <string>
+#include <vector>
+
 #include "../Types.hpp"
 
 namespace XTL
@@ -135,6 +138,21 @@ namespace XTL
 	template <typename T> const T OnlyZeroBit(unsigned int bitIndex)
 	{
 		return OnlyZeroBits<T>::Instance()[bitIndex];
+	}
+
+	template <typename T>
+	const std::string BitString(const T & value)
+	{
+		static const char CHARS[] = { '0', '1' };
+		static const unsigned int BITS_COUNT = sizeof(T) << 3;
+
+		std::vector<char> result(BITS_COUNT);
+		for (unsigned int i = 0; i < BITS_COUNT; ++i)
+		{
+			result[i] = CHARS[(value >> i) & 1];
+		}
+
+		return std::string(&result[0], result.size());
 	}
 }
 

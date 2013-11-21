@@ -68,6 +68,11 @@ namespace XTL
 				return (bits_ & OnlyOneBit<T>(bit)) != 0;
 			}
 
+			bool Contains(unsigned int bit) const
+			{
+				return Includes(bit);
+			}
+
 			unsigned int operator[] (unsigned int bit) const
 			{
 				return Includes(bit) ? 1 : 0;
