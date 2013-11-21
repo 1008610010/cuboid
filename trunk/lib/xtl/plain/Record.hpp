@@ -345,6 +345,21 @@ namespace PLAIN
 					{
 						return RecordRef(this->Prototype(), this->data_);
 					}
+
+					Ref & operator= (ConstRef ref)
+					{
+						if (this->data_ != ref->data_)
+						{
+							::memcpy(this->data_, ref->data_, this->Size());
+						}
+
+						return *this;
+					}
+
+					Ref & operator= (const Ref & other)
+					{
+						return operator=((ConstRef) other);
+					}
 			};
 
 			class Rec : public Ref
