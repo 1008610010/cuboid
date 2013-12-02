@@ -4,6 +4,7 @@
 #include <sys/types.h>
 
 #include <string>
+#include <vector>
 
 #include "../UnixError.hpp"
 
@@ -13,11 +14,11 @@ namespace XTL
 	{
 	};
 
-	class ForkExecListener
+	class ForkExecErrorListener
 	{
 		public:
 
-			virtual ~ForkExecListener() throw() { ;; }
+			virtual ~ForkExecErrorListener() throw() { ;; }
 
 			virtual void OnExecError(const std::string & filePath, const UnixError & e) const = 0;
 
@@ -26,20 +27,42 @@ namespace XTL
 
 	void WaitPid(pid_t pid);
 
-	void Exec(const std::string & filePath, const ForkExecListener & listener);
+	void Exec(const std::string & filePath, const ForkExecErrorListener & errorListener);
+
+	void Exec(const std::string & filePath, const std::vector<std::string> & arguments, const ForkExecErrorListener & errorListener);
 
 	/**
 		Выполнить заданную программу и подождать ее завершения.
-		listener.OnExecError(...) вызывается в дочернем процессе при ошибке вызова execve().
-		@throw XTL::UnixError  выбрасывается в родительском процессе при ошибке в системном вызове.
+		errorListener.OnExecError(...) вызывается в дочернем процессе при ошибке вызова execvpe().
+		@throw XTL::UnixError  выбрасывается в родительском процессе при ошибке в системном вызове fork.
 	*/
-	void ForkExecWait(const std::string & filePath, const ForkExecListener & listener);
+	void ForkExecWait(const std::string           & filePath,
+	                  const ForkExecErrorListener & errorListener);
+
+	/**
+		Выполнить заданную программу с переданными аргументами и подождать ее завершения.
+		errorListener.OnExecError(...) вызывается в дочернем процессе при ошибке вызова execvpe().
+		@throw XTL::UnixError  выбрасывается в родительском процессе при ошибке в системном вызове fork.
+	*/
+	void ForkExecWait(const std::string              & filePath,
+	                  const std::vector<std::string> & arguments,
+	                  const ForkExecErrorListener    & errorListener);
+
+	void ForkExecWait(const std::string           & filePath,
+	                  const std::string           & arg1,
+	                  const ForkExecErrorListener & errorListener);
+
+	void ForkExecWait(const std::string           & filePath,
+	                  const std::string           & arg1,
+	                  const std::string           & arg2,
+	                  const ForkExecErrorListener & errorListener);
 
 	/**
 	 * @throw XTL::UnixError выбрасывает родительский процесс в случае ошибки fork() или waitpid().
 	 * @throw XTL::ChildExit выбрасывает дочерний процесс.
 	 */
-	void DoubleForkExec(const std::string & filePath, const ForkExecListener & listener);
+	void DoubleForkExec(const std::string           & filePath,
+	                    const ForkExecErrorListener & errorListener);
 }
 
 #endif

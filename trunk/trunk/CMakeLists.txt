@@ -150,9 +150,17 @@ TARGET_LINK_LIBRARIES (
 		xtl
 )
 
+ADD_EXECUTABLE (
+	test_fork_exec
+		tests/test_fork_exec.cpp
+)
+
+TARGET_LINK_LIBRARIES (
+	test_fork_exec
+		xtl
+)
+
+
 
 ADD_SUBDIRECTORY (unittests)
 ADD_SUBDIRECTORY (rpm)
-
-
-
