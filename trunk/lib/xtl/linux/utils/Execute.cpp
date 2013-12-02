@@ -3,6 +3,10 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+#include <memory>
+
+#include "../../utils/AutoPtrVector.hpp"
+
 namespace XTL
 {
 	void WaitPid(pid_t pid)
@@ -27,42 +31,135 @@ namespace XTL
 		}
 	}
 
-	void Exec(const std::string & filePath, const ForkExecListener & listener)
+	void Exec(const std::string & filePath, char * const argv[], const ForkExecErrorListener & errorListener)
 	{
-		char * const argv[] = { NULL };
 		char * const envp[] = { NULL };
 
-		if (::execve(filePath.c_str(), argv, envp) == -1)
+		if (::execvpe(filePath.c_str(), argv, envp) == -1)
 		{
-			listener.OnExecError(filePath, UnixError());
+			errorListener.OnExecError(filePath, UnixError());
 		}
 	}
 
-	void ForkExecWait(const std::string & filePath, const ForkExecListener & listener)
+	void Exec(const std::string & filePath, const ForkExecErrorListener & errorListener)
 	{
-		pid_t pid = ::fork();
-		if (pid == 0)
-		{
-			// Child process
+		std::string argv0(filePath);
+		char * const argv[] = { &argv0[0], NULL };
 
-			Exec(filePath, listener);
+		Exec(filePath, argv, errorListener);
+	}
 
-			// It will never be executed.
-			throw ChildExit();
-		}
-		else if (pid < 0)
+	namespace
+	{
+		class MutableArguments
 		{
-			throw UnixError();
-		}
-		else
-		{
-			// Parent process
+			public:
 
-			WaitPid(pid);
+				explicit MutableArguments(const std::string & filePath, const std::vector<std::string> & arguments)
+					: args_(arguments.size() + 1)
+				{
+					args_.Set(0, CopyArgument(filePath));
+					for (unsigned int i = 0; i < arguments.size(); ++i)
+					{
+						args_.Set(i + 1, CopyArgument(arguments[i]));
+					}
+				}
+
+				void ReleasePointers(std::vector<char *> & outputArgs)
+				{
+					outputArgs.resize(args_.Size() + 1);
+					unsigned int i = 0;
+					while (i < args_.Size())
+					{
+						outputArgs[i] = &(*args_[i])[0];
+						++i;
+					}
+
+					outputArgs[i] = NULL;
+				}
+
+			private:
+
+				static std::auto_ptr<std::vector<char> > CopyArgument(const std::string & arg)
+				{
+					return std::auto_ptr<std::vector<char> >(new std::vector<char>(arg.c_str(), arg.c_str() + (arg.size() + 1)));
+				}
+
+				XTL::AutoPtrVector<std::vector<char> > args_;
+		};
+	}
+
+	void Exec(const std::string & filePath, const std::vector<std::string> & arguments, const ForkExecErrorListener & errorListener)
+	{
+		MutableArguments mutableArguments(filePath, arguments);
+
+		std::vector<char *> argv;
+		mutableArguments.ReleasePointers(argv);
+
+		Exec(filePath, &argv[0], errorListener);
+	}
+
+	namespace
+	{
+		void ForkExecWait(const std::string & filePath, char * const argv[], const ForkExecErrorListener & errorListener)
+		{
+			pid_t pid = ::fork();
+			if (pid == 0)
+			{
+				// Child process
+
+				Exec(filePath, argv, errorListener);
+
+				// It will be executed on Exec error.
+				throw ChildExit();
+			}
+			else if (pid < 0)
+			{
+				throw UnixError();
+			}
+			else
+			{
+				// Parent process
+
+				WaitPid(pid);
+			}
 		}
 	}
 
-	void DoubleForkExec(const std::string & filePath, const ForkExecListener & listener)
+	void ForkExecWait(const std::string & filePath, const ForkExecErrorListener & errorListener)
+	{
+		std::string argv0(filePath);
+		char * const argv[] = { &argv0[0], NULL };
+
+		ForkExecWait(filePath, argv, errorListener);
+	}
+
+	void ForkExecWait(const std::string & filePath, const std::vector<std::string> & arguments, const ForkExecErrorListener & errorListener)
+	{
+		MutableArguments mutableArguments(filePath, arguments);
+
+		std::vector<char *> argv;
+		mutableArguments.ReleasePointers(argv);
+
+		ForkExecWait(filePath, &argv[0], errorListener);
+	}
+
+	void ForkExecWait(const std::string & filePath, const std::string & arg1, const ForkExecErrorListener & errorListener)
+	{
+		std::vector<std::string> arguments(1);
+		arguments[0] = arg1;
+		ForkExecWait(filePath, arguments, errorListener);
+	}
+
+	void ForkExecWait(const std::string & filePath, const std::string & arg1, const std::string & arg2, const ForkExecErrorListener & errorListener)
+	{
+		std::vector<std::string> arguments(2);
+		arguments[0] = arg1;
+		arguments[1] = arg2;
+		ForkExecWait(filePath, arguments, errorListener);
+	}
+
+	void DoubleForkExec(const std::string & filePath, const ForkExecErrorListener & errorListener)
 	{
 		pid_t pid = ::fork();
 		if (pid < 0)
@@ -82,7 +179,7 @@ namespace XTL
 			pid_t pid2 = ::fork();
 			if (pid2 < 0)
 			{
-				listener.OnDoubleForkError(UnixError());
+				errorListener.OnDoubleForkError(UnixError());
 				throw ChildExit();
 			}
 			else if (pid2 != 0)
@@ -91,11 +188,24 @@ namespace XTL
 			}
 			else
 			{
-				Exec(filePath, listener);
+				Exec(filePath, errorListener);
 
-				// It will never be executed.
+				// It will be executed on Exec error.
 				throw ChildExit();
 			}
 		}
 	}
+
+/*
+	class Executor
+	{
+		public:
+
+			void ForkExec(const std::string & filePath)
+			{
+			}
+
+		private:
+	};
+*/
 }
