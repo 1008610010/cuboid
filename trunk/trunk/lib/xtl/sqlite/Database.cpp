@@ -3,6 +3,7 @@
 #include <sqlite3.h>
 
 #include <xtl/Exception.hpp>
+#include <xtl/linux/Utils.hpp>
 
 #include "Exception.hpp"
 
@@ -12,9 +13,33 @@ namespace XTL
 {
 namespace SQLITE
 {
-	Database::Database(const std::string & filePath)
+	namespace
+	{
+		static const double SQLITE_BUSY_DELAY = 0.001; // 1 ms
+
+		static const int MODE_DEFAULT      = 0x0000;
+		static const int MODE_WAIT_IF_BUSY = 0x0001;
+	}
+
+	const Database::Options Database::Options::DEFAULT      (MODE_DEFAULT);
+	const Database::Options Database::Options::WAIT_IF_BUSY (MODE_WAIT_IF_BUSY);
+
+	Database::Options::Options(unsigned int value)
+		: value_(value)
+	{
+		;;
+	}
+
+	bool Database::Options::DoWaitIfBusy() const
+	{
+		return (value_ & MODE_WAIT_IF_BUSY) != 0;
+	}
+
+
+	Database::Database(const std::string & filePath, Options options)
 		: filePath_(filePath),
-		  db_(0)
+		  db_(0),
+		  options_(options)
 	{
 		;;
 	}
@@ -40,6 +65,7 @@ namespace SQLITE
 			Exception e(::sqlite3_errcode(DB_), ::sqlite3_errmsg(DB_));
 			::sqlite3_close(DB_);
 			db_ = 0;
+
 			throw e;
 		}
 	}
@@ -61,6 +87,16 @@ namespace SQLITE
 		return false;
 	}
 
+	bool Database::WaitIfBusy()
+	{
+		return options_.DoWaitIfBusy();
+	}
+
+	void Database::BusySleep()
+	{
+		Sleep(SQLITE_BUSY_DELAY);
+	}
+
 	int Database::Execute(const std::string & query)
 	{
 		if (db_ == 0)
@@ -69,15 +105,26 @@ namespace SQLITE
 		}
 
 		char * errorMessage = 0;
-		int rc = ::sqlite3_exec(DB_, query.c_str(), NULL, 0, &errorMessage);
-		if (rc != SQLITE_OK)
-		{
-			QueryError e(::sqlite3_errcode(DB_), ::sqlite3_errmsg(DB_), query);
-			::sqlite3_free(errorMessage);
-			throw e;
-		}
 
-		return ::sqlite3_changes(DB_);
+		while (true)
+		{
+			int rc = ::sqlite3_exec(DB_, query.c_str(), NULL, 0, &errorMessage);
+
+			if (rc == SQLITE_BUSY && WaitIfBusy())
+			{
+				BusySleep();
+				continue;
+			}
+
+			if (rc != SQLITE_OK)
+			{
+				QueryError e(::sqlite3_errcode(DB_), ::sqlite3_errmsg(DB_), query);
+				::sqlite3_free(errorMessage);
+				throw e;
+			}
+
+			return ::sqlite3_changes(DB_);
+		}
 	}
 
 	int Database::AffectedRows()

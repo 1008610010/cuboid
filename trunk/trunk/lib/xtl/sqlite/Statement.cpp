@@ -1,5 +1,7 @@
 #include "Statement.hpp"
 
+#include <stdio.h>
+
 #include <sqlite3.h>
 
 #include "Exception.hpp"
@@ -139,9 +141,29 @@ namespace SQLITE
 		::sqlite3_reset(STMT_);
 	}
 
+	namespace
+	{
+		int SqliteStep(Database * db, sqlite3_stmt * stmt)
+		{
+			while (true)
+			{
+				int rc = ::sqlite3_step(stmt);
+				if (rc == SQLITE_BUSY && db->WaitIfBusy())
+				{
+					db->BusySleep();
+					continue;
+				}
+				else
+				{
+					return rc;
+				}
+			}
+		}
+	}
+
 	int Statement::Execute()
 	{
-		int rc = ::sqlite3_step(STMT_);
+		int rc = SqliteStep(db_, STMT_);
 
 		if (rc != SQLITE_DONE && rc != SQLITE_ROW)
 		{
@@ -162,7 +184,7 @@ namespace SQLITE
 
 	bool Statement::Fetch()
 	{
-		int rc = ::sqlite3_step(STMT_);
+		int rc = SqliteStep(db_, STMT_);
 
 		switch (rc)
 		{
