@@ -33,9 +33,7 @@ namespace XTL
 
 	void Exec(const std::string & filePath, char * const argv[], const ForkExecErrorListener & errorListener)
 	{
-		char * const envp[] = { NULL };
-
-		if (::execvpe(filePath.c_str(), argv, envp) == -1)
+		if (::execvp(filePath.c_str(), argv) == -1)
 		{
 			errorListener.OnExecError(filePath, UnixError());
 		}
