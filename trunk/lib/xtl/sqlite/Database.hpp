@@ -14,6 +14,22 @@ namespace SQLITE
 	{
 		public:
 
+			class Options
+			{
+				public:
+
+					static const Options DEFAULT;
+					static const Options WAIT_IF_BUSY;
+
+					bool DoWaitIfBusy() const;
+
+				private:
+
+					explicit Options(unsigned int value);
+
+					unsigned int value_;
+			};
+
 			/*
 			 * TODO: add callback to method 'execute'
 			 * If an sqlite3_exec() callback returns non-zero, the sqlite3_exec()
@@ -22,7 +38,7 @@ namespace SQLITE
 			 */
 			// typedef int (*Callback) (void * param, int argc, char ** argv, char ** columnsNames);
 
-			Database(const std::string & filePath);
+			Database(const std::string & filePath, Options mode = Options::DEFAULT);
 
 			/**
 			 * База данных автоматически закрывается в деструкторе.
@@ -40,6 +56,10 @@ namespace SQLITE
 			void Open();
 
 			bool Close();
+
+			bool WaitIfBusy();
+
+			void BusySleep();
 
 			/**
 			 * @throw XTL::SQLITE::QueryError
@@ -94,7 +114,8 @@ namespace SQLITE
 			void ThrowQueryError(const std::string & query);
 
 			const std::string filePath_;
-			void * db_;
+			void    * db_;      // actually type is "sqlite3 *"
+			Options   options_;
 	};
 }
 }

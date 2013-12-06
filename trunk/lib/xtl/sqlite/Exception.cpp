@@ -1,5 +1,7 @@
 #include "Exception.hpp"
 
+#include <sqlite3.h>
+
 namespace XTL
 {
 namespace SQLITE
@@ -24,6 +26,11 @@ namespace SQLITE
 	const std::string & Exception::Message() const
 	{
 		return message_;
+	}
+
+	bool Exception::IsDatabaseLocked() const
+	{
+		return code_ == SQLITE_BUSY;
 	}
 
 

@@ -19,6 +19,8 @@ namespace SQLITE
 
 			const std::string & Message() const;
 
+			bool IsDatabaseLocked() const;
+
 		private:
 
 			const int         code_;
