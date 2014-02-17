@@ -4,7 +4,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
 SET (XTL_MAJOR_VERSION   "1")
 SET (XTL_MINOR_VERSION   "0")
-SET (XTL_RELEASE_VERSION "3")
+SET (XTL_RELEASE_VERSION "4")
 
 SET (XTL_FULL_VERSION "${XTL_MAJOR_VERSION}.${XTL_MINOR_VERSION}.${XTL_RELEASE_VERSION}")
 
@@ -23,7 +23,7 @@ IF("${CMAKE_SYSTEM_NAME}" MATCHES "SunOS")
 	MESSAGE(STATUS "#### Building for SunOS")
 ENDIF("${CMAKE_SYSTEM_NAME}" MATCHES "SunOS")
 
-SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O2 -Wall -Wundef -Wsign-compare -Wpointer-arith -Wparentheses -Wno-long-long -pedantic")
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -O2 -Wall -Wundef -Wsign-compare -Wpointer-arith -Wparentheses -Wno-long-long -pedantic")
 # -std=c++0x
 # SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall -Wundef -Wsign-compare -Wpointer-arith -Wparentheses -Wno-long-long -pedantic -D_DEBUG")
 
