@@ -12,7 +12,7 @@ namespace XTL
 	{
 		public:
 
-			LogLevel(int value, const char * name);
+			explicit LogLevel(int value);
 
 			int Value() const;
 
@@ -20,8 +20,7 @@ namespace XTL
 
 		private:
 
-			const int          value_;
-			const std::string  name_;
+			int value_;
 	};
 }
 
@@ -40,6 +39,11 @@ namespace XTL
 			Logger();
 
 			virtual ~Logger() throw();
+
+			int MinLogLevel()
+			{
+				return minLevel_;
+			}
 
 			void SetMinLogLevel(LogLevel level);
 
@@ -143,40 +147,74 @@ namespace XTL
 
 namespace XTL
 {
+	LogLevel LogLevelFromString(const std::string & level, LogLevel defaultValue);
+
 	Logger & DefaultLogger();
 
 	void SetDefaultLogger(Logger * logger);
 
-	void Warn(const char * message);
+	void Log(LogLevel level, const std::string & message);
+
+	template <typename T1>
+	void Log(LogLevel level, const char * format, const T1 & t1)
+	{
+		DefaultLogger().Log(level, format, t1);
+	}
+
+	template <typename T1, typename T2>
+	void Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2)
+	{
+		DefaultLogger().Log(level, format, t1, t2);
+	}
+
+	template <typename T1, typename T2, typename T3>
+	void Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3)
+	{
+		DefaultLogger().Log(level, format, t1, t2, t3);
+	}
+
+	template <typename T1, typename T2, typename T3, typename T4>
+	void Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4)
+	{
+		DefaultLogger().Log(level, format, t1, t2, t3, t4);
+	}
+
+	template <typename T1, typename T2, typename T3, typename T4, typename T5>
+	void Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5)
+	{
+		DefaultLogger().Log(level, format, t1, t2, t3, t4, t5);
+	}
+
+	void Warn(const std::string & message);
 
 	template <typename T1>
 	void Warn(const char * format, const T1 & t1)
 	{
-		DefaultLogger().Log(LOG_WARN, format, t1);
+		Log(LOG_WARN, format, t1);
 	}
 
 	template <typename T1, typename T2>
 	void Warn(const char * format, const T1 & t1, const T2 & t2)
 	{
-		DefaultLogger().Log(LOG_WARN, format, t1, t2);
+		Log(LOG_WARN, format, t1, t2);
 	}
 
 	template <typename T1, typename T2, typename T3>
 	void Warn(const char * format, const T1 & t1, const T2 & t2, const T3 & t3)
 	{
-		DefaultLogger().Log(LOG_WARN, format, t1, t2, t3);
+		Log(LOG_WARN, format, t1, t2, t3);
 	}
 
 	template <typename T1, typename T2, typename T3, typename T4>
 	void Warn(const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4)
 	{
-		DefaultLogger().Log(LOG_WARN, format, t1, t2, t3, t4);
+		Log(LOG_WARN, format, t1, t2, t3, t4);
 	}
 
 	template <typename T1, typename T2, typename T3, typename T4, typename T5>
 	void Warn(const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5)
 	{
-		DefaultLogger().Log(LOG_WARN, format, t1, t2, t3, t4, t5);
+		Log(LOG_WARN, format, t1, t2, t3, t4, t5);
 	}
 }
 

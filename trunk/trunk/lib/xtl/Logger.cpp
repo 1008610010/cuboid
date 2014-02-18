@@ -2,14 +2,27 @@
 
 #include <stdio.h>
 
+#include <map>
 #include <memory>
 #include <stdexcept>
 
+#include "StringUtils.hpp"
+
 namespace XTL
 {
-	LogLevel::LogLevel(int value, const char * name)
-		: value_(value),
-		  name_(name)
+	namespace
+	{
+		const std::string LOG_LEVEL_NAME[] = {
+			"ERROR",
+			"WARN ",
+			"INFO ",
+			"DEBUG",
+			"TRACE"
+		};
+	}
+
+	LogLevel::LogLevel(int value)
+		: value_(value)
 	{
 		;;
 	}
@@ -21,15 +34,15 @@ namespace XTL
 
 	const std::string & LogLevel::Name() const
 	{
-		return name_;
+		return LOG_LEVEL_NAME[value_];
 	}
 }
 
-const XTL::LogLevel LOG_ERROR (0, "ERROR");
-const XTL::LogLevel LOG_WARN  (1, "WARN ");
-const XTL::LogLevel LOG_INFO  (2, "INFO ");
-const XTL::LogLevel LOG_DEBUG (3, "DEBUG");
-const XTL::LogLevel LOG_TRACE (4, "TRACE");
+const XTL::LogLevel LOG_ERROR (0);
+const XTL::LogLevel LOG_WARN  (1);
+const XTL::LogLevel LOG_INFO  (2);
+const XTL::LogLevel LOG_DEBUG (3);
+const XTL::LogLevel LOG_TRACE (4);
 
 namespace XTL
 {
@@ -187,6 +200,47 @@ namespace XTL
 {
 	namespace
 	{
+		class LevelsMap
+		{
+			public:
+
+				static const LevelsMap & Instance()
+				{
+					static LevelsMap instance;
+					return instance;
+				}
+
+				LogLevel Get(const std::string & level, LogLevel defaultValue) const
+				{
+					std::map<std::string, LogLevel>::const_iterator itr = levels_.find(XTL::LowerCased(level));
+					return itr != levels_.end() ? itr->second : defaultValue;
+				}
+
+			private:
+
+				LevelsMap()
+				{
+					levels_.insert(std::pair<std::string, LogLevel>("error",    LOG_ERROR));
+					levels_.insert(std::pair<std::string, LogLevel>("err",      LOG_ERROR));
+					levels_.insert(std::pair<std::string, LogLevel>("warnings", LOG_WARN));
+					levels_.insert(std::pair<std::string, LogLevel>("warning",  LOG_WARN));
+					levels_.insert(std::pair<std::string, LogLevel>("warn",     LOG_WARN));
+					levels_.insert(std::pair<std::string, LogLevel>("info",     LOG_INFO));
+					levels_.insert(std::pair<std::string, LogLevel>("debug",    LOG_DEBUG));
+					levels_.insert(std::pair<std::string, LogLevel>("trace",    LOG_TRACE));
+				}
+
+				std::map<std::string, LogLevel> levels_;
+		};
+	}
+
+	LogLevel LogLevelFromString(const std::string & level, LogLevel defaultValue)
+	{
+		return LevelsMap::Instance().Get(level, defaultValue);
+	}
+
+	namespace
+	{
 		std::auto_ptr<Logger> & DefaultLoggerPtr()
 		{
 			static std::auto_ptr<Logger> instance(new StdErrLogger());
@@ -204,8 +258,13 @@ namespace XTL
 		DefaultLoggerPtr().reset(logger);
 	}
 
-	void Warn(const char * message)
+	void Log(LogLevel level, const std::string & message)
 	{
-		DefaultLogger().Log(LOG_WARN, message);
+		DefaultLogger().Log(level, message);
+	}
+
+	void Warn(const std::string & message)
+	{
+		Log(LOG_WARN, message);
 	}
 }
