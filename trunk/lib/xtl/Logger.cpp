@@ -36,18 +36,34 @@ namespace XTL
 	{
 		return LOG_LEVEL_NAME[value_];
 	}
+
+	bool LogLevel::operator== (const LogLevel & other) const
+	{
+		return Value() == other.Value();
+	}
+
+	bool LogLevel::operator<= (const LogLevel & other) const
+	{
+		return Value() <= other.Value();
+	}
+
+	bool LogLevel::operator>= (const LogLevel & other) const
+	{
+		return Value() >= other.Value();
+	}
 }
 
-const XTL::LogLevel LOG_ERROR (0);
-const XTL::LogLevel LOG_WARN  (1);
-const XTL::LogLevel LOG_INFO  (2);
-const XTL::LogLevel LOG_DEBUG (3);
-const XTL::LogLevel LOG_TRACE (4);
+const XTL::LogLevel LOG_NOTHING (-1);
+const XTL::LogLevel LOG_ERROR   ( 0);
+const XTL::LogLevel LOG_WARN    ( 1);
+const XTL::LogLevel LOG_INFO    ( 2);
+const XTL::LogLevel LOG_DEBUG   ( 3);
+const XTL::LogLevel LOG_TRACE   ( 4);
 
 namespace XTL
 {
 	Logger::Logger()
-		: minLevel_(LOG_TRACE.Value())
+		: minLevel_(LOG_TRACE)
 	{
 		;;
 	}
@@ -57,19 +73,19 @@ namespace XTL
 		;;
 	}
 
-	void Logger::SetMinLogLevel(int level)
+	LogLevel Logger::GetMinLogLevel() const
 	{
-		minLevel_ = level;
+		return minLevel_;
 	}
 
 	void Logger::SetMinLogLevel(LogLevel level)
 	{
-		SetMinLogLevel(level.Value());
+		minLevel_ = level;
 	}
 
 	void Logger::Log(LogLevel level, const std::string & message)
 	{
-		if (level.Value() <= minLevel_)
+		if (level <= minLevel_)
 		{
 			WriteMessage(level, message);
 		}
@@ -108,7 +124,7 @@ namespace XTL
 	NullLogger::NullLogger()
 		: Logger()
 	{
-		SetMinLogLevel(-1);
+		SetMinLogLevel(LOG_NOTHING);
 	}
 
 	NullLogger::~NullLogger() throw()
@@ -256,6 +272,11 @@ namespace XTL
 	void SetDefaultLogger(Logger * logger)
 	{
 		DefaultLoggerPtr().reset(logger);
+	}
+
+	LogLevel CurrentLogLevel()
+	{
+		DefaultLogger().GetMinLogLevel();
 	}
 
 	void Log(LogLevel level, const std::string & message)

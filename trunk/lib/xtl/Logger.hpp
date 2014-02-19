@@ -14,11 +14,17 @@ namespace XTL
 
 			explicit LogLevel(int value);
 
-			int Value() const;
-
 			const std::string & Name() const;
 
+			bool operator== (const LogLevel & other) const;
+
+			bool operator<= (const LogLevel & other) const;
+
+			bool operator>= (const LogLevel & other) const;
+
 		private:
+
+			int Value() const;
 
 			int value_;
 	};
@@ -40,10 +46,7 @@ namespace XTL
 
 			virtual ~Logger() throw();
 
-			int MinLogLevel()
-			{
-				return minLevel_;
-			}
+			LogLevel GetMinLogLevel() const;
 
 			void SetMinLogLevel(LogLevel level);
 
@@ -68,8 +71,6 @@ namespace XTL
 
 		protected:
 
-			void SetMinLogLevel(int level);
-
 			void WriteMessage(const LogLevel & level, const std::string & message);
 
 			void Write(const std::string & s);
@@ -81,7 +82,7 @@ namespace XTL
 			Logger(const Logger &);
 			Logger & operator= (const Logger &);
 
-			int minLevel_;
+			LogLevel minLevel_;
 	};
 
 	class NullLogger : public Logger
@@ -153,6 +154,8 @@ namespace XTL
 
 	void SetDefaultLogger(Logger * logger);
 
+	LogLevel CurrentLogLevel();
+
 	void Log(LogLevel level, const std::string & message);
 
 	template <typename T1>
@@ -223,7 +226,7 @@ namespace XTL
 	template <typename T1>
 	void Logger::Log(LogLevel level, const char * format, const T1 & t1)
 	{
-		if (level.Value() <= minLevel_)
+		if (level <= minLevel_)
 		{
 			WriteMessage(level, XTL::FormatString(format, t1));
 		}
@@ -232,7 +235,7 @@ namespace XTL
 	template <typename T1, typename T2>
 	void Logger::Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2)
 	{
-		if (level.Value() <= minLevel_)
+		if (level <= minLevel_)
 		{
 			WriteMessage(level, XTL::FormatString(format, t1, t2));
 		}
@@ -241,7 +244,7 @@ namespace XTL
 	template <typename T1, typename T2, typename T3>
 	void Logger::Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3)
 	{
-		if (level.Value() <= minLevel_);
+		if (level <= minLevel_);
 		{
 			WriteMessage(level, XTL::FormatString(format, t1, t2, t3));
 		}
@@ -250,7 +253,7 @@ namespace XTL
 	template <typename T1, typename T2, typename T3, typename T4>
 	void Logger::Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4)
 	{
-		if (level.Value() <= minLevel_);
+		if (level <= minLevel_);
 		{
 			WriteMessage(level, XTL::FormatString(format, t1, t2, t3, t4));
 		}
@@ -259,7 +262,7 @@ namespace XTL
 	template <typename T1, typename T2, typename T3, typename T4, typename T5>
 	void Logger::Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5)
 	{
-		if (level.Value() <= minLevel_);
+		if (level <= minLevel_);
 		{
 			WriteMessage(level, XTL::FormatString(format, t1, t2, t3, t4, t5));
 		}
