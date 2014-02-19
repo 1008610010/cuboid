@@ -1,11 +1,12 @@
 #ifndef XTL__PLAIN__RECORD_ARRAY_HPP__
 #define XTL__PLAIN__RECORD_ARRAY_HPP__ 1
 
+#include <stdio.h>
+
 #include <algorithm>
 #include <deque>
 
 #include "Record.hpp"
-#include "../Logger.hpp"
 #include "../io/Serializable.hpp"
 
 namespace XTL
@@ -194,13 +195,15 @@ namespace PLAIN
 			{
 				if (RecordType::Prototype()->Size() % RecordType::Prototype()->Alignment())
 				{
-					Warn(
+					fprintf(
+						stderr,
 						"Using record prototype '%s' with size (%u), that is not a multiple of its alignment (%u), in RecordFixedArray",
-						RecordType::Prototype()->Name(),
+						RecordType::Prototype()->Name().c_str(),
 						RecordType::Prototype()->Size(),
 						RecordType::Prototype()->Alignment()
 					);
 				}
+
 				return RecordType::Prototype()->AlignedSize();
 			}
 

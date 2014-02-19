@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 
-#include "../Logger.hpp"
 #include "RecordPrototype.hpp"
 
 namespace XTL
@@ -19,7 +18,7 @@ namespace PLAIN
 	{
 		if (prototype_.IsNull())
 		{
-			Warn("Calling RecordPrototypeBuilder::Finish() method on already released prototype. No effect.\n");
+			fprintf(stderr, "Calling RecordPrototypeBuilder::Finish() method on already released prototype. No effect.\n");
 			return prototype_;
 		}
 
@@ -32,7 +31,7 @@ namespace PLAIN
 	{
 		if (prototype_.IsNull())
 		{
-			Warn("Adding field '%s' to already released prototype. No effect.\n", fieldName);
+			fprintf(stderr, "Adding field '%s' to already released prototype. No effect.\n", fieldName.c_str());
 			return *this;
 		}
 

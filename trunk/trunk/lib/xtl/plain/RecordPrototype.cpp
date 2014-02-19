@@ -5,7 +5,7 @@
 
 #include <stdexcept>
 
-#include "../Logger.hpp"
+#include "../FormatString.hpp"
 #include "Field.hpp"
 #include "FieldType.hpp"
 
@@ -27,11 +27,12 @@ namespace PLAIN
 	{
 		if (size_ % fieldType->Alignment() != 0)
 		{
-			Warn(
+			fprintf(
+				stderr,
 				"Adding field '%s' with alignment %u to record prototype '%s' at not divisible offset %u\n",
-				fieldName,
+				fieldName.c_str(),
 				fieldType->Alignment(),
-				name_,
+				name_.c_str(),
 				size_
 			);
 		}
