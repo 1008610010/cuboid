@@ -194,14 +194,15 @@ namespace XTL
 
 		private:
 
-			/*
-			 * TODO: convert this shit to object member
-			 */
-			static const KeyComparator_ KEY_COMPARATOR;
+			static const KeyComparator_ & KEY_COMPARATOR()
+			{
+				static KeyComparator_ comp;
+				return comp;
+			}
 
 			static bool Less(const KeyType & left, const KeyType & right)
 			{
-				return KEY_COMPARATOR(left, right);
+				return KEY_COMPARATOR()(left, right);
 			}
 
 			/*
@@ -1603,18 +1604,6 @@ namespace XTL
 			unsigned int   leavesCount_;
 			unsigned int   branchesCount_;
 	};
-
-/*
-	TODO: Fix compiler error with "-O0" option.
-
-	template <typename ItemType_,
-	          typename KeyType_,
-	          typename KeyComparator_,
-	          bool UNIQUE_KEYS = false,
-	          unsigned int LEAF_CAPACITY,
-	          unsigned int BRANCH_CAPACITY>
-	KeyComparator_ BTree<ItemType_, KeyType_, KeyComparator_, UNIQUE_KEYS, LEAF_CAPACITY, BRANCH_CAPACITY>::KEY_COMPARATOR;
-*/
 }
 
 #endif
