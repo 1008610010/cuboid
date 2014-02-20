@@ -23,9 +23,9 @@ IF("${CMAKE_SYSTEM_NAME}" MATCHES "SunOS")
 	MESSAGE(STATUS "#### Building for SunOS")
 ENDIF("${CMAKE_SYSTEM_NAME}" MATCHES "SunOS")
 
-SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -O2 -Wall -Wundef -Wsign-compare -Wpointer-arith -Wparentheses -Wno-long-long -pedantic")
+# SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g -O2 -Wall -Wundef -Wsign-compare -Wpointer-arith -Wparentheses -Wno-long-long -pedantic")
 # -std=c++0x
-# SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall -Wundef -Wsign-compare -Wpointer-arith -Wparentheses -Wno-long-long -pedantic -D_DEBUG")
+SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall -Wundef -Wsign-compare -Wpointer-arith -Wparentheses -Wno-long-long -pedantic -D_DEBUG")
 
 #############################################################################################################
 
@@ -45,8 +45,8 @@ ADD_EXECUTABLE (
 
 TARGET_LINK_LIBRARIES (
 	forge
-		xtl-pgsql
 		xtl
+		xtl-pgsql
 )
 
 ADD_EXECUTABLE (
