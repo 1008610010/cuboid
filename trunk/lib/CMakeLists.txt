@@ -32,6 +32,7 @@ SET (
 		xtl/Logger.cpp
 		xtl/PrintStream.cpp
 		xtl/ProgramOptions.cpp
+		xtl/RegExp.cpp
 		xtl/StringUtils.cpp
 		xtl/Variant.cpp
 		xtl/VariantArray.cpp
@@ -117,6 +118,10 @@ ADD_LIBRARY (
 		${XTL_SOURCES}
 )
 
+TARGET_LINK_LIBRARIES (
+	xtl
+		boost_regex
+)
 
 
 FIND_LIBRARY (
