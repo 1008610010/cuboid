@@ -160,6 +160,15 @@ TARGET_LINK_LIBRARIES (
 		xtl
 )
 
+ADD_EXECUTABLE (
+	regexp_test
+		tests/regexp_test.cpp
+)
+
+TARGET_LINK_LIBRARIES (
+	regexp_test
+		xtl
+)
 
 
 ADD_SUBDIRECTORY (unittests)

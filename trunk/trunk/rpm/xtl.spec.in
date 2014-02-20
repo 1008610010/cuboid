@@ -9,7 +9,7 @@ License:        GPL
 Source:         %{name}-%{version}.tar.gz
 Group:          Development/Libraries
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-# BuildRequires:
+BuildRequires:  boost-devel
 Prefix:         %{_prefix}
 
 %description
@@ -96,6 +96,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/Logger.hpp
 %{_prefix}/include/xtl/PrintStream.hpp
 %{_prefix}/include/xtl/ProgramOptions.hpp
+%{_prefix}/include/xtl/RegExp.hpp
 %{_prefix}/include/xtl/SharedPtr.hpp
 %{_prefix}/include/xtl/StringUtils.hpp
 %{_prefix}/include/xtl/TypeTraits.hpp
