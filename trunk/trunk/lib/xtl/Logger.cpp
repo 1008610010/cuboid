@@ -113,6 +113,7 @@ namespace XTL
 		Write(level.Name());
 		Write("] ", 2);
 		Write(message);
+		Write("\n", 1);
 	}
 
 	void Logger::Write(const std::string & s)
@@ -276,7 +277,7 @@ namespace XTL
 
 	LogLevel CurrentLogLevel()
 	{
-		DefaultLogger().GetMinLogLevel();
+		return DefaultLogger().GetMinLogLevel();
 	}
 
 	void Log(LogLevel level, const std::string & message)
