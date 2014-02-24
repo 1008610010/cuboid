@@ -1,6 +1,7 @@
 #include "Logger.hpp"
 
 #include <stdio.h>
+#include <sys/time.h>
 
 #include <map>
 #include <memory>
@@ -14,8 +15,8 @@ namespace XTL
 	{
 		const std::string LOG_LEVEL_NAME[] = {
 			"ERROR",
-			"WARN ",
-			"INFO ",
+			" WARN",
+			" INFO",
 			"DEBUG",
 			"TRACE"
 		};
@@ -95,13 +96,17 @@ namespace XTL
 	{
 		const std::string Now()
 		{
-			time_t ts_now = time(0);
-			struct tm * now = ::gmtime(&ts_now);
+			struct timeval tv;
+			::gettimeofday(&tv, 0);
+
+			struct tm t;
+			::gmtime_r(&tv.tv_sec, &t);
 
 			return XTL::FormatString(
-				"%04u-%02u-%02u %02u:%02u:%02u",
-				now->tm_year + 1900, now->tm_mon + 1, now->tm_mday,
-				now->tm_hour, now->tm_min, now->tm_sec
+				"[%02u/%02u/%04u %02u:%02u:%02u.%06u]",
+				t.tm_mday, t.tm_mon + 1, t.tm_year + 1900,
+				t.tm_hour, t.tm_min, t.tm_sec,
+				static_cast<unsigned int>(tv.tv_usec)
 			);
 		}
 	}
@@ -109,9 +114,9 @@ namespace XTL
 	void Logger::WriteMessage(const LogLevel & level, const std::string & message)
 	{
 		Write(Now());
-		Write(" [", 2);
+		Write(" ", 1);
 		Write(level.Name());
-		Write("] ", 2);
+		Write(" ", 1);
 		Write(message);
 		Write("\n", 1);
 	}
