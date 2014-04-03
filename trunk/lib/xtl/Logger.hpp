@@ -67,6 +67,15 @@ namespace XTL
 			template <typename T1, typename T2, typename T3, typename T4, typename T5>
 			void Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5);
 
+			template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+			void Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5, const T6 & t6);
+
+			template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+			void Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5, const T6 & t6, const T7 & t7);
+
+			template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
+			void Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5, const T6 & t6, const T7 & t7, const T8 & t8);
+
 			virtual void Flush() = 0;
 
 		protected:
@@ -188,6 +197,24 @@ namespace XTL
 		DefaultLogger().Log(level, format, t1, t2, t3, t4, t5);
 	}
 
+	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+	void Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5, const T6 & t6)
+	{
+		DefaultLogger().Log(level, format, t1, t2, t3, t4, t5, t6);
+	}
+
+	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+	void Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5, const T6 & t6, const T7 & t7)
+	{
+		DefaultLogger().Log(level, format, t1, t2, t3, t4, t5, t6, t7);
+	}
+
+	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
+	void Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5, const T6 & t6, const T7 & t7, const T8 & t8)
+	{
+		DefaultLogger().Log(level, format, t1, t2, t3, t4, t5, t6, t7, t8);
+	}
+
 	void Warn(const std::string & message);
 
 	template <typename T1>
@@ -265,6 +292,33 @@ namespace XTL
 		if (level <= minLevel_);
 		{
 			WriteMessage(level, XTL::FormatString(format, t1, t2, t3, t4, t5));
+		}
+	}
+
+	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+	void Logger::Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5, const T6 & t6)
+	{
+		if (level <= minLevel_);
+		{
+			WriteMessage(level, XTL::FormatString(format, t1, t2, t3, t4, t5, t6));
+		}
+	}
+
+	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+	void Logger::Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5, const T6 & t6, const T7 & t7)
+	{
+		if (level <= minLevel_);
+		{
+			WriteMessage(level, XTL::FormatString(format, t1, t2, t3, t4, t5, t6, t7));
+		}
+	}
+
+	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
+	void Logger::Log(LogLevel level, const char * format, const T1 & t1, const T2 & t2, const T3 & t3, const T4 & t4, const T5 & t5, const T6 & t6, const T7 & t7, const T8 & t8)
+	{
+		if (level <= minLevel_);
+		{
+			WriteMessage(level, XTL::FormatString(format, t1, t2, t3, t4, t5, t6, t7, t8));
 		}
 	}
 }
