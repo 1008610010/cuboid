@@ -2897,8 +2897,20 @@ void PrintBit(unsigned int bit)
 	printf("%u\n", bit);
 }
 
+#include <xtl/Logger.hpp>
+
 int main(int argc, const char * argv[])
 {
+	{
+		XTL::DefaultLogger().SetMinLogLevel(LOG_INFO);
+		XTL::Log(LOG_ERROR, "Error");
+		XTL::Log(LOG_WARN,  "Warn");
+		XTL::Log(LOG_INFO,  "Info");
+		XTL::Log(LOG_DEBUG, "Debug");
+		XTL::Log(LOG_TRACE, "Trace");
+		return 0;
+	}
+
 	{
 		XTL::BitSet32 s;
 		s.Add(4);

@@ -111,7 +111,13 @@ namespace XTL
 		}
 	}
 
-	void Logger::WriteMessage(const LogLevel & level, const std::string & message)
+
+	SimpleLogger::~SimpleLogger() throw()
+	{
+		;;
+	}
+
+	void SimpleLogger::WriteMessage(const LogLevel & level, const std::string & message)
 	{
 		Write(Now());
 		Write(" ", 1);
@@ -121,14 +127,14 @@ namespace XTL
 		Write("\n", 1);
 	}
 
-	void Logger::Write(const std::string & s)
+	void SimpleLogger::Write(const std::string & s)
 	{
 		Write(s.data(), s.size());
 	}
 
 
 	NullLogger::NullLogger()
-		: Logger()
+		: SimpleLogger()
 	{
 		SetMinLogLevel(LOG_NOTHING);
 	}
@@ -195,8 +201,52 @@ namespace XTL
 	}
 
 
+	ConsoleLogger::~ConsoleLogger() throw()
+	{
+		;;
+	}
+
+	void ConsoleLogger::Flush()
+	{
+		if (::fflush(stdout) != 0)
+		{
+			throw std::runtime_error("Could not fflush(stdout)");
+		}
+
+		if (::fflush(stderr) != 0)
+		{
+			throw std::runtime_error("Could not fflush(stderr)");
+		}
+	}
+
+	void ConsoleLogger::WriteMessage(const LogLevel & level, const std::string & message)
+	{
+		FILE * const stream = (level == LOG_ERROR || level == LOG_WARN) ? stderr : stdout;
+		Write(stream, Now());
+		Write(stream, " ", 1);
+		Write(stream, level.Name());
+		Write(stream, " ", 1);
+		Write(stream, message);
+		Write(stream, "\n", 1);
+	}
+
+	void ConsoleLogger::Write(FILE * stream, const char * buffer, unsigned int size)
+	{
+		const size_t written = ::fwrite(buffer, 1, size, stream);
+		if (written < size)
+		{
+			throw std::runtime_error("Error in ConsoleLogger::Write");
+		}
+	}
+
+	void ConsoleLogger::Write(FILE * stream, const std::string & buffer)
+	{
+		Write(stream, buffer.data(), buffer.size());
+	}
+
+
 	FileLogger::FileLogger(const std::string & filePath)
-		: Logger(),
+		: SimpleLogger(),
 		  file_(filePath)
 	{
 		file_.Create(XTL::File::CREATE_APPEND);
@@ -265,7 +315,7 @@ namespace XTL
 	{
 		std::auto_ptr<Logger> & DefaultLoggerPtr()
 		{
-			static std::auto_ptr<Logger> instance(new StdErrLogger());
+			static std::auto_ptr<Logger> instance(new ConsoleLogger());
 			return instance;
 		}
 	}

@@ -80,11 +80,7 @@ namespace XTL
 
 		protected:
 
-			void WriteMessage(const LogLevel & level, const std::string & message);
-
-			void Write(const std::string & s);
-
-			virtual void Write(const char * buffer, unsigned int size) = 0;
+			virtual void WriteMessage(const LogLevel & level, const std::string & message) = 0;
 
 		private:
 
@@ -94,7 +90,22 @@ namespace XTL
 			LogLevel minLevel_;
 	};
 
-	class NullLogger : public Logger
+	class SimpleLogger : public Logger
+	{
+		public:
+
+			virtual ~SimpleLogger() throw();
+
+		protected:
+
+			virtual void WriteMessage(const LogLevel & level, const std::string & message);
+
+			void Write(const std::string & s);
+
+			virtual void Write(const char * buffer, unsigned int size) = 0;
+	};
+
+	class NullLogger : public SimpleLogger
 	{
 		public:
 
@@ -109,7 +120,7 @@ namespace XTL
 			virtual void Write(const char * buffer, unsigned int size);
 	};
 
-	class StdOutLogger : public Logger
+	class StdOutLogger : public SimpleLogger
 	{
 		public:
 
@@ -122,7 +133,7 @@ namespace XTL
 			virtual void Write(const char * buffer, unsigned int size);
 	};
 
-	class StdErrLogger : public Logger
+	class StdErrLogger : public SimpleLogger
 	{
 		public:
 
@@ -135,7 +146,24 @@ namespace XTL
 			virtual void Write(const char * buffer, unsigned int size);
 	};
 
-	class FileLogger : public Logger
+	class ConsoleLogger : public Logger
+	{
+		public:
+
+			virtual ~ConsoleLogger() throw();
+
+			virtual void Flush();
+
+		protected:
+
+			virtual void WriteMessage(const LogLevel & level, const std::string & message);
+
+			void Write(FILE * stream, const char * buffer, unsigned int size);
+
+			void Write(FILE * stream, const std::string & buffer);
+	};
+
+	class FileLogger : public SimpleLogger
 	{
 		public:
 
