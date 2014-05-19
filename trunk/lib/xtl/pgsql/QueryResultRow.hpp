@@ -33,9 +33,9 @@ namespace PGSQL
 				return result_.GetChar(row_, column, defaultValue);
 			}
 
-			long long int GetInteger(unsigned int column, long long int defaultValue = 0) const
+			long long int GetLongLong(unsigned int column, long long int defaultValue = 0) const
 			{
-				return result_.GetInteger(row_, column, defaultValue);
+				return result_.GetLongLong(row_, column, defaultValue);
 			}
 
 			float GetFloat(unsigned int column, float defaultValue = 0.0) const

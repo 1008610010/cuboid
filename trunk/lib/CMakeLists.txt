@@ -165,6 +165,7 @@ SET (
 		xtl/pgsql/ConnectionConfig.cpp
 		xtl/pgsql/Cursor.cpp
 		xtl/pgsql/Exception.cpp
+		xtl/pgsql/QueryParameters.cpp
 		xtl/pgsql/QueryResult.cpp
 )
 
