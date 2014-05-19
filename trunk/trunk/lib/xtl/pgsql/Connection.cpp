@@ -86,8 +86,14 @@ namespace PGSQL
 			return result;
 		}
 
-		if (IsOpened())
+		for (int i = 0; i < 2; ++i)
 		{
+			if (!IsOpened())
+			{
+				// TODO: Делать или нет автореконнект должен решать класс Connection.
+				Open();
+			}
+
 			result.ResetHandle(PQexec(HANDLE_, query));
 			if (result.Success())
 			{
@@ -96,24 +102,114 @@ namespace PGSQL
 
 			if (IsOpened())
 			{
-				throw QueryError(LastError(), query, result);
+				break;
 			}
 		}
 
-		// TODO: Делать или нет автореконнект должен решать класс Connection.
-		Open();
-		result.ResetHandle(PQexec(HANDLE_, query));
-		if (result.Failed())
+		throw QueryError(LastError(), query, result);
+	}
+
+	QueryResult Connection::Execute(const char * query, const QueryParameters & params)
+	{
+		QueryResult result;
+		if (query == 0)
 		{
-			throw QueryError(LastError(), query, result);
+			return result;
 		}
 
-		return result;
+		for (int i = 0; i < 2; ++i)
+		{
+			if (!IsOpened())
+			{
+				// TODO: Делать или нет автореконнект должен решать класс Connection.
+				Open();
+			}
+
+			result.ResetHandle(PQexecParams(HANDLE_, query, params.Size(), static_cast<const Oid *>(params.Types()), params.Values(), NULL, NULL, 0));
+			if (result.Success())
+			{
+				return result;
+			}
+
+			if (IsOpened())
+			{
+				break;
+			}
+		}
+
+		throw QueryError(LastError(), query, result);
 	}
+
+	/*
+	QueryResult Connection::Prepare(const std::string & name, const std::string & query)
+	{
+		QueryResult result;
+		for (int i = 0; i < 2; ++i)
+		{
+			if (!IsOpened())
+			{
+				// TODO: Делать или нет автореконнект должен решать класс Connection.
+				Open();
+			}
+
+			result.ResetHandle(PQprepare(HANDLE_, name.c_str(), query.c_str(), 0, NULL));
+			if (result.Success())
+			{
+				return result;
+			}
+
+			if (IsOpened())
+			{
+				break;
+			}
+		}
+
+		throw QueryError(LastError(), query.c_str(), result);
+	}
+
+	QueryResult Connection::ExecutePrepared(const std::string & name, const QueryParameters & params)
+	{
+		QueryResult result;
+
+		for (int i = 0; i < 2; ++i)
+		{
+			if (!IsOpened())
+			{
+				// TODO: Делать или нет автореконнект должен решать класс Connection.
+				Open();
+			}
+
+			result.ResetHandle(PQexecPrepared(HANDLE_, name.c_str(), params.Size(), params.Values(), NULL, NULL, 0));
+			if (result.Success())
+			{
+				return result;
+			}
+
+			if (IsOpened())
+			{
+				break;
+			}
+		}
+
+		throw QueryError(LastError(), query.c_str(), result);
+	}
+	*/
 
 	QueryResult Connection::Execute(const std::string & query)
 	{
 		return Execute(query.c_str());
+	}
+
+	const std::string Connection::SelectString(const std::string & query, const std::string & defaultValue)
+	{
+		QueryResult result = Execute(query);
+		return result.Empty() ? defaultValue : result.GetString(0, 0);
+	}
+
+	const long long int Connection::SelectLongLong(const std::string & query, const long long int & defaultValue)
+	{
+		QueryResult result = Execute(query);
+		return result.Empty() ? defaultValue : result.GetLongLong(0, 0, defaultValue);
 	}
 
 	void Connection::CopyTable(const char * tableName, CopyDataConsumer & dataConsumer)
@@ -228,15 +324,6 @@ namespace PGSQL
 
 */
 /*
-	const long long int PostgreSqlConnection::SelectInteger(const std::string & query,
-	                                                        long long int       errorValue,
-	                                                        unsigned int        attempts,
-	                                                        unsigned int        pauseMicroSecs)
-	{
-		PostgreSqlResult result = Execute(query, attempts, pauseMicroSecs);
-		return result.Failed() ? errorValue : result.GetField(0, 0).ToInteger(errorValue);
-	}
-
 	bool PostgreSqlConnection::Prepare(const char * name,
 	                                   const char * sql,
 	                                   const char * paramsSignature,
@@ -287,4 +374,3 @@ namespace PGSQL
 }
 
 #undef HANDLE_
-

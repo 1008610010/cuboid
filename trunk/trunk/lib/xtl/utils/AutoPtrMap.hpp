@@ -110,7 +110,7 @@ namespace XTL
 						return itr_->first;
 					}
 
-					const ValueType * Value() const
+					ValueType * Value() const
 					{
 						return itr_->second;
 					}

@@ -155,7 +155,7 @@ namespace PGSQL
 
 	const std::string QueryResult::GetString(unsigned int row, unsigned int column) const
 	{
-		if (Failed())
+		if (Failed() || Empty())
 		{
 			return std::string();
 		}
@@ -166,7 +166,7 @@ namespace PGSQL
 
 	char QueryResult::GetChar(unsigned int row, unsigned int column, char defaultValue) const
 	{
-		if (Failed())
+		if (Failed() || Empty())
 		{
 			return defaultValue;
 		}
@@ -175,9 +175,9 @@ namespace PGSQL
 		return value == 0 ? defaultValue : value[0];
 	}
 
-	long long int QueryResult::GetInteger(unsigned int row, unsigned int column, long long int defaultValue) const
+	long long int QueryResult::GetLongLong(unsigned int row, unsigned int column, long long int defaultValue) const
 	{
-		if (Failed())
+		if (Failed() || Empty())
 		{
 			return defaultValue;
 		}
@@ -188,7 +188,7 @@ namespace PGSQL
 
 	float QueryResult::GetFloat(unsigned int row, unsigned int column, float defaultValue) const
 	{
-		if (Failed())
+		if (Failed() || Empty())
 		{
 			return defaultValue;
 		}
@@ -199,7 +199,7 @@ namespace PGSQL
 
 	double QueryResult::GetDouble(unsigned int row, unsigned int column, double defaultValue) const
 	{
-		if (Failed())
+		if (Failed() || Empty())
 		{
 			return defaultValue;
 		}

@@ -4,6 +4,7 @@
 #include <string>
 
 #include "ConnectionConfig.hpp"
+#include "QueryParameters.hpp"
 #include "QueryResult.hpp"
 
 namespace XTL
@@ -11,8 +12,6 @@ namespace XTL
 namespace PGSQL
 {
 	class ConnectionConfig;
-	class QueryParameters;
-	class QueryResult;
 
 	class Connection
 	{
@@ -46,7 +45,43 @@ namespace PGSQL
 
 			QueryResult Execute(const char * query);
 
+			QueryResult Execute(const char * query, const QueryParameters & params);
+
 			QueryResult Execute(const std::string & query);
+
+			template <typename T1>
+			QueryResult Execute(const char * query, const T1 & p1);
+
+			template <typename T1, typename T2>
+			QueryResult Execute(const char * query, const T1 & p1, const T2 & p2);
+
+			template <typename T1, typename T2, typename T3>
+			QueryResult Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3);
+
+			template <typename T1, typename T2, typename T3, typename T4>
+			QueryResult Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4);
+
+			template <typename T1, typename T2, typename T3, typename T4, typename T5>
+			QueryResult Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5);
+
+			/**
+			 * From postgresql doc:
+			 *    The function creates a prepared statement named stmtName
+			 *    from the query string, which must contain a single SQL
+			 *    command. stmtName can be "" to create an unnamed statement,
+			 *    in which case any pre-existing unnamed statement is
+			 *    automatically replaced; otherwise it is an error if the
+			 *    statement name is already defined in the current session.
+			 */
+			/*
+			QueryResult Prepare(const std::string & name, const std::string & query);
+
+			QueryResult ExecutePrepared(const std::string & name, const QueryParameters & params);
+			*/
+
+			const std::string SelectString(const std::string & query, const std::string & defaultValue = "");
+
+			const long long int SelectLongLong(const std::string & query, const long long int & defaultValue = 0);
 
 			class CopyDataConsumer
 			{
@@ -70,22 +105,6 @@ namespace PGSQL
 
 			const std::string Escape(const std::string & value);
 
-//			QueryResult ExecutePrepared(const std::string      & name,
-//			                            const QueryParameters & params);
-
-			/**
-			 * From postgresql doc:
-			 *    The function creates a prepared statement named stmtName
-			 *    from the query string, which must contain a single SQL
-			 *    command. stmtName can be "" to create an unnamed statement,
-			 *    in which case any pre-existing unnamed statement is
-			 *    automatically replaced; otherwise it is an error if the
-			 *    statement name is already defined in the current session.
-			 */
-//			bool Prepare(const std::string     & name,
-//			             const std::string     & query,
-//			             const QueryParameters & params);
-
 		private:
 
 			Connection(const Connection &);
@@ -103,6 +122,56 @@ namespace PGSQL
 			bool TableExists(const char * tableName, const char * tableSchema = 0);
 */
 	};
+
+	template <typename T1>
+	QueryResult Connection::Execute(const char * query, const T1 & p1)
+	{
+		QueryParameters params;
+		params.Add(p1);
+		return Execute(query, params);
+	}
+
+	template <typename T1, typename T2>
+	QueryResult Connection::Execute(const char * query, const T1 & p1, const T2 & p2)
+	{
+		QueryParameters params;
+		params.Add(p1);
+		params.Add(p2);
+		return Execute(query, params);
+	}
+
+	template <typename T1, typename T2, typename T3>
+	QueryResult Connection::Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3)
+	{
+		QueryParameters params;
+		params.Add(p1);
+		params.Add(p2);
+		params.Add(p3);
+		return Execute(query, params);
+	}
+
+	template <typename T1, typename T2, typename T3, typename T4>
+	QueryResult Connection::Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4)
+	{
+		QueryParameters params;
+		params.Add(p1);
+		params.Add(p2);
+		params.Add(p3);
+		params.Add(p4);
+		return Execute(query, params);
+	}
+
+	template <typename T1, typename T2, typename T3, typename T4, typename T5>
+	QueryResult Connection::Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5)
+	{
+		QueryParameters params;
+		params.Add(p1);
+		params.Add(p2);
+		params.Add(p3);
+		params.Add(p4);
+		params.Add(p5);
+		return Execute(query, params);
+	}
 }
 }
 

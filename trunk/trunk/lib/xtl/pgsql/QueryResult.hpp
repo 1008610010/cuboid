@@ -65,15 +65,15 @@ namespace PGSQL
 
 			const QueryResultRow GetRow(unsigned int row) const;
 
-			const std::string GetString(unsigned int row, unsigned int column) const;
+			const std::string GetString(unsigned int row = 0, unsigned int column = 0) const;
 
-			char GetChar(unsigned int row, unsigned int column, char defaultValue = '\0') const;
+			char GetChar(unsigned int row = 0, unsigned int column = 0, char defaultValue = '\0') const;
 
-			long long int GetInteger(unsigned int row, unsigned int column, long long int defaultValue = 0) const;
+			long long int GetLongLong(unsigned int row = 0, unsigned int column = 0, long long int defaultValue = 0) const;
 
-			float GetFloat(unsigned int row, unsigned int column, float defaultValue = 0.0) const;
+			float GetFloat(unsigned int row = 0, unsigned int column = 0, float defaultValue = 0.0) const;
 
-			double GetDouble(unsigned int row, unsigned int column, double defaultValue = 0.0) const;
+			double GetDouble(unsigned int row = 0, unsigned int column = 0, double defaultValue = 0.0) const;
 
 		private:
 
