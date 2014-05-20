@@ -157,7 +157,7 @@ namespace XTL
 		ForkExecWait(filePath, arguments, errorListener);
 	}
 
-	void DoubleForkExec(const std::string & filePath, const ForkExecErrorListener & errorListener)
+	void DoubleForkExec(const std::string & filePath, const std::vector<std::string> & arguments, const ForkExecErrorListener & errorListener)
 	{
 		pid_t pid = ::fork();
 		if (pid < 0)
@@ -186,7 +186,7 @@ namespace XTL
 			}
 			else
 			{
-				Exec(filePath, errorListener);
+				Exec(filePath, arguments, errorListener);
 
 				// It will be executed on Exec error.
 				throw ChildExit();
@@ -194,16 +194,19 @@ namespace XTL
 		}
 	}
 
-/*
-	class Executor
+	void DoubleForkExec(const std::string           & filePath,
+	                    const ForkExecErrorListener & errorListener)
 	{
-		public:
+		std::vector<std::string> arguments;
+		DoubleForkExec(filePath, arguments, errorListener);
+	}
 
-			void ForkExec(const std::string & filePath)
-			{
-			}
-
-		private:
-	};
-*/
+	void DoubleForkExec(const std::string           & filePath,
+	                    const std::string           & arg1,
+	                    const ForkExecErrorListener & errorListener)
+	{
+		std::vector<std::string> arguments(1);
+		arguments[0] = arg1;
+		DoubleForkExec(filePath, arguments, errorListener);
+	}
 }
