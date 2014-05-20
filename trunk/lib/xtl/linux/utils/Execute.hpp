@@ -61,8 +61,16 @@ namespace XTL
 	 * @throw XTL::UnixError выбрасывает родительский процесс в случае ошибки fork() или waitpid().
 	 * @throw XTL::ChildExit выбрасывает дочерний процесс.
 	 */
-	void DoubleForkExec(const std::string           & filePath,
-	                    const ForkExecErrorListener & errorListener);
+	void DoubleForkExec(const std::string              & filePath,
+	                    const std::vector<std::string> & arguments,
+	                    const ForkExecErrorListener    & errorListener);
+
+	void DoubleForkExec(const std::string              & filePath,
+	                    const ForkExecErrorListener    & errorListener);
+
+	void DoubleForkExec(const std::string              & filePath,
+	                    const std::string              & arg1,
+	                    const ForkExecErrorListener    & errorListener);
 }
 
 #endif
