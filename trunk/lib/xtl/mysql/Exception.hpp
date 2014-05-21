@@ -1,5 +1,5 @@
-#ifndef XTL_MYSQL__EXCEPTION_HPP__
-#define XTL_MYSQL__EXCEPTION_HPP__ 1
+#ifndef XTL__MYSQL__EXCEPTION_HPP__
+#define XTL__MYSQL__EXCEPTION_HPP__ 1
 
 #include <memory>
 #include <string>
@@ -11,8 +11,6 @@ namespace XTL
 {
 namespace MYSQL
 {
-	// class QueryResult;
-
 	class Exception : public XTL::Exception
 	{
 		public:
