@@ -1,5 +1,5 @@
-#ifndef XTL_MYSQL__CONNECTION_HPP__
-#define XTL_MYSQL__CONNECTION_HPP__ 1
+#ifndef XTL__MYSQL__CONNECTION_HPP__
+#define XTL__MYSQL__CONNECTION_HPP__ 1
 
 #include <string>
 
