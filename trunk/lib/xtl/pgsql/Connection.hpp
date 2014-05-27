@@ -64,6 +64,15 @@ namespace PGSQL
 			template <typename T1, typename T2, typename T3, typename T4, typename T5>
 			QueryResult Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5);
 
+			template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+			QueryResult Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6);
+
+			template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+			QueryResult Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6, const T7 & p7);
+
+			template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
+			QueryResult Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6, const T7 & p7, const T8 & p8);
+
 			/**
 			 * From postgresql doc:
 			 *    The function creates a prepared statement named stmtName
@@ -170,6 +179,48 @@ namespace PGSQL
 		params.Add(p3);
 		params.Add(p4);
 		params.Add(p5);
+		return Execute(query, params);
+	}
+
+	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+	QueryResult Connection::Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6)
+	{
+		QueryParameters params;
+		params.Add(p1);
+		params.Add(p2);
+		params.Add(p3);
+		params.Add(p4);
+		params.Add(p5);
+		params.Add(p6);
+		return Execute(query, params);
+	}
+
+	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
+	QueryResult Connection::Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6, const T7 & p7)
+	{
+		QueryParameters params;
+		params.Add(p1);
+		params.Add(p2);
+		params.Add(p3);
+		params.Add(p4);
+		params.Add(p5);
+		params.Add(p6);
+		params.Add(p7);
+		return Execute(query, params);
+	}
+
+	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
+	QueryResult Connection::Execute(const char * query, const T1 & p1, const T2 & p2, const T3 & p3, const T4 & p4, const T5 & p5, const T6 & p6, const T7 & p7, const T8 & p8)
+	{
+		QueryParameters params;
+		params.Add(p1);
+		params.Add(p2);
+		params.Add(p3);
+		params.Add(p4);
+		params.Add(p5);
+		params.Add(p6);
+		params.Add(p7);
+		params.Add(p8);
 		return Execute(query, params);
 	}
 }
