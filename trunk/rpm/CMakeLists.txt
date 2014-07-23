@@ -15,4 +15,3 @@ CONFIGURE_FILE(
 	${CMAKE_CURRENT_BINARY_DIR}/build-sup-xtl.sh
 	@ONLY
 )
-

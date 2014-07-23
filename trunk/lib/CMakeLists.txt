@@ -160,7 +160,8 @@ FIND_PATH (
 		/usr/local/include
 		/usr/include
 		/usr/include/postgresql
-                /usr/include/pgsql/server
+		/usr/include/pgsql/server
+		/usr/include/postgresql/9.3/server
 		NO_DEFAULT_PATH
 	DOC
 		"Searching ${POSTGRES_H}"
