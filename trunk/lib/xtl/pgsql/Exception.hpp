@@ -1,5 +1,5 @@
-#ifndef XTL_PGSQL__EXCEPTION_HPP__
-#define XTL_PGSQL__EXCEPTION_HPP__ 1
+#ifndef XTL__PGSQL__EXCEPTION_HPP__
+#define XTL__PGSQL__EXCEPTION_HPP__ 1
 
 #include <memory>
 #include <string>

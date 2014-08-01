@@ -23,6 +23,13 @@ namespace PGSQL
 				;;
 			}
 
+			void Add(NullType)
+			{
+				paramTypes_.push_back(UNKNOWNOID);
+				paramStrings_.push_back("");
+				paramValues_.push_back(NULL);
+			}
+
 			void Add(const std::string & value)
 			{
 				paramTypes_.push_back(TEXTOID);
@@ -67,6 +74,11 @@ namespace PGSQL
 		: impl_(new QueryParametersImpl())
 	{
 		;;
+	}
+
+	void QueryParameters::Add(NullType value)
+	{
+		impl_->Add(value);
 	}
 
 	void QueryParameters::Add(const std::string & value)

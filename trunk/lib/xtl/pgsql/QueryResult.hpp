@@ -1,5 +1,5 @@
-#ifndef XTL_PGSQL__QUERY_RESULT_HPP__
-#define XTL_PGSQL__QUERY_RESULT_HPP__ 1
+#ifndef XTL__PGSQL__QUERY_RESULT_HPP__
+#define XTL__PGSQL__QUERY_RESULT_HPP__ 1
 
 #include <stdint.h>
 
@@ -64,6 +64,8 @@ namespace PGSQL
 			const char * GetSqlState() const;
 
 			const QueryResultRow GetRow(unsigned int row) const;
+
+			bool IsNull(unsigned int row = 0, unsigned int column = 0) const;
 
 			const std::string GetString(unsigned int row = 0, unsigned int column = 0) const;
 

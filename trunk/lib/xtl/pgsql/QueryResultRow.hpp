@@ -1,5 +1,5 @@
-#ifndef XTL_PGSQL__QUERY_RESULT_ROW_HPP__
-#define XTL_PGSQL__QUERY_RESULT_ROW_HPP__ 1
+#ifndef XTL__PGSQL__QUERY_RESULT_ROW_HPP__
+#define XTL__PGSQL__QUERY_RESULT_ROW_HPP__ 1
 
 #include "QueryResult.hpp"
 
@@ -21,6 +21,11 @@ namespace PGSQL
 			unsigned int GetIndex() const
 			{
 				return row_;
+			}
+
+			bool IsNull(unsigned int column) const
+			{
+				return result_.IsNull(row_, column);
 			}
 
 			const std::string GetString(unsigned int column) const

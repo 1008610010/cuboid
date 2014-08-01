@@ -153,6 +153,16 @@ namespace PGSQL
 		return QueryResultRow(*this, row);
 	}
 
+	bool QueryResult::IsNull(unsigned int row, unsigned int column) const
+	{
+		if (Failed() || Empty())
+		{
+			return false;
+		}
+
+		return GetValue(row, column) == 0;
+	}
+
 	const std::string QueryResult::GetString(unsigned int row, unsigned int column) const
 	{
 		if (Failed() || Empty())
