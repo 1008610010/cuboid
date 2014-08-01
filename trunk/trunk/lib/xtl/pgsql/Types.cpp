@@ -4,6 +4,6 @@ namespace XTL
 {
 namespace PGSQL
 {
-	const NullType Null;
+	const NullType Null = NullType();
 }
 }
