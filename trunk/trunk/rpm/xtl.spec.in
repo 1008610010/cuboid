@@ -248,6 +248,7 @@ XTL C++ Library development files - PostgreSQL
 %{_prefix}/include/xtl/pgsql/QueryResultIterator.hpp
 %{_prefix}/include/xtl/pgsql/QueryResultRow.hpp
 %{_prefix}/include/xtl/pgsql/QueryState.hpp
+%{_prefix}/include/xtl/pgsql/Types.hpp
 
 
 
