@@ -1,11 +1,12 @@
-#ifndef XTL_PGSQL__CONNECTION_HPP__
-#define XTL_PGSQL__CONNECTION_HPP__ 1
+#ifndef XTL__PGSQL__CONNECTION_HPP__
+#define XTL__PGSQL__CONNECTION_HPP__ 1
 
 #include <string>
 
 #include "ConnectionConfig.hpp"
 #include "QueryParameters.hpp"
 #include "QueryResult.hpp"
+#include "Types.hpp"
 
 namespace XTL
 {

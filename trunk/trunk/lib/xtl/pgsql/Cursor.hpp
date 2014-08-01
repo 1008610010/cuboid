@@ -1,5 +1,5 @@
-#ifndef XTL_PGSQL__CURSOR_HPP__
-#define XTL_PGSQL__CURSOR_HPP__ 1
+#ifndef XTL__PGSQL__CURSOR_HPP__
+#define XTL__PGSQL__CURSOR_HPP__ 1
 
 #include <string>
 

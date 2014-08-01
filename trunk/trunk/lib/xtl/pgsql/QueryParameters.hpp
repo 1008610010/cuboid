@@ -1,8 +1,10 @@
-#ifndef XTL_PGSQL__QUERY_PARAMETERS_HPP__
-#define XTL_PGSQL__QUERY_PARAMETERS_HPP__ 1
+#ifndef XTL__PGSQL__QUERY_PARAMETERS_HPP__
+#define XTL__PGSQL__QUERY_PARAMETERS_HPP__ 1
 
 #include <memory>
 #include <string>
+
+#include "Types.hpp"
 
 namespace XTL
 {
@@ -15,6 +17,8 @@ namespace PGSQL
 		public:
 
 			QueryParameters();
+
+			void Add(NullType value);
 
 			void Add(const std::string & value);
 
