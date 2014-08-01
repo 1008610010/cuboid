@@ -190,6 +190,7 @@ SET (
 		xtl/pgsql/Exception.cpp
 		xtl/pgsql/QueryParameters.cpp
 		xtl/pgsql/QueryResult.cpp
+		xtl/pgsql/Types.cpp
 )
 
 ADD_LIBRARY (
