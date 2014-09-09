@@ -160,7 +160,7 @@ namespace PGSQL
 			return false;
 		}
 
-		return GetValue(row, column) == 0;
+		return PQgetisnull(CONST_HANDLE_, row, column) != 0;
 	}
 
 	const std::string QueryResult::GetString(unsigned int row, unsigned int column) const
