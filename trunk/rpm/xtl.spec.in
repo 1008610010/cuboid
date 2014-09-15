@@ -55,6 +55,10 @@ XTL C++ wrapper of PostgreSQL client
 %post pgsql
 ldconfig
 
+%changelog pgsql
+* Tue Sep 09 2014 Dmitriy Nikolaev <dnikolaev@sup.com>
+  - Fix PGSQL::QueryResult::IsNull method (now use PQgetisnull).
+
 
 
 %package sqlite
