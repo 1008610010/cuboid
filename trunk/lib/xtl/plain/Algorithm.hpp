@@ -17,12 +17,12 @@ namespace PLAIN
 	void Swap(RecordRef & left, RecordRef & right, RecordRef & temp);
 
 	/**
-	 * int RecordComparator_::operator() (RecordRef ref);
+	 * int RecordComparator_::operator() (const RecordType_ & rec);
 	 */
-	template <typename RecordComparator_>
-	bool BinarySearch(XTL::SeekableInputStream & inputStream, RecordRef ref, const RecordComparator_ & comp)
+	template <typename RecordType_, typename RecordComparator_>
+	bool BinarySearch(XTL::SeekableInputStream & inputStream, RecordType_ & rec, const RecordComparator_ & comp)
 	{
-		unsigned int recordSize = ref.Size();
+		unsigned int recordSize = rec.Size();
 
 		if (recordSize == 0)
 		{
@@ -42,9 +42,9 @@ namespace PLAIN
 			unsigned int middle = (left + right) / 2;
 
 			inputStream.Seek(middle * recordSize);
-			ref.Read(inputStream);
+			rec.Read(inputStream);
 
-			int result = comp(ref);
+			int result = comp(rec);
 
 			if (result < 0)
 			{
