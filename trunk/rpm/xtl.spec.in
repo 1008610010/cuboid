@@ -203,7 +203,6 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/utils/AutoPtrVector.hpp
 %{_prefix}/include/xtl/utils/Base64.hpp
 %{_prefix}/include/xtl/utils/BitUtils.hpp
-%{_prefix}/include/xtl/utils/CacheMap.hpp
 %{_prefix}/include/xtl/utils/Chronometer.hpp
 %{_prefix}/include/xtl/utils/Date.hpp
 %{_prefix}/include/xtl/utils/Heap.hpp

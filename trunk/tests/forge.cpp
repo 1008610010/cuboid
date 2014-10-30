@@ -2937,19 +2937,19 @@ int main(int argc, const char * argv[])
 	{
 		XTL::AutoPtrMapCache<std::string, Obj> cache(3);
 		printf("---\n");
-		cache.Get("A").SetIfNull(Obj::Creator(1));
+		cache["A"].SetIfNull(Obj::Creator(1));
 		printf("---\n");
-		cache.Get("B") = new Obj(2);
+		cache["B"] = new Obj(2);
 		printf("---\n");
-		cache.Get("C") = new Obj(3);
+		cache["C"] = new Obj(3);
 		printf("---\n");
-		cache.Get("A").SetIfNull(Obj::Creator(6));
+		cache["A"].SetIfNull(Obj::Creator(6));
 		printf("---\n");
-		cache.Get("D") = new Obj(4);
+		cache["D"] = new Obj(4);
 		printf("---\n");
-		cache.Get("B");
+		cache["B"];
 		printf("---\n");
-		cache.Get("E") = new Obj(5);
+		cache["E"] = new Obj(5);
 		printf("---\n");
 		return 0;
 	}
