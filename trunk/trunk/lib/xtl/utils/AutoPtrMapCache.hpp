@@ -66,6 +66,10 @@ namespace XTL
 	/*
 	 * @class AutoPtrMapCache
 	 * @brief Класс, представляющий ограниченные по размеру кэш с методом вытеснения Least Recently Used.
+	 *
+	 * Реализация вытесняющего кэша. Если размер кэша достигает capacity элементов,
+	 * то при вставке нового элемента "самый старый" (Least Recently Used) будет удален.
+	 * Вызов метода operator[](KEY) делает элемент с этим ключом "самым новым".
 	 */
 	template <typename KeyType_, typename ValueType_>
 	class AutoPtrMapCache
@@ -111,7 +115,6 @@ namespace XTL
 
 			explicit AutoPtrMapCache(int capacity)
 				: capacity_(capacity),
-				  size_(0),
 				  map_(),
 				  list_()
 			{
@@ -125,10 +128,22 @@ namespace XTL
 
 			unsigned int Size() const
 			{
-				return size_;
+				return map_.size();
 			}
 
-			AutoPtrRef<ValueType> Get(const KeyType & key)
+			void Clear()
+			{
+				const typename Map::iterator end = map_.end();
+				for (typename Map::iterator mapItr = map_.begin(); mapItr != end; ++mapItr)
+				{
+					delete mapItr->second.value;
+				}
+
+				map_.clear();
+				list_.clear();
+			}
+
+			AutoPtrRef<ValueType> operator[] (const KeyType & key)
 			{
 				typename Map::iterator mapItr = map_.find(key);
 				if (mapItr != map_.end())
@@ -137,30 +152,18 @@ namespace XTL
 				}
 				else
 				{
-					if (size_ > 0 && size_ == capacity_)
+					if (Size() > 0 && Size() == capacity_)
 					{
 						DiscardLeastRecentlyUsed();
 					}
 
 					mapItr = map_.insert(std::make_pair(key, MapEntry())).first;
-					++size_;
 				}
 
 				list_.push_front(ListEntry(mapItr));
 				mapItr->second.listItr = list_.begin();
 
 				return AutoPtrRef<ValueType>(mapItr->second.value);
-			}
-
-			void Clear()
-			{
-				for (typename Map::iterator mapItr = map_.begin(); mapItr != map_.end(); ++mapItr)
-				{
-					delete mapItr->second.value;
-				}
-				size_ = 0;
-				map_.clear();
-				list_.clear();
 			}
 
 		private:
@@ -171,14 +174,12 @@ namespace XTL
 			void DiscardLeastRecentlyUsed()
 			{
 				const typename Map::iterator mapItr = list_.back().mapItr;
-				list_.erase(mapItr->second.listItr);
 				delete mapItr->second.value;
+				list_.erase(mapItr->second.listItr);
 				map_.erase(mapItr);
-				--size_;
 			}
 
 			const unsigned int capacity_;
-			unsigned int       size_;
 			Map                map_;
 			List               list_;
 	};
