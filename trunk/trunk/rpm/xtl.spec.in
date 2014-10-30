@@ -198,6 +198,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/utils/AutoPtr.hpp
 %{_prefix}/include/xtl/utils/AutoPtrPair.hpp
 %{_prefix}/include/xtl/utils/AutoPtrMap.hpp
+%{_prefix}/include/xtl/utils/AutoPtrMapCache.hpp
 %{_prefix}/include/xtl/utils/AutoPtrStack.hpp
 %{_prefix}/include/xtl/utils/AutoPtrVector.hpp
 %{_prefix}/include/xtl/utils/Base64.hpp

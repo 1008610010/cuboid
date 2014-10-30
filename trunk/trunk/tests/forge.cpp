@@ -2898,9 +2898,62 @@ void PrintBit(unsigned int bit)
 }
 
 #include <xtl/Logger.hpp>
+#include <xtl/utils/AutoPtrMapCache.hpp>
+
+struct Obj
+{
+	const int i;
+
+	explicit Obj(int i_)
+		: i(i_)
+	{
+		printf("Construct %d\n", i);
+	}
+
+	~Obj() throw()
+	{
+		printf("Destruct %d\n", i);
+	}
+
+	struct Creator
+	{
+		const int i;
+
+		explicit Creator(int i_)
+			: i(i_)
+		{
+			;;
+		}
+
+		Obj * operator() () const
+		{
+			return new Obj(i);
+		}
+	};
+};
 
 int main(int argc, const char * argv[])
 {
+	{
+		XTL::AutoPtrMapCache<std::string, Obj> cache(3);
+		printf("---\n");
+		cache.Get("A").SetIfNull(Obj::Creator(1));
+		printf("---\n");
+		cache.Get("B") = new Obj(2);
+		printf("---\n");
+		cache.Get("C") = new Obj(3);
+		printf("---\n");
+		cache.Get("A").SetIfNull(Obj::Creator(6));
+		printf("---\n");
+		cache.Get("D") = new Obj(4);
+		printf("---\n");
+		cache.Get("B");
+		printf("---\n");
+		cache.Get("E") = new Obj(5);
+		printf("---\n");
+		return 0;
+	}
+
 	{
 		XTL::DefaultLogger().SetMinLogLevel(LOG_INFO);
 		XTL::Log(LOG_ERROR, "Error");
