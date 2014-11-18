@@ -120,89 +120,97 @@ TARGET_LINK_LIBRARIES (
 )
 
 
-FIND_LIBRARY (
-	POSTGRESQL_CLIENT_LIBRARY
-		NAMES pq
-		PATHS /opt/lib /usr/lib /usr/local/lib
-		DOC "Path where the PostgreSQL client library can be found"
-)
+IF (BUILD_PGSQL)
+	FIND_LIBRARY (
+		POSTGRESQL_CLIENT_LIBRARY
+			NAMES pq
+			PATHS /opt/lib /usr/lib /usr/local/lib
+			DOC "Path where the PostgreSQL client library can be found"
+	)
 
-SET (LIBPQ_FE_H libpq-fe.h)
+	SET (LIBPQ_FE_H libpq-fe.h)
 
-FIND_PATH (
-	LIBPQ_FE_INCLUDE_DIR
-	${LIBPQ_FE_H}
-	PATH
-		/usr/local/include
-		/usr/include
-		/usr/include/postgresql
-		NO_DEFAULT_PATH
-	DOC
-		"Searching ${LIBPQ_FE_H}"
-)
+	FIND_PATH (
+		LIBPQ_FE_INCLUDE_DIR
+		${LIBPQ_FE_H}
+		PATH
+			/usr/local/include
+			/usr/include
+			/usr/include/postgresql
+			NO_DEFAULT_PATH
+		DOC
+			"Searching ${LIBPQ_FE_H}"
+	)
 
-IF (LIBPQ_FE_INCLUDE_DIR)
-	MESSAGE (STATUS "${LIBPQ_FE_H} found in ${LIBPQ_FE_INCLUDE_DIR}")
-ELSE (LIBPQ_FE_INCLUDE_DIR)
-	MESSAGE (FATAL_ERROR "${LIBPQ_FE_H} NOT found")
-ENDIF (LIBPQ_FE_INCLUDE_DIR)
+	IF (LIBPQ_FE_INCLUDE_DIR)
+		MESSAGE (STATUS "${LIBPQ_FE_H} found in ${LIBPQ_FE_INCLUDE_DIR}")
+	ELSE (LIBPQ_FE_INCLUDE_DIR)
+		MESSAGE (FATAL_ERROR "${LIBPQ_FE_H} NOT found")
+	ENDIF (LIBPQ_FE_INCLUDE_DIR)
 
-MARK_AS_ADVANCED (
-	LIBPQ_FE_INCLUDE_DIR
-)
+	MARK_AS_ADVANCED (
+		LIBPQ_FE_INCLUDE_DIR
+	)
 
-SET (POSTGRES_H postgres.h)
+	SET (POSTGRES_H postgres.h)
 
-FIND_PATH (
-	POSTGRES_INCLUDE_DIR
-	${POSTGRES_H}
-	PATH
-		/usr/local/include
-		/usr/include
-		/usr/include/postgresql
-		/usr/include/pgsql/server
-		/usr/include/postgresql/9.3/server
-		NO_DEFAULT_PATH
-	DOC
-		"Searching ${POSTGRES_H}"
-)
+	FIND_PATH (
+		POSTGRES_INCLUDE_DIR
+		${POSTGRES_H}
+		PATH
+			/usr/local/include
+			/usr/include
+			/usr/include/postgresql
+			/usr/include/pgsql/server
+			/usr/include/postgresql/9.3/server
+			NO_DEFAULT_PATH
+		DOC
+			"Searching ${POSTGRES_H}"
+	)
 
-IF (POSTGRES_INCLUDE_DIR)
-	MESSAGE (STATUS "${POSTGRES_H} found in ${POSTGRES_INCLUDE_DIR}")
-ELSE (POSTGRES_INCLUDE_DIR)
-	MESSAGE (FATAL_ERROR "${POSTGRES_H} NOT found")
-ENDIF (POSTGRES_INCLUDE_DIR)
+	IF (POSTGRES_INCLUDE_DIR)
+		MESSAGE (STATUS "${POSTGRES_H} found in ${POSTGRES_INCLUDE_DIR}")
+	ELSE (POSTGRES_INCLUDE_DIR)
+		MESSAGE (FATAL_ERROR "${POSTGRES_H} NOT found")
+	ENDIF (POSTGRES_INCLUDE_DIR)
 
-MARK_AS_ADVANCED (
-	POSTGRES_INCLUDE_DIR
-)
+	MARK_AS_ADVANCED (
+		POSTGRES_INCLUDE_DIR
+	)
 
-INCLUDE_DIRECTORIES (
-	${LIBPQ_FE_INCLUDE_DIR}
-	${POSTGRES_INCLUDE_DIR}
-)
+	INCLUDE_DIRECTORIES (
+		${LIBPQ_FE_INCLUDE_DIR}
+		${POSTGRES_INCLUDE_DIR}
+	)
 
-SET (
-	XTL_PGSQL_SOURCES
-		xtl/pgsql/Connection.cpp
-		xtl/pgsql/ConnectionConfig.cpp
-		xtl/pgsql/Cursor.cpp
-		xtl/pgsql/Exception.cpp
-		xtl/pgsql/QueryParameters.cpp
-		xtl/pgsql/QueryResult.cpp
-		xtl/pgsql/Types.cpp
-)
+	SET (
+		XTL_PGSQL_SOURCES
+			xtl/pgsql/Connection.cpp
+			xtl/pgsql/ConnectionConfig.cpp
+			xtl/pgsql/Cursor.cpp
+			xtl/pgsql/Exception.cpp
+			xtl/pgsql/QueryParameters.cpp
+			xtl/pgsql/QueryResult.cpp
+			xtl/pgsql/Types.cpp
+	)
 
-ADD_LIBRARY (
-	xtl-pgsql SHARED
-		${XTL_PGSQL_SOURCES}
-)
+	ADD_LIBRARY (
+		xtl-pgsql SHARED
+			${XTL_PGSQL_SOURCES}
+	)
 
-TARGET_LINK_LIBRARIES (
-	xtl-pgsql
-		${POSTGRESQL_CLIENT_LIBRARY}
-)
+	TARGET_LINK_LIBRARIES (
+		xtl-pgsql
+			${POSTGRESQL_CLIENT_LIBRARY}
+	)
 
+	INSTALL (
+		TARGETS
+			xtl-pgsql
+		DESTINATION
+			lib
+	)
+ENDIF (BUILD_PGSQL)
 
 
 FIND_LIBRARY (
@@ -278,7 +286,6 @@ INSTALL (
 	TARGETS
 		xtl
 		xtl-mysql
-		xtl-pgsql
 		xtl-sqlite
 	DESTINATION
 		lib
