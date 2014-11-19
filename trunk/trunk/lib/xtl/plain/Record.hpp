@@ -1,7 +1,7 @@
 #ifndef XTL_PLAIN__RECORD_HPP__
 #define XTL_PLAIN__RECORD_HPP__ 1
 
-#include <string.h>
+#include <cstring>
 
 #include <algorithm>
 #include <stdexcept>
@@ -150,7 +150,7 @@ namespace PLAIN
 
 			void Clear()
 			{
-				::memset(Data(), '\0', this->Size());
+				std::memset(Data(), '\0', this->Size());
 			}
 
 			void * Data() const
@@ -192,7 +192,7 @@ namespace PLAIN
 				: prototype_(prototype),
 				  data_(new char[prototype->Size()])
 			{
-				::memset(data_, '\0', prototype->Size());
+				std::memset(data_, '\0', prototype->Size());
 			}
 
 			~Record() throw()
@@ -212,7 +212,7 @@ namespace PLAIN
 
 			void Clear()
 			{
-				::memset(data_, '\0', prototype_->Size());
+				std::memset(data_, '\0', prototype_->Size());
 			}
 
 			void Assign(const RecordConstRef & other)
@@ -328,7 +328,7 @@ namespace PLAIN
 
 					void Clear()
 					{
-						::memset(Data(), '\0', this->Size());
+						std::memset(Data(), '\0', this->Size());
 					}
 
 					void Read(XTL::InputStream & stream)
@@ -392,9 +392,6 @@ namespace PLAIN
 
 						private:
 
-							PrototypeHolder(const PrototypeHolder &);
-							PrototypeHolder & operator= (const PrototypeHolder &);
-
 							RecordPrototype::SharedConstPtr prototype_;
 					};
 
@@ -403,7 +400,24 @@ namespace PLAIN
 						  prototypeHolder_(RecordType::Prototype())
 					{
 						this->data_ = new char[this->Size()];
-						::memset(this->data_, '\0', this->Size());
+						std::memset(this->data_, '\0', this->Size());
+					}
+
+					Rec(const Rec & other)
+						: Ref(),
+						  prototypeHolder_(other.prototypeHolder_)
+					{
+						this->data_ = new char[this->Size()];
+
+						try
+						{
+							*this = other;
+						}
+						catch (...)
+						{
+							delete [] static_cast<char *>(this->data_);
+							throw;
+						}
 					}
 
 					Rec(XTL::InputStream & stream)
@@ -464,8 +478,6 @@ namespace PLAIN
 					}
 
 				private:
-
-					Rec(const Rec &);
 
 					PrototypeHolder prototypeHolder_;
 			};
