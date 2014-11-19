@@ -33,6 +33,16 @@ namespace XTL
 				;;
 			}
 
+			bool operator== (const BitSet & other) const
+			{
+				return bits_ == other.bits_;
+			}
+
+			bool operator!= (const BitSet & other) const
+			{
+				return bits_ != other.bits_;
+			}
+
 			void Assign(T bits)
 			{
 				bits_ = bits;
