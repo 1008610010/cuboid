@@ -1,5 +1,5 @@
-#ifndef _XTL__SINGLETON_HPP__
-#define _XTL__SINGLETON_HPP__ 1
+#ifndef XTL__SINGLETON_HPP__
+#define XTL__SINGLETON_HPP__ 1
 
 namespace XTL
 {
