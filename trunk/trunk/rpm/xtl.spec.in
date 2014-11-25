@@ -102,6 +102,7 @@ XTL C++ Library development files
 %{_prefix}/include/xtl/ProgramOptions.hpp
 %{_prefix}/include/xtl/RegExp.hpp
 %{_prefix}/include/xtl/SharedPtr.hpp
+%{_prefix}/include/xtl/Singleton.hpp
 %{_prefix}/include/xtl/StringUtils.hpp
 %{_prefix}/include/xtl/TypeTraits.hpp
 %{_prefix}/include/xtl/Types.hpp
