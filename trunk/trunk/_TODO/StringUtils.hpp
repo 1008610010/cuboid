@@ -61,7 +61,7 @@ namespace XTL
 			IntegerDigits(const T & value)
 				: size_(0)
 			{
-				size_ = sprintf(value_, IntegerTypeTraits<T>::PrintPattern, value);
+				size_ = sprintf(value_, TypeTraits<T>::DecFormat, value);
 			}
 
 			operator const char * () const
@@ -83,7 +83,7 @@ namespace XTL
 
 			unsigned int size_;
 
-			char value_[AlignedSupremum<IntegerTypeTraits<T>::PrintMaxChars + 1, sizeof(int)>::Value];
+			char value_[AlignedSupremum<TypeTraits<T>::MaxDecChars + 1, sizeof(int)>::Value];
 	};
 
 	class FloatDigits
