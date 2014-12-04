@@ -48,6 +48,11 @@ namespace XTL
 				bits_ = bits;
 			}
 
+			const T GetBits() const
+			{
+				return bits_;
+			}
+
 			static unsigned int Capacity()
 			{
 				return CAPACITY;
