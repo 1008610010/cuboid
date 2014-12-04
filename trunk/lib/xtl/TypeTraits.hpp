@@ -139,14 +139,17 @@ namespace XTL
 
 	template <> struct TypeTraits<int> : public TypeTraits_SignedInteger<int>
 	{
+		static const char * const DecFormat;
 	};
 
 	template <> struct TypeTraits<long int> : public TypeTraits_SignedInteger<long int>
 	{
+		static const char * const DecFormat;
 	};
 
 	template <> struct TypeTraits<long long int> : public TypeTraits_SignedInteger<long long int>
 	{
+		static const char * const DecFormat;
 	};
 
 	/*** Unsigned Integer Type Traits ***/
@@ -161,14 +164,17 @@ namespace XTL
 
 	template <> struct TypeTraits<unsigned int> : public TypeTraits_UnsignedInteger<unsigned int>
 	{
+		static const char * const DecFormat;
 	};
 
 	template <> struct TypeTraits<unsigned long int> : public TypeTraits_UnsignedInteger<unsigned long int>
 	{
+		static const char * const DecFormat;
 	};
 
 	template <> struct TypeTraits<unsigned long long int> : public TypeTraits_UnsignedInteger<unsigned long long int>
 	{
+		static const char * const DecFormat;
 	};
 }
 
