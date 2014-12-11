@@ -183,6 +183,11 @@ namespace XTL
 						return current_;
 					}
 
+					const BitSet & GetSet() const
+					{
+						return set_;
+					}
+
 				private:
 
 					void FindNextBit()
@@ -199,7 +204,7 @@ namespace XTL
 						current_ = -1;
 					}
 
-					const BitSet & set_;
+					const BitSet set_;
 					int current_;
 			};
 
@@ -274,8 +279,8 @@ namespace XTL
 						currentBit_ = CAPACITY;
 					}
 
-					const BitSet & bitSet_;
-					unsigned int   currentBit_;
+					const BitSet bitSet_;
+					unsigned int currentBit_;
 			};
 
 			const_iterator begin() const
