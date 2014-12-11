@@ -213,9 +213,9 @@ namespace XTL
 		{
 			const Number n = FloatLiteralParser(GetCharSource()).Parse();
 
-			if (n.IsFloat())
+			if (n.IsRational())
 			{
-				return VariantPtr(new Variant::Double(n.ToFloat()));
+				return VariantPtr(new Variant::Double(n.ToDouble()));
 			}
 			else
 			{

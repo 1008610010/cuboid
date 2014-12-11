@@ -14,7 +14,7 @@ namespace XTL
 			{
 				SIGNED_INTEGER   = 0,
 				UNSIGNED_INTEGER = 1,
-				FLOAT            = 2
+				RATIONAL         = 2
 			};
 
 			explicit Number(INT_64 value)
@@ -27,7 +27,7 @@ namespace XTL
 
 			explicit Number(double value)
 				: value_(value),
-				  type_(FLOAT) { ;; }
+				  type_(RATIONAL) { ;; }
 
 			static const Number ZERO()
 			{
@@ -38,15 +38,15 @@ namespace XTL
 
 			Type GetType() const              { return type_; }
 
-			bool IsInteger() const            { return type_ != FLOAT; }
+			bool IsInteger() const            { return type_ != RATIONAL; }
 
-			bool IsFloat() const              { return type_ == FLOAT; }
+			bool IsRational() const           { return type_ == RATIONAL; }
 
 			INT_64 ToSignedInteger() const    { return value_.i; }
 
 			UINT_64 ToUnsignedInteger() const { return value_.u; }
 
-			double ToFloat() const            { return value_.f; }
+			double ToDouble() const           { return value_.f; }
 
 		private:
 
