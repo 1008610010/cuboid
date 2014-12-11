@@ -2282,7 +2282,7 @@ void DebugPrint(const XTL::Number & n)
 	{
 		case XTL::Number::SIGNED_INTEGER:   printf("signed %lld\n", static_cast<long long int>(n.ToSignedInteger())); break;
 		case XTL::Number::UNSIGNED_INTEGER: printf("unsigned %llu\n", static_cast<unsigned long long int>(n.ToUnsignedInteger())); break;
-		case XTL::Number::FLOAT:            printf("float %g\n", n.ToFloat()); break;
+		case XTL::Number::RATIONAL:         printf("rational %g\n", n.ToDouble()); break;
 	}
 }
 
