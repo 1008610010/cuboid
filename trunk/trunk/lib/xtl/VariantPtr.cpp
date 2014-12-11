@@ -37,6 +37,11 @@ namespace XTL
 		return ptr_ != 0 && ptr_->IsArray();
 	}
 
+	bool VariantPtr::IsStruct() const
+	{
+		return ptr_ != 0 && ptr_->IsStruct();
+	}
+
 	long long int VariantPtr::ToLongLongInt()
 	{
 		Variant::LongLongInt * newPtr = ptr_->ToLongLongInt();
