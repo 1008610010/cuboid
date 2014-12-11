@@ -62,6 +62,8 @@ namespace XTL
 
 			bool IsArray() const;
 
+			bool IsStruct() const;
+
 			long long int ToLongLongInt();
 
 			double ToDouble();
