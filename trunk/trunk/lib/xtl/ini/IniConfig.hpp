@@ -24,12 +24,13 @@
     " ([^\]|\ESC)* "  ESC = ["\", '"', "r", "n", "t"]
     ' ([^\]|\ESC)* '  ESC = ["\", "'"]
 
-{Include "StringLiteral"}
-{Set Var = "StringLiteral"}
-{$Var}
+{include "StringLiteral"}
+{set Var = "StringLiteral"}
+$Var
+${Var}
 
-  {Set BinDir = "/usr/local/bin"}
-  Param = "{$BinDir}/program_name"
+  {set BinDir = "/usr/local/bin"}
+  Param = "$BinDir/program_name"
 */
 
 namespace XTL
