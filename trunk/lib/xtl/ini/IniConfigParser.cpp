@@ -67,7 +67,7 @@ namespace XTL
 			{
 				ThrowError("Section name was expected");
 			}
-			currentSection_ == ReadIdentifier();
+			currentSection_ = ReadIdentifier();
 			SkipLinearSpaces();
 			if (NeedChar() != ']')
 			{

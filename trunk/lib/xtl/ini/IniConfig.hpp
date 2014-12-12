@@ -1,10 +1,12 @@
 #ifndef XTL__INI_CONFIG_HPP__
 #define XTL__INI_CONFIG_HPP__ 1
 
+#include <algorithm>
 #include <map>
 #include <string>
 
 #include "../Exception.hpp"
+#include "../Types.hpp"
 #include "../VariantPtr.hpp"
 #include "../utils/AutoPtrMap.hpp"
 
@@ -35,6 +37,8 @@ ${Var}
 
 namespace XTL
 {
+	static const FileSize MAX_INI_CONFIG_SIZE = 128 * 1024 * 1024;
+
 	class IniConfig
 	{
 		public:
@@ -43,8 +47,18 @@ namespace XTL
 			{
 				public:
 
+					explicit Error(const std::string & what);
+
+					virtual ~Error() throw();
+
+					virtual const std::string What() const;
+
 					class SectionDoesNotExist;
-					class KeyWasNotFound;
+					class KeyDoesNotExist;
+
+				private:
+
+					const std::string what_;
 			};
 
 			class Section
@@ -57,10 +71,18 @@ namespace XTL
 
 					void Set(const std::string & key, const VariantPtr & value);
 
+					void Append(const Section & section);
+
 					/**
-					 * @throw XTL::IniConfig::Error::KeyWasNotFound
+					 * @throw XTL::IniConfig::Error::KeyDoesNotExist
 					 */
 					VariantPtr Get(const std::string & key) const;
+
+					/**
+					 * Если заданный ключ не найден, выбрасывается исключение.
+					 * @throw XTL::IniConfig::Error::KeyDoesNotExist
+					 */
+					const long long int GetLongLongInt(const std::string & key) const;
 
 					/**
 					 * Если заданный ключ не найден, метод возвращает defaultValue
@@ -81,6 +103,8 @@ namespace XTL
 
 			void Set(const std::string & sectionName, const std::string & key, VariantPtr value);
 
+			void Append(const IniConfig & config);
+
 			/**
 			 * @throw XTL::IniConfig::Error::SectionDoesNotExist
 			 */
@@ -88,10 +112,7 @@ namespace XTL
 
 			const Section & GetSectionOptional(const std::string & sectionName) const;
 
-			void LoadFromFile(const std::string & filePath)
-			{
-				// TODO: create this shit!
-			}
+			void LoadFromFile(const std::string & filePath);
 
 		private:
 
@@ -107,8 +128,6 @@ namespace XTL
 
 			virtual ~SectionDoesNotExist() throw();
 
-			virtual const std::string What() const;
-
 			const std::string & SectionName() const;
 
 		private:
@@ -117,15 +136,13 @@ namespace XTL
 	};
 
 
-	class IniConfig::Error::KeyWasNotFound : public IniConfig::Error
+	class IniConfig::Error::KeyDoesNotExist : public IniConfig::Error
 	{
 		public:
 
-			KeyWasNotFound(const std::string & sectionName, const std::string & key);
+			KeyDoesNotExist(const std::string & sectionName, const std::string & key);
 
-			virtual ~KeyWasNotFound() throw();
-
-			virtual const std::string What() const;
+			virtual ~KeyDoesNotExist() throw();
 
 			const std::string & SectionName() const;
 
