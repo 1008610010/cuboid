@@ -38,3 +38,14 @@ void StringUtilsTest::StringCastTest()
 	*/
 }
 
+void StringUtilsTest::CheckIsNumberTest()
+{
+	CPPUNIT_ASSERT_EQUAL(XTL::IsInteger(0), false);
+	CPPUNIT_ASSERT_EQUAL(XTL::IsInteger(""), false);
+	CPPUNIT_ASSERT_EQUAL(XTL::IsInteger("0"), true);
+	CPPUNIT_ASSERT_EQUAL(XTL::IsInteger("-0"), true);
+	CPPUNIT_ASSERT_EQUAL(XTL::IsInteger("1"), true);
+	CPPUNIT_ASSERT_EQUAL(XTL::IsInteger("-1"), true);
+	CPPUNIT_ASSERT_EQUAL(XTL::IsInteger("+1"), false);
+}
+
