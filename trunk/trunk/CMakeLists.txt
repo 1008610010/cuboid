@@ -87,6 +87,17 @@ TARGET_LINK_LIBRARIES (
 
 
 ADD_EXECUTABLE (
+	iniconfig_test
+		tests/iniconfig_test.cpp
+)
+
+TARGET_LINK_LIBRARIES (
+	iniconfig_test
+		xtl
+)
+
+
+ADD_EXECUTABLE (
 	json_parser
 		tests/json_parser.cpp
 )
