@@ -8,6 +8,7 @@ class StringUtilsTest : public CppUnit::TestFixture
 {
 	CPPUNIT_TEST_SUITE(StringUtilsTest);
 	CPPUNIT_TEST(StringCastTest);
+	CPPUNIT_TEST(CheckIsNumberTest);
 	CPPUNIT_TEST_SUITE_END();
 
 	public:
@@ -25,6 +26,8 @@ class StringUtilsTest : public CppUnit::TestFixture
 	protected:
 
 		void StringCastTest();
+
+		void CheckIsNumberTest();
 };
 
 #endif

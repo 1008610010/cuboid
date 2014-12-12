@@ -62,6 +62,11 @@ namespace XTL
 		return result;
 	}
 
+	bool IsDigit(const char * s)
+	{
+		return *s >= '0' && *s <= '9';
+	}
+
 	bool IsInteger(const char * s)
 	{
 		if (s == 0 || *s == '\0')
@@ -72,30 +77,93 @@ namespace XTL
 		if (*s == '-')
 		{
 			++s;
-			if (*s == '\0')
-			{
-				return false;
-			}
 		}
 
-		// HERE: *s != '\0'
+		if (!IsDigit(s))
+		{
+			return false;
+		}
+
 		do
 		{
-			if (*s < '0' || *s > '9')
-			{
-				return false;
-			}
-
 			++s;
 		}
-		while (*s != '\0');
+		while (IsDigit(s));
 
-		return true;
+		return *s == '\0';
 	}
 
 	bool IsInteger(const std::string & s)
 	{
 		return IsInteger(s.c_str());
+	}
+
+	bool IsNumber(const char * s)
+	{
+		if (s == 0 || *s == '\0')
+		{
+			return false;
+		}
+
+		if (*s == '-')
+		{
+			++s;
+		}
+
+		if (!IsDigit(s))
+		{
+			return false;
+		}
+
+		do
+		{
+			++s;
+		}
+		while (IsDigit(s));
+
+		if (*s == '.')
+		{
+			++s;
+
+			if (!IsDigit(s))
+			{
+				return false;
+			}
+
+			do
+			{
+				++s;
+			}
+			while (IsDigit(s));
+		}
+
+		if (*s == 'e' || *s == 'E')
+		{
+			++s;
+
+			if (*s == '+' || *s == '-')
+			{
+				++s;
+			}
+
+			if (!IsDigit(s))
+			{
+				return false;
+			}
+
+			do
+			{
+				++s;
+			}
+			while (IsDigit(s));
+		}
+
+		return *s == '\0';
+	}
+
+	bool IsNumber(const std::string & s)
+	{
+		return IsNumber(s.c_str());
 	}
 
 	/********** FloatStringifier **********/

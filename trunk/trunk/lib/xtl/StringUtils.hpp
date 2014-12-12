@@ -20,6 +20,10 @@ namespace XTL
 
 	bool IsInteger(const std::string & s);
 
+	bool IsNumber(const char * s);
+
+	bool IsNumber(const std::string & s);
+
 	template <typename T>
 	const char * StringToInteger(const char * src, T & result)
 	{
