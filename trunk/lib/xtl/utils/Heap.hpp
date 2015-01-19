@@ -82,15 +82,12 @@ namespace XTL
 				return items_.front();
 			}
 
-			const T Pop()
+			void Pop()
 			{
 				Heapify();
 
-				const T temp = items_.front();
 				std::pop_heap(items_.begin(), items_.end(), comp_);
 				items_.pop_back();
-
-				return temp;
 			}
 
 			void Heapify()
@@ -109,6 +106,64 @@ namespace XTL
 			std::vector<T> items_;
 			Compare        comp_;
 			bool           heapified_;
+	};
+
+	template <typename T, typename Compare>
+	class LimitedHeap
+	{
+		public:
+
+			explicit LimitedHeap(unsigned int capacity)
+				: capacity_(capacity),
+				  heap_(),
+				  comp_()
+			{
+				;;
+			}
+
+			unsigned int Capacity() const
+			{
+				return capacity_;
+			}
+
+			unsigned int Size() const
+			{
+				return heap_.Size();
+			}
+
+			bool Empty() const
+			{
+				return heap_.Empty();
+			}
+
+			void Push(const T & value)
+			{
+				if (heap_.Size() < capacity_)
+				{
+					heap_.Push(value);
+				}
+				else if (comp_(value, heap_.Top()))
+				{
+					heap_.Pop();
+					heap_.Push(value);
+				}
+			}
+
+			const T & Top()
+			{
+				return heap_.Top();
+			}
+
+			void Pop()
+			{
+				heap_.Pop();
+			}
+
+		private:
+
+			unsigned int     capacity_;
+			Heap<T, Compare> heap_;
+			Compare          comp_;
 	};
 }
 
